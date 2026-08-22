@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createTarget } from '../domain/targets';
 import { createVault, unlockVault } from './vault';
-import { addEntry, addKey, deleteEntry, deleteKey, getWorkspace, initializeWorkspace, setWorkspaceMetadata, updateEntry } from './workspace';
+import { addEntry, addKey, deleteEntry, deleteKey, getWorkspace, initializeWorkspace, listRecycledRecords, restoreRecycledRecord, setWorkspaceMetadata, updateEntry } from './workspace';
 
 describe('encrypted workspace seam', () => {
   it('stores entries, groups, tags and key relationships only inside the KDBX workspace', async () => {
@@ -33,6 +33,7 @@ describe('encrypted workspace seam', () => {
     const vault = await unlockVault(await createVault('test'), 'test'); initializeWorkspace(vault);
     const entry = createTarget({ name: 'temporary', kind: 'web', config: { url: 'https://example.com' } }); addEntry(vault, entry);
     expect(deleteEntry(vault, entry.id)).toBe(true); expect(getWorkspace(vault).entries).toEqual([]);
+    const recycled = listRecycledRecords(vault); expect(recycled).toHaveLength(1); expect(restoreRecycledRecord(vault, recycled[0]!.id)).toBe(true); expect(getWorkspace(vault).entries).toHaveLength(1);
   });
 
   it('keeps group and tag metadata encrypted alongside entries', async () => {

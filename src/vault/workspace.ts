@@ -7,6 +7,7 @@ const dataField = 'LinkmarkData';
 const metadataTitle = '.linkmark-metadata';
 type WorkspaceMetadata = { groups: Group[]; tags: Tag[] };
 export type EncryptedWorkspace = { entries: Target[]; groups: Group[]; tags: Tag[]; keys: VaultItemSummary[] };
+export type RecycledRecord = { id: string; title: string };
 
 const read = (value: unknown) => value instanceof ProtectedValue ? value.getText() : typeof value === 'string' ? value : '';
 const partition = (vault: Kdbx, name: string) => {
@@ -70,6 +71,19 @@ export function deleteKey(vault: Kdbx, keyId: string): boolean {
   if (!record) return false;
   for (const entry of getWorkspace(vault).entries.filter((item) => item.vaultItemIds.includes(keyId))) updateEntry(vault, { ...entry, vaultItemIds: entry.vaultItemIds.filter((id) => id !== keyId), updatedAt: new Date().toISOString() });
   vault.createRecycleBin(); vault.remove(record); return true;
+}
+
+export function listRecycledRecords(vault: Kdbx): RecycledRecord[] {
+  const recycleBin = vault.meta.recycleBinUuid ? vault.getGroup(vault.meta.recycleBinUuid) : undefined;
+  return recycleBin?.entries.map((entry) => ({ id: entry.uuid.toString(), title: read(entry.fields.get('Title')) })) ?? [];
+}
+
+export function restoreRecycledRecord(vault: Kdbx, id: string): boolean {
+  const recycleBin = vault.meta.recycleBinUuid ? vault.getGroup(vault.meta.recycleBinUuid) : undefined;
+  const entry = recycleBin?.entries.find((item) => item.uuid.toString() === id);
+  if (!entry) return false;
+  const targetGroup = entry.fields.has(dataField) ? partition(vault, '入口') : partition(vault, '密钥');
+  vault.move(entry, targetGroup); return true;
 }
 
 export function getWorkspace(vault: Kdbx): EncryptedWorkspace {
