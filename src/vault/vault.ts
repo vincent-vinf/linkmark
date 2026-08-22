@@ -19,7 +19,7 @@ export async function createVault(password: string): Promise<ArrayBuffer> {
   configureArgon2();
   const vault = Kdbx.create(credentials(password), 'Linkmark Vault');
   vault.setKdf(Consts.KdfId.Argon2id);
-  vault.header.kdfParameters?.set('M', VarDictionary.ValueType.UInt64, new Int64(65536));
+  vault.header.kdfParameters?.set('M', VarDictionary.ValueType.UInt64, new Int64(64 * 1024 * 1024));
   vault.header.kdfParameters?.set('I', VarDictionary.ValueType.UInt64, new Int64(3));
   vault.header.kdfParameters?.set('P', VarDictionary.ValueType.UInt32, 1);
   return vault.save();
