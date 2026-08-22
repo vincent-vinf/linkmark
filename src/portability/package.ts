@@ -1,4 +1,4 @@
-import { argon2id } from 'hash-wasm';
+import { deriveArgon2id } from '../crypto/argon2';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -11,7 +11,7 @@ async function gzip(data: Uint8Array): Promise<Uint8Array> { const stream = new 
 async function gunzip(data: Uint8Array): Promise<Uint8Array> { const stream = new DecompressionStream('gzip'); const writer = stream.writable.getWriter(); await writer.write(data); await writer.close(); return new Uint8Array(await new Response(stream.readable).arrayBuffer()); }
 
 async function derive(password: string, salt: Uint8Array, memoryKiB: number, iterations: number, parallelism: number): Promise<CryptoKey> {
-  const bytes = await argon2id({ password, salt, memorySize: memoryKiB, iterations, parallelism, hashLength: 32, outputType: 'binary' });
+  const bytes = await deriveArgon2id(password, salt, { memorySize: memoryKiB, iterations, parallelism, hashLength: 32 });
   return crypto.subtle.importKey('raw', bytes, 'AES-GCM', false, ['encrypt', 'decrypt']);
 }
 

@@ -1,5 +1,5 @@
-import { argon2id } from 'hash-wasm';
 import { Consts, Credentials, CryptoEngine, Int64, Kdbx, ProtectedValue, VarDictionary } from 'kdbxweb';
+import { deriveArgon2id } from '../crypto/argon2';
 
 const text = new TextEncoder();
 let configured = false;
@@ -7,7 +7,7 @@ let configured = false;
 function configureArgon2(): void {
   if (configured) return;
   CryptoEngine.setArgon2Impl(async (password, salt, memory, iterations, length, parallelism) => {
-    const result = await argon2id({ password: new Uint8Array(password), salt: new Uint8Array(salt), memorySize: memory, iterations, parallelism, hashLength: length, outputType: 'binary' });
+    const result = await deriveArgon2id(new Uint8Array(password), new Uint8Array(salt), { memorySize: memory, iterations, parallelism, hashLength: length });
     return result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength);
   });
   configured = true;
