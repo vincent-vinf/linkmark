@@ -47,10 +47,12 @@ export default function App() {
   useEffect(() => { const clear = () => clearSensitiveState(); window.addEventListener('pagehide', clear); return () => window.removeEventListener('pagehide', clear); }, []);
 
   const visible = useMemo(() => targets.filter((target) => {
-    const words = `${target.name} ${target.kind} ${Object.values(target.config).join(' ')}`.toLowerCase();
+    const groupName = target.groupId ? groups.find((group) => group.id === target.groupId)?.name ?? '' : '';
+    const tagNames = target.tagIds.map((id) => tags.find((tag) => tag.id === id)?.name ?? '').join(' ');
+    const words = `${target.name} ${target.kind} ${Object.values(target.config).join(' ')} ${groupName} ${tagNames}`.toLowerCase();
     const secretMatch = vaultUnlocked && vaultItems.some((item) => target.vaultItemIds.includes(item.id) && `${item.title} ${item.username}`.toLowerCase().includes(query.toLowerCase()));
     return (!activeGroup || target.groupId === activeGroup) && (words.includes(query.toLowerCase()) || secretMatch);
-  }).sort((left, right) => left.sortOrder - right.sortOrder), [targets, activeGroup, query, vaultUnlocked, vaultItems]);
+  }).sort((left, right) => left.sortOrder - right.sortOrder), [targets, groups, tags, activeGroup, query, vaultUnlocked, vaultItems]);
   const orphanVaultItems = useMemo(() => vaultItems.filter((item) => !targets.some((target) => target.vaultItemIds.includes(item.id))), [targets, vaultItems]);
 
   const addGroup = async () => {
