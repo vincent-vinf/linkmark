@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addVaultItem, createVault, deleteVaultItem, listVaultItems, mergeVaultItems, rekeyVault, unlockVault } from './vault';
+import { addVaultItem, createVault, deleteVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, rekeyVault, restoreVaultItem, unlockVault } from './vault';
 
 describe('Vault item seam', () => {
   it('stores secret fields inside a password-protected KDBX vault', async () => {
@@ -25,6 +25,9 @@ describe('Vault item seam', () => {
     expect(listVaultItems(vault)).toEqual([{ id, title: 'temporary', username: '' }]);
     expect(deleteVaultItem(vault, id)).toBe(true);
     expect(listVaultItems(vault)).toHaveLength(0);
+    expect(listRecycledVaultItems(vault).map((item) => item.id)).toEqual([id]);
+    expect(restoreVaultItem(vault, id)).toBe(true);
+    expect(listVaultItems(vault).map((item) => item.id)).toEqual([id]);
   });
 
   it('can rekey a portable Vault without changing its entries', async () => {

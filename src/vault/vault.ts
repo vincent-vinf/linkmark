@@ -61,6 +61,27 @@ export function deleteVaultItem(vault: Kdbx, id: string): boolean {
   return false;
 }
 
+export function listRecycledVaultItems(vault: Kdbx): VaultItemSummary[] {
+  const recycleBin = vault.meta.recycleBinUuid ? vault.getGroup(vault.meta.recycleBinUuid) : undefined;
+  if (!recycleBin) return [];
+  return recycleBin.entries.map((entry) => ({ id: entry.uuid.toString(), title: typeof entry.fields.get('Title') === 'string' ? entry.fields.get('Title') as string : '', username: '' }));
+}
+
+export function restoreVaultItem(vault: Kdbx, id: string): boolean {
+  const recycleBin = vault.meta.recycleBinUuid ? vault.getGroup(vault.meta.recycleBinUuid) : undefined;
+  const item = recycleBin?.entries.find((entry) => entry.uuid.toString() === id);
+  if (!item) return false;
+  vault.move(item, vault.getDefaultGroup()); return true;
+}
+
+export function purgeExpiredVaultItems(vault: Kdbx, now = Date.now(), retentionMs = 30 * 24 * 60 * 60 * 1000): number {
+  const recycleBin = vault.meta.recycleBinUuid ? vault.getGroup(vault.meta.recycleBinUuid) : undefined;
+  if (!recycleBin) return 0;
+  const expired = recycleBin.entries.filter((entry) => entry.lastModTime <= now - retentionMs);
+  for (const item of expired) vault.remove(item);
+  return expired.length;
+}
+
 export function mergeVaultItems(target: Kdbx, incoming: Kdbx): void {
   const group = target.getDefaultGroup();
   for (const sourceGroup of incoming.groups) for (const entry of sourceGroup.entries) target.importEntry(entry, group, incoming);
