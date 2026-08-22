@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addVaultItem, assertVaultKdfParameters, createVault, deleteVaultItem, emptyVaultRecycleBin, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, unlockVault, updateVaultItem } from './vault';
+import { addVaultItem, assertVaultKdfParameters, createVault, deleteVaultItem, emptyVaultRecycleBin, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, permanentlyDeleteVaultItem, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, unlockVault, updateVaultItem } from './vault';
 
 describe('Vault item seam', () => {
   it('stores secret fields inside a password-protected KDBX vault', async () => {
@@ -16,6 +16,11 @@ describe('Vault item seam', () => {
   it('permanently empties the recycle bin on request', async () => {
     const vault = await unlockVault(await createVault('test'), 'test'); const id = addVaultItem(vault, { title: 'remove' }); deleteVaultItem(vault, id);
     expect(emptyVaultRecycleBin(vault)).toBe(1); expect(listRecycledVaultItems(vault)).toEqual([]);
+  });
+
+  it('permanently deletes one recycled Vault Item on request', async () => {
+    const vault = await unlockVault(await createVault('test'), 'test'); const id = addVaultItem(vault, { title: 'remove' }); deleteVaultItem(vault, id);
+    expect(permanentlyDeleteVaultItem(vault, id)).toBe(true); expect(listRecycledVaultItems(vault)).toEqual([]);
   });
 
   it('purges recycle-bin entries after the retention window', async () => {

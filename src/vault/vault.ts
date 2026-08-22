@@ -126,6 +126,14 @@ export function emptyVaultRecycleBin(vault: Kdbx): number {
   const count = recycleBin.entries.length; recycleBin.entries.splice(0, count); return count;
 }
 
+export function permanentlyDeleteVaultItem(vault: Kdbx, id: string): boolean {
+  const recycleBin = vault.meta.recycleBinUuid ? vault.getGroup(vault.meta.recycleBinUuid) : undefined;
+  const index = recycleBin?.entries.findIndex((entry) => entry.uuid.toString() === id) ?? -1;
+  if (index < 0 || !recycleBin) return false;
+  recycleBin.entries.splice(index, 1);
+  return true;
+}
+
 export function mergeVaultItems(target: Kdbx, incoming: Kdbx): Map<string, string> {
   const group = target.getDefaultGroup();
   const ids = new Map<string, string>();
