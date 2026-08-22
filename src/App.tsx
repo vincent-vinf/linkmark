@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Kdbx } from 'kdbxweb';
-import { createTarget, reorderTargets, type Target, type TargetKind, validateWebUrl } from './domain/targets';
+import { createTarget, deleteGroup, reorderTargets, type Target, type TargetKind, validateWebUrl } from './domain/targets';
 import { db, replaceLocalData, type Group, type Tag } from './storage/db';
 import { parseBackup, serializeBackup } from './portability/backup';
 import { mergeMetadata } from './portability/merge';
@@ -55,6 +55,7 @@ export default function App() {
     await db.groups.add({ id: newId(), name, sortOrder: groups.length });
     await reload();
   };
+  const removeGroup = async (group: Group) => { if (!window.confirm(`删除分组“${group.name}”？其中 Target 将移入收件箱。`)) return; await db.targets.bulkPut(deleteGroup(targets, group.id)); await db.groups.delete(group.id); if (activeGroup === group.id) setActiveGroup(null); await reload(); };
 
   const removeTarget = async (id: string) => {
     if (!window.confirm('删除此 Target？关联的秘密不会被删除。')) return;
@@ -128,7 +129,7 @@ export default function App() {
       <nav>
         <button className={!activeGroup ? 'active' : ''} onClick={() => setActiveGroup(null)}>收件箱 <small>{targets.filter((item) => !item.groupId).length}</small></button>
         <div className="section-title">分组 <button aria-label="添加分组" onClick={() => void addGroup()}>＋</button></div>
-        {groups.map((group) => <button key={group.id} className={activeGroup === group.id ? 'active' : ''} onClick={() => setActiveGroup(group.id)}>{group.name}<small>{targets.filter((item) => item.groupId === group.id).length}</small></button>)}
+        {groups.map((group) => <div key={group.id}><button className={activeGroup === group.id ? 'active' : ''} onClick={() => setActiveGroup(group.id)}>{group.name}<small>{targets.filter((item) => item.groupId === group.id).length}</small></button><button aria-label={`删除分组 ${group.name}`} onClick={() => void removeGroup(group)}>×</button></div>)}
       </nav>
       <div className="sidebar-footer"><span className={vaultUnlocked ? 'lock-dot unlocked' : 'lock-dot'} /> Vault {vaultUnlocked ? '已解锁' : '已锁定'} <button onClick={vaultUnlocked ? lockVault : () => setVaultDialog(true)}>{vaultUnlocked ? '锁定' : hasVault ? '解锁' : '创建'}</button></div>
     </aside>
