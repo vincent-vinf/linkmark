@@ -33,6 +33,7 @@ export default function App() {
   useEffect(() => { void reload(); void db.vaults.get('primary').then((record) => setHasVault(Boolean(record))); }, []);
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
   useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(() => { vaultRef.current = null; masterPasswordRef.current = null; setVaultUnlocked(false); setVaultExpiry(null); }, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry]);
+  useEffect(() => { const clear = () => { vaultRef.current = null; masterPasswordRef.current = null; }; window.addEventListener('pagehide', clear); return () => window.removeEventListener('pagehide', clear); }, []);
 
   const visible = useMemo(() => targets.filter((target) => {
     const words = `${target.name} ${target.kind} ${Object.values(target.config).join(' ')}`.toLowerCase();
@@ -68,6 +69,13 @@ export default function App() {
     await db.targets.put({ ...target, vaultItemIds: [...new Set([...target.vaultItemIds, value])], updatedAt: new Date().toISOString() }); await reload();
   };
   const lockVault = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultUnlocked(false); setVaultExpiry(null); };
+  const changeMasterPassword = async () => {
+    if (!vaultRef.current || !masterPasswordRef.current) return setVaultDialog(true);
+    const next = window.prompt('输入新的主密码'); if (!next) return;
+    if (!window.confirm('主密码将立即更新；忘记新密码将无法恢复 Vault。')) return;
+    const data = await rekeyVault(await saveVault(vaultRef.current), masterPasswordRef.current, next);
+    await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); vaultRef.current = await unlockVault(data, next); masterPasswordRef.current = next; alert('主密码已更新。请立即导出新的备份。');
+  };
   const share = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
     const password = window.prompt('设置独立分享口令'); if (!password) return;
@@ -101,7 +109,7 @@ export default function App() {
     <section className="content">
       <header>
         <div><p className="eyebrow">LOCAL-FIRST WORKSPACE</p><h1>{activeGroup ? groups.find((group) => group.id === activeGroup)?.name : '所有 Targets'}</h1></div>
-        <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => void importShare()}>导入</button></div>
+        <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void changeMasterPassword()}>改主密码</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => void importShare()}>导入</button></div>
       </header>
       <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索名称、连接主机或数据库…" /></label>
       <div className="toolbar"><span>{visible.length} 个 Target</span><button onClick={() => setEditorOpen(true)}>新建</button></div>
