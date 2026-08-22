@@ -1,12 +1,23 @@
 import { expect, test } from '@playwright/test';
 
-test('creates a Web Target in IndexedDB', async ({ page }) => {
+test('creates a Web entry in IndexedDB', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: '＋ 新建 Target' }).click();
+  await page.getByRole('button', { name: '＋ 新建入口' }).click();
   await page.getByLabel('名称', { exact: true }).fill('Linkmark 文档');
   await page.getByLabel('URL', { exact: true }).fill('https://example.com/docs');
   await page.getByRole('button', { name: '保存' }).click();
   await expect(page.getByRole('heading', { name: 'Linkmark 文档' })).toBeVisible();
+});
+
+test('keeps the add-entry confirmation button legible in dark mode', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('linkmark-theme', 'dark'));
+  await page.goto('/');
+  await page.getByRole('button', { name: '＋ 新建入口' }).click();
+  const colors = await page.getByRole('button', { name: '保存' }).evaluate((button) => {
+    const style = getComputedStyle(button);
+    return { background: style.backgroundColor, color: style.color };
+  });
+  expect(colors).toEqual({ background: 'rgb(124, 224, 192)', color: 'rgb(8, 44, 40)' });
 });
 
 test('creates a Worker-encrypted Vault and locks after reload', async ({ page }) => {
@@ -35,5 +46,5 @@ test('reopens the cached application shell while offline', async ({ page, contex
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   await context.setOffline(true);
   await page.reload();
-  await expect(page.getByRole('heading', { name: '所有 Targets' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '所有入口' })).toBeVisible();
 });
