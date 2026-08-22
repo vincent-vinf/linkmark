@@ -40,6 +40,7 @@ export default function App() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [query, setQuery] = useState('');
   const [sortMode, setSortMode] = useState<'manual' | 'name' | 'updated'>('manual');
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [isEditorOpen, setEditorOpen] = useState(false);
   const [editingTarget, setEditingTarget] = useState<Target | null>(null);
@@ -169,8 +170,8 @@ export default function App() {
         <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => setRecycledItems(listRecycledVaultItems(vaultRef.current!))}>回收站</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void changeMasterPassword()}>改主密码</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => void importShare()}>导入</button></div>
       </header>
       <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={vaultUnlocked ? '搜索 Target、秘密标题或账号…' : '搜索名称、连接主机或数据库…'} /></label>
-      <div className="toolbar"><span>{visible.length} 个 Target</span><span><label className="sort-label">排序 <select value={sortMode} onChange={(event) => setSortMode(event.target.value as typeof sortMode)}><option value="manual">手动</option><option value="name">名称</option><option value="updated">最近更新</option></select></label><button onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>新建</button></span></div>
-      {visible.length ? <div className="grid">{visible.map((target) => <article className="card" key={target.id} onDoubleClick={() => { if (target.kind === 'web') window.open(String(target.config.url), '_blank', 'noopener,noreferrer'); }}>
+      <div className="toolbar"><span>{visible.length} 个 Target</span><span><label className="sort-label">排序 <select value={sortMode} onChange={(event) => setSortMode(event.target.value as typeof sortMode)}><option value="manual">手动</option><option value="name">名称</option><option value="updated">最近更新</option></select></label><button aria-pressed={viewMode === 'list'} onClick={() => setViewMode(viewMode === 'cards' ? 'list' : 'cards')}>{viewMode === 'cards' ? '列表' : '卡片'}</button><button onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>新建</button></span></div>
+      {visible.length ? <div className={`grid ${viewMode === 'list' ? 'list-view' : ''}`}>{visible.map((target) => <article className="card" key={target.id} onDoubleClick={() => { if (target.kind === 'web') window.open(String(target.config.url), '_blank', 'noopener,noreferrer'); }}>
         <div className={`kind kind-${target.kind}`}>{target.kind === 'web' ? '↗' : target.kind === 'postgresql' ? '◫' : target.kind === 'redis' ? '◆' : '◇'}</div>
         <div className="card-body"><p className="kind-label">{kinds[target.kind]}</p><h2>{target.name}</h2><p>{target.kind === 'web' ? String(target.config.url ?? '') : Object.values(target.config).filter(Boolean).join(' · ') || '未填写连接资料'}</p></div>
         {target.tagIds.length > 0 && <small>{target.tagIds.map((id) => tags.find((tag) => tag.id === id)?.name).filter(Boolean).join(' · ')}</small>}
