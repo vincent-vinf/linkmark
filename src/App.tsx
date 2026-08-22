@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Kdbx } from 'kdbxweb';
 import { createTarget, type Target, type TargetKind, validateWebUrl } from './domain/targets';
 import { db, type Group } from './storage/db';
-import { createVault, unlockVault } from './vault/vault';
+import { addVaultItem, createVault, saveVault, unlockVault } from './vault/vault';
 import './app.css';
 
 const kinds: Record<TargetKind, string> = { web: '网站', postgresql: 'PostgreSQL', redis: 'Redis', generic: '通用' };
@@ -17,6 +18,8 @@ export default function App() {
   const [hasVault, setHasVault] = useState(false);
   const [vaultDialog, setVaultDialog] = useState(false);
   const [vaultError, setVaultError] = useState('');
+  const [vaultUnlocked, setVaultUnlocked] = useState(false);
+  const vaultRef = useRef<Kdbx | null>(null);
 
   const reload = async () => {
     setTargets(await db.targets.orderBy('updatedAt').reverse().toArray());
@@ -42,6 +45,14 @@ export default function App() {
     await db.targets.delete(id);
     await reload();
   };
+  const addSecret = async () => {
+    if (!vaultRef.current) return setVaultDialog(true);
+    const title = window.prompt('秘密条目名称')?.trim(); const password = window.prompt('密码、API Key 或 Token');
+    if (!title || password === null) return;
+    addVaultItem(vaultRef.current, { title, password });
+    await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() });
+  };
+  const lockVault = () => { vaultRef.current = null; setVaultUnlocked(false); };
 
   return <main className="shell">
     <aside className="sidebar">
@@ -52,12 +63,12 @@ export default function App() {
         <div className="section-title">分组 <button aria-label="添加分组" onClick={() => void addGroup()}>＋</button></div>
         {groups.map((group) => <button key={group.id} className={activeGroup === group.id ? 'active' : ''} onClick={() => setActiveGroup(group.id)}>{group.name}<small>{targets.filter((item) => item.groupId === group.id).length}</small></button>)}
       </nav>
-      <div className="sidebar-footer"><span className="lock-dot" /> Vault 已锁定 <button onClick={() => setVaultDialog(true)}>{hasVault ? '解锁' : '创建'}</button></div>
+      <div className="sidebar-footer"><span className={vaultUnlocked ? 'lock-dot unlocked' : 'lock-dot'} /> Vault {vaultUnlocked ? '已解锁' : '已锁定'} <button onClick={vaultUnlocked ? lockVault : () => setVaultDialog(true)}>{vaultUnlocked ? '锁定' : hasVault ? '解锁' : '创建'}</button></div>
     </aside>
     <section className="content">
       <header>
         <div><p className="eyebrow">LOCAL-FIRST WORKSPACE</p><h1>{activeGroup ? groups.find((group) => group.id === activeGroup)?.name : '所有 Targets'}</h1></div>
-        <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button><button onClick={() => alert('完整加密导出将在 Vault 创建后可用。')}>导入 / 导出</button></div>
+        <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}<button onClick={() => alert('加密备份与分享导入将在下一切片接入界面。')}>导入 / 导出</button></div>
       </header>
       <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索名称、连接主机或数据库…" /></label>
       <div className="toolbar"><span>{visible.length} 个 Target</span><button onClick={() => setEditorOpen(true)}>新建</button></div>
@@ -68,7 +79,7 @@ export default function App() {
       </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => setEditorOpen(true)}>新建 Target</button></div>}
     </section>
     {isEditorOpen && <TargetEditor groups={groups} onClose={() => setEditorOpen(false)} onSaved={async () => { setEditorOpen(false); await reload(); }} />}
-    {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password) => { try { const record = await db.vaults.get('primary'); if (record) await unlockVault(record.data, password); else await db.vaults.put({ id: 'primary', data: await createVault(password), updatedAt: new Date().toISOString() }); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
+    {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password) => { try { const record = await db.vaults.get('primary'); const data = record?.data ?? await createVault(password); const vault = await unlockVault(data, password); if (!record) await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); vaultRef.current = vault; setVaultUnlocked(true); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
   </main>;
 }
 

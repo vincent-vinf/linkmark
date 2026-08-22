@@ -29,4 +29,16 @@ export async function unlockVault(data: ArrayBuffer, password: string): Promise<
 
 export async function saveVault(vault: Kdbx): Promise<ArrayBuffer> { return vault.save(); }
 
+export type VaultItemInput = { title: string; username?: string; password?: string; notes?: string; fields?: Record<string, string> };
+
+export function addVaultItem(vault: Kdbx, input: VaultItemInput): string {
+  const entry = vault.createEntry(vault.getDefaultGroup());
+  entry.fields.set('Title', input.title);
+  if (input.username) entry.fields.set('UserName', input.username);
+  if (input.password) entry.fields.set('Password', ProtectedValue.fromString(input.password));
+  if (input.notes) entry.fields.set('Notes', ProtectedValue.fromString(input.notes));
+  for (const [name, value] of Object.entries(input.fields ?? {})) entry.fields.set(name, ProtectedValue.fromString(value));
+  return entry.uuid.toString();
+}
+
 export function clearPassword(value: string): void { text.encode(value).fill(0); }
