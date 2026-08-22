@@ -21,8 +21,9 @@ describe('Vault item seam', () => {
 
   it('imports Vault Items while preserving the current Vault', async () => {
     const current = await unlockVault(await createVault('a'), 'a'); const incoming = await unlockVault(await createVault('b'), 'b');
-    addVaultItem(current, { title: 'local' }); addVaultItem(incoming, { title: 'imported' }); mergeVaultItems(current, incoming);
+    addVaultItem(current, { title: 'local' }); const importedId = addVaultItem(incoming, { title: 'imported' }); const mapping = mergeVaultItems(current, incoming);
     expect(listVaultItems(current).map((item) => item.title)).toEqual(['local', 'imported']);
+    expect(mapping.get(importedId)).toBeDefined();
   });
 
   it('moves deleted Vault Items into the recycle bin', async () => {

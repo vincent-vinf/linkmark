@@ -82,9 +82,11 @@ export function purgeExpiredVaultItems(vault: Kdbx, now = Date.now(), retentionM
   return expired.length;
 }
 
-export function mergeVaultItems(target: Kdbx, incoming: Kdbx): void {
+export function mergeVaultItems(target: Kdbx, incoming: Kdbx): Map<string, string> {
   const group = target.getDefaultGroup();
-  for (const sourceGroup of incoming.groups) for (const entry of sourceGroup.entries) target.importEntry(entry, group, incoming);
+  const ids = new Map<string, string>();
+  for (const sourceGroup of incoming.groups) for (const entry of sourceGroup.entries) ids.set(entry.uuid.toString(), target.importEntry(entry, group, incoming).uuid.toString());
+  return ids;
 }
 
 export function clearPassword(value: string): void { text.encode(value).fill(0); }
