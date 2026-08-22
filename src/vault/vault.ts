@@ -78,7 +78,7 @@ export function purgeExpiredVaultItems(vault: Kdbx, now = Date.now(), retentionM
   const recycleBin = vault.meta.recycleBinUuid ? vault.getGroup(vault.meta.recycleBinUuid) : undefined;
   if (!recycleBin) return 0;
   const expired = recycleBin.entries.filter((entry) => entry.lastModTime <= now - retentionMs);
-  for (const item of expired) vault.remove(item);
+  for (const item of expired) recycleBin.entries.splice(recycleBin.entries.indexOf(item), 1);
   return expired.length;
 }
 
