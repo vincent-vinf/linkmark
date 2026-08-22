@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addVaultItem, assertVaultKdfParameters, createVault, deleteVaultItem, emptyVaultRecycleBin, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, permanentlyDeleteVaultItem, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, unlockVault, updateVaultItem } from './vault';
+import { addVaultItem, assertVaultKdfParameters, createVault, deleteVaultItem, emptyVaultRecycleBin, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, permanentlyDeleteVaultItem, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, saveVault, unlockVault, updateVaultItem } from './vault';
 
 describe('Vault item seam', () => {
   it('stores secret fields inside a password-protected KDBX vault', async () => {
@@ -66,5 +66,11 @@ describe('Vault item seam', () => {
 
   it('rejects malformed Vault bytes before attempting a password KDF', () => {
     expect(() => assertVaultKdfParameters(new Uint8Array([1, 2, 3]).buffer)).toThrow('Vault');
+  });
+
+  it('saves a Vault snapshot that remains protected by the supplied password', async () => {
+    const vault = await unlockVault(await createVault('test'), 'test'); addVaultItem(vault, { title: 'saved', password: 'secret' });
+    const data = await saveVault(vault, 'test');
+    expect(listVaultItems(await unlockVault(data, 'test')).map((item) => item.title)).toEqual(['saved']);
   });
 });

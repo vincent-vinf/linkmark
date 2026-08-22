@@ -40,7 +40,16 @@ export async function unlockVault(data: ArrayBuffer, password: string): Promise<
   return Kdbx.load(data, credentials(password));
 }
 
-export async function saveVault(vault: Kdbx): Promise<ArrayBuffer> { return vault.save(); }
+export async function saveVault(vault: Kdbx, password?: string): Promise<ArrayBuffer> {
+  if (!password || typeof Worker === 'undefined') return vault.save();
+  const xml = await vault.saveXml();
+  const worker = new Worker(new URL('./vault-save.worker.ts', import.meta.url), { type: 'module' });
+  return new Promise<ArrayBuffer>((resolve, reject) => {
+    worker.onmessage = ({ data }) => { worker.terminate(); if (data.error) reject(new Error(data.error)); else resolve(data.result); };
+    worker.onerror = () => { worker.terminate(); reject(new Error('Vault save worker failed')); };
+    worker.postMessage({ xml, password });
+  });
+}
 
 export async function rekeyVault(data: ArrayBuffer, currentPassword: string, nextPassword: string): Promise<ArrayBuffer> {
   const vault = await unlockVault(data, currentPassword);

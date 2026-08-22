@@ -83,7 +83,7 @@ export default function App() {
   const orphanVaultItems = useMemo(() => vaultItems.filter((item) => !targets.some((target) => target.vaultItemIds.includes(item.id))), [targets, vaultItems]);
   const persistVault = async (): Promise<ArrayBuffer> => {
     if (!vaultRef.current) throw new Error('Vault 已锁定。');
-    const data = await saveVault(vaultRef.current);
+    const data = await saveVault(vaultRef.current, masterPasswordRef.current ?? undefined);
     try { await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); } catch { throw new Error('无法保存 Vault。请检查浏览器存储空间后重试；本次修改仍只在当前页面内存中。'); }
     return data;
   };
@@ -124,7 +124,7 @@ export default function App() {
     addVaultItem(vaultRef.current, { title, username, password, notes, fields });
     try { await persistVault(); setVaultItems(listVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); }
   };
-  const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); try { const data = await saveVault(vaultRef.current); const now = new Date().toISOString(); await db.transaction('rw', db.vaults, db.targets, async () => { await db.vaults.put({ id: 'primary', data, updatedAt: now }); await db.targets.bulkPut((await db.targets.toArray()).filter((target) => target.vaultItemIds.includes(id)).map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.filter((itemId) => itemId !== id), updatedAt: now }))); }); setVaultItems(listVaultItems(vaultRef.current)); await reload(); } catch (error) { notifyVaultSaveFailure(error); } };
+  const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); try { const data = await saveVault(vaultRef.current, masterPasswordRef.current ?? undefined); const now = new Date().toISOString(); await db.transaction('rw', db.vaults, db.targets, async () => { await db.vaults.put({ id: 'primary', data, updatedAt: now }); await db.targets.bulkPut((await db.targets.toArray()).filter((target) => target.vaultItemIds.includes(id)).map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.filter((itemId) => itemId !== id), updatedAt: now }))); }); setVaultItems(listVaultItems(vaultRef.current)); await reload(); } catch (error) { notifyVaultSaveFailure(error); } };
   const restoreSecret = async (id: string) => { if (!vaultRef.current) return; restoreVaultItem(vaultRef.current, id); try { await persistVault(); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultItems(listVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); } };
   const emptyRecycleBin = async () => { if (!vaultRef.current || !window.confirm('永久删除回收站中的全部秘密？')) return; emptyVaultRecycleBin(vaultRef.current); try { await persistVault(); setRecycledItems([]); } catch (error) { notifyVaultSaveFailure(error); } };
   const permanentlyRemoveSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('永久删除此秘密且无法恢复？')) return; permanentlyDeleteVaultItem(vaultRef.current, id); try { await persistVault(); setRecycledItems(listRecycledVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); } };
@@ -142,20 +142,20 @@ export default function App() {
     const next = await askPassword('输入新的主密码'); if (!next) return;
     const confirmation = await askPassword('再次输入新的主密码'); if (next !== confirmation) return alert('两次输入的主密码不一致。');
     if (!window.confirm('主密码将立即更新；忘记新密码将无法恢复 Vault。静态加密不能防护正在运行页面的 XSS、恶意扩展或已失陷设备。')) return;
-    const data = await rekeyVault(await saveVault(vaultRef.current), masterPasswordRef.current, next);
+    const data = await rekeyVault(await saveVault(vaultRef.current, masterPasswordRef.current), masterPasswordRef.current, next);
     await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); vaultRef.current = await unlockVault(data, next); masterPasswordRef.current = next; alert('主密码已更新。请立即导出新的备份。');
   };
   const share = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
     const password = await askPassword('设置独立分享口令'); if (!password) return;
     const currentPassword = masterPasswordRef.current; if (!currentPassword) return lockVault();
-    const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current)]);
+    const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current, currentPassword)]);
     const text = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault: await rekeyVault(vault, currentPassword, password) }, password, 'share');
     try { await navigator.clipboard.writeText(text); alert('已复制加密分享字符串。'); } catch { alert('无法写入剪贴板，请检查浏览器权限。'); }
   };
   const downloadBackup = async () => {
     if (!vaultRef.current || !masterPasswordRef.current) return setVaultDialog(true);
-    const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current)]);
+    const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current, masterPasswordRef.current)]);
     const encoded = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault }, masterPasswordRef.current);
     const url = URL.createObjectURL(new Blob([encoded], { type: 'text/plain' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `linkmark-backup-${new Date().toISOString().slice(0, 10)}.txt`; anchor.click(); URL.revokeObjectURL(url);
   };
@@ -169,7 +169,7 @@ export default function App() {
   const mergeImport = async () => {
     if (!importPreview) return;
     if (!vaultRef.current) throw new Error('合并导入前必须先解锁当前 Vault。');
-    const { data, password } = importPreview; const incoming = await unlockVault(data.vault, password); const mapping = mergeVaultItems(vaultRef.current, incoming); const remapped = { ...data, targets: data.targets.map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.map((id) => mapping.get(id) ?? id) })) }; const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, remapped); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current) }); setImportPreview(null); await reload(); alert('已合并导入。');
+    const { data, password } = importPreview; const incoming = await unlockVault(data.vault, password); const mapping = mergeVaultItems(vaultRef.current, incoming); const remapped = { ...data, targets: data.targets.map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.map((id) => mapping.get(id) ?? id) })) }; const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, remapped); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current, masterPasswordRef.current ?? undefined) }); setImportPreview(null); await reload(); alert('已合并导入。');
   };
 
   return <main className="shell">
@@ -206,7 +206,7 @@ export default function App() {
       {vaultUnlocked && recycledItems.length > 0 && <section className="vault-list"><h2>回收站 <button onClick={() => void emptyRecycleBin()}>清空</button></h2>{recycledItems.map((item) => <div key={item.id}><span>{item.title || '已删除秘密'}</span><span><button onClick={() => void restoreSecret(item.id)}>恢复</button><button onClick={() => void permanentlyRemoveSecret(item.id)}>永久删除</button></span></div>)}</section>}
     </section>
     {isEditorOpen && <TargetEditor target={editingTarget} groups={groups} onClose={() => setEditorOpen(false)} onSaved={async () => { setEditorOpen(false); setEditingTarget(null); await reload(); }} />}
-    {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password, duration) => { try { const record = await db.vaults.get('primary'); const data = record?.data ?? await createVault(password); const vault = await unlockVault(data, password); const purged = purgeExpiredVaultItems(vault); if (!record || purged) await db.vaults.put({ id: 'primary', data: await saveVault(vault), updatedAt: new Date().toISOString() }); vaultRef.current = vault; masterPasswordRef.current = password; setVaultExpiry(Date.now() + duration); setVaultUnlocked(true); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
+    {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password, duration) => { try { const record = await db.vaults.get('primary'); const data = record?.data ?? await createVault(password); const vault = await unlockVault(data, password); const purged = purgeExpiredVaultItems(vault); if (!record || purged) await db.vaults.put({ id: 'primary', data: await saveVault(vault, password), updatedAt: new Date().toISOString() }); vaultRef.current = vault; masterPasswordRef.current = password; setVaultExpiry(Date.now() + duration); setVaultUnlocked(true); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
     {passwordRequest && <PasswordPrompt label={passwordRequest.label} onClose={() => { passwordRequest.resolve(null); setPasswordRequest(null); }} onSubmit={(value) => { passwordRequest.resolve(value); setPasswordRequest(null); }} />}
     {selectedVaultItem && <VaultItemDialog item={selectedVaultItem} onClose={() => setSelectedVaultItem(null)} onSave={saveSecret} />}
     {isImportOpen && <ImportDialog onClose={() => setImportOpen(false)} onSubmit={inspectImport} />}
