@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createTarget, deleteGroup, deleteTarget, validateWebUrl } from './targets';
+import { createTarget, deleteGroup, deleteTarget, reorderTargets, validateWebUrl } from './targets';
 
 describe('Target management seam', () => {
   it('moves Targets to Inbox when a Group is deleted', () => {
@@ -23,5 +23,10 @@ describe('Target management seam', () => {
     expect(validateWebUrl('https://linkmark.example')).toBe(true);
     expect(validateWebUrl('javascript:alert(1)')).toBe(false);
     expect(validateWebUrl('file:///etc/passwd')).toBe(false);
+  });
+
+  it('persists a requested ordering inside a Group', () => {
+    const first = createTarget({ name: 'first', kind: 'generic' }); const second = createTarget({ name: 'second', kind: 'generic' });
+    expect(reorderTargets([first, second], [second.id, first.id]).map((target) => target.sortOrder)).toEqual([1, 0]);
   });
 });

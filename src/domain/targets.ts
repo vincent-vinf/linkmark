@@ -57,3 +57,8 @@ export function validateWebUrl(value: string): boolean {
     return false;
   }
 }
+
+export function reorderTargets(targets: Target[], orderedIds: string[]): Target[] {
+  const order = new Map(orderedIds.map((id, index) => [id, index]));
+  return targets.map((target) => order.has(target.id) ? { ...target, sortOrder: order.get(target.id)!, updatedAt: new Date().toISOString() } : target);
+}

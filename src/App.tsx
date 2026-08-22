@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Kdbx } from 'kdbxweb';
-import { createTarget, type Target, type TargetKind, validateWebUrl } from './domain/targets';
+import { createTarget, reorderTargets, type Target, type TargetKind, validateWebUrl } from './domain/targets';
 import { db, replaceLocalData, type Group } from './storage/db';
 import { parseBackup, serializeBackup } from './portability/backup';
 import { mergeMetadata } from './portability/merge';
@@ -41,7 +41,7 @@ export default function App() {
   const visible = useMemo(() => targets.filter((target) => {
     const words = `${target.name} ${target.kind} ${Object.values(target.config).join(' ')}`.toLowerCase();
     return (!activeGroup || target.groupId === activeGroup) && words.includes(query.toLowerCase());
-  }), [targets, activeGroup, query]);
+  }).sort((left, right) => left.sortOrder - right.sortOrder), [targets, activeGroup, query]);
 
   const addGroup = async () => {
     const name = window.prompt('分组名称')?.trim();
@@ -58,6 +58,10 @@ export default function App() {
   const editTarget = async (target: Target) => {
     const name = window.prompt('Target 名称', target.name)?.trim(); if (!name) return;
     await db.targets.put({ ...target, name, updatedAt: new Date().toISOString() }); await reload();
+  };
+  const moveTarget = async (target: Target, direction: -1 | 1) => {
+    const withinGroup = targets.filter((item) => item.groupId === target.groupId).sort((left, right) => left.sortOrder - right.sortOrder); const index = withinGroup.findIndex((item) => item.id === target.id); const adjacent = withinGroup[index + direction]; if (!adjacent) return;
+    await db.targets.bulkPut(reorderTargets(targets, withinGroup.map((item, position) => position === index ? adjacent.id : position === index + direction ? target.id : item.id))); await reload();
   };
   const addSecret = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
@@ -126,6 +130,7 @@ export default function App() {
         <div className="card-body"><p className="kind-label">{kinds[target.kind]}</p><h2>{target.name}</h2><p>{target.kind === 'web' ? String(target.config.url ?? '') : Object.values(target.config).filter(Boolean).join(' · ') || '未填写连接资料'}</p></div>
         {vaultUnlocked && <button className="link-secret" onClick={() => void linkSecret(target)}>秘密 {target.vaultItemIds.length}</button>}
         <button className="edit-target" onClick={() => void editTarget(target)}>编辑</button>
+        <button onClick={() => void moveTarget(target, -1)}>↑</button><button onClick={() => void moveTarget(target, 1)}>↓</button>
         <button className="delete" aria-label={`删除 ${target.name}`} onClick={() => void removeTarget(target.id)}>×</button>
       </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => setEditorOpen(true)}>新建 Target</button></div>}
       {vaultUnlocked && vaultItems.length > 0 && <section className="vault-list"><h2>Vault Items</h2>{vaultItems.map((item) => <div key={item.id}><span>{item.title}</span><small>{item.username}</small><button onClick={() => void removeSecret(item.id)}>删除</button></div>)}</section>}
