@@ -6,7 +6,7 @@ const toBinaryString = (bytes: Uint8Array) => { let text = ''; for (let start = 
 const toBase64Url = (bytes: Uint8Array) => btoa(toBinaryString(bytes)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
 const fromBase64Url = (value: string) => Uint8Array.from(atob(value.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - value.length % 4) % 4)), (char) => char.charCodeAt(0));
 
-export type EncryptedPackage = { formatVersion: 1; algorithm: 'Argon2id/AES-GCM'; compression: 'gzip'; salt: string; iv: string; memoryKiB: number; iterations: number; parallelism: number; ciphertext: string };
+export type EncryptedPackage = { formatVersion: 1; algorithm: 'Argon2id/AES-GCM'; compression: 'gzip'; authenticationData: 'linkmark-package-v1'; salt: string; iv: string; memoryKiB: number; iterations: number; parallelism: number; ciphertext: string };
 async function gzip(data: Uint8Array): Promise<Uint8Array> { const stream = new CompressionStream('gzip'); const writer = stream.writable.getWriter(); await writer.write(data); await writer.close(); return new Uint8Array(await new Response(stream.readable).arrayBuffer()); }
 async function gunzip(data: Uint8Array, maxBytes = 25_000_000): Promise<Uint8Array> { const stream = new DecompressionStream('gzip'); const writer = stream.writable.getWriter(); await writer.write(data); await writer.close(); const reader = stream.readable.getReader(); const chunks: Uint8Array[] = []; let size = 0; for (;;) { const { value, done } = await reader.read(); if (done) break; size += value.byteLength; if (size > maxBytes) { await reader.cancel(); throw new Error('导入包解压后过大'); } chunks.push(value); } const output = new Uint8Array(size); let offset = 0; for (const chunk of chunks) { output.set(chunk, offset); offset += chunk.byteLength; } return output; }
 
@@ -18,11 +18,11 @@ async function derive(password: string, salt: Uint8Array, memoryKiB: number, ite
 export async function encryptPackage(payload: unknown, password: string): Promise<EncryptedPackage> {
   const salt = crypto.getRandomValues(new Uint8Array(16)); const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await derive(password, salt, 65536, 3, 1);
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, await gzip(encoder.encode(JSON.stringify(payload))));
-  return { formatVersion: 1, algorithm: 'Argon2id/AES-GCM', compression: 'gzip', salt: toBase64Url(salt), iv: toBase64Url(iv), memoryKiB: 65536, iterations: 3, parallelism: 1, ciphertext: toBase64Url(new Uint8Array(ciphertext)) };
+  const authenticationData = 'linkmark-package-v1'; const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: encoder.encode(authenticationData) }, key, await gzip(encoder.encode(JSON.stringify(payload))));
+  return { formatVersion: 1, algorithm: 'Argon2id/AES-GCM', compression: 'gzip', authenticationData, salt: toBase64Url(salt), iv: toBase64Url(iv), memoryKiB: 65536, iterations: 3, parallelism: 1, ciphertext: toBase64Url(new Uint8Array(ciphertext)) };
 }
 
 export async function decryptPackage(envelope: EncryptedPackage, password: string): Promise<unknown> {
-  if (envelope.formatVersion !== 1 || envelope.algorithm !== 'Argon2id/AES-GCM' || envelope.compression !== 'gzip' || envelope.memoryKiB > 65536 || envelope.iterations > 6 || envelope.parallelism > 2) throw new Error('不支持的导入包');
-  try { const key = await derive(password, fromBase64Url(envelope.salt), envelope.memoryKiB, envelope.iterations, envelope.parallelism); const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromBase64Url(envelope.iv) }, key, fromBase64Url(envelope.ciphertext)); return JSON.parse(decoder.decode(await gunzip(new Uint8Array(plain)))); } catch { throw new Error('无法解密导入包'); }
+  if (envelope.formatVersion !== 1 || envelope.algorithm !== 'Argon2id/AES-GCM' || envelope.compression !== 'gzip' || envelope.authenticationData !== 'linkmark-package-v1' || envelope.memoryKiB > 65536 || envelope.iterations > 6 || envelope.parallelism > 2) throw new Error('不支持的导入包');
+  try { const key = await derive(password, fromBase64Url(envelope.salt), envelope.memoryKiB, envelope.iterations, envelope.parallelism); const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromBase64Url(envelope.iv), additionalData: encoder.encode(envelope.authenticationData) }, key, fromBase64Url(envelope.ciphertext)); return JSON.parse(decoder.decode(await gunzip(new Uint8Array(plain)))); } catch { throw new Error('无法解密导入包'); }
 }

@@ -6,7 +6,7 @@ import type { Group, Tag } from '../storage/db';
 
 const binaryToBase64 = (data: ArrayBuffer) => { const bytes = new Uint8Array(data); let text = ''; for (let start = 0; start < bytes.length; start += 0x8000) text += String.fromCharCode(...bytes.subarray(start, start + 0x8000)); return btoa(text); };
 const base64ToBinary = (data: string) => Uint8Array.from(atob(data), (char) => char.charCodeAt(0)).buffer;
-const envelopeSchema = z.object({ formatVersion: z.literal(1), algorithm: z.literal('Argon2id/AES-GCM'), compression: z.literal('gzip'), salt: z.string().max(128), iv: z.string().max(64), memoryKiB: z.number().int(), iterations: z.number().int(), parallelism: z.number().int(), ciphertext: z.string().max(20_000_000) });
+const envelopeSchema = z.object({ formatVersion: z.literal(1), algorithm: z.literal('Argon2id/AES-GCM'), compression: z.literal('gzip'), authenticationData: z.literal('linkmark-package-v1'), salt: z.string().max(128), iv: z.string().max(64), memoryKiB: z.number().int(), iterations: z.number().int(), parallelism: z.number().int(), ciphertext: z.string().max(20_000_000) });
 const targetSchema = z.object({ id: z.string().uuid(), name: z.string().min(1).max(256), kind: z.enum(['web', 'postgresql', 'redis', 'generic']), groupId: z.string().uuid().nullable(), tagIds: z.array(z.string().uuid()), sortOrder: z.number().finite(), config: z.record(z.union([z.string(), z.number(), z.boolean()])), vaultItemIds: z.array(z.string()), createdAt: z.string().datetime(), updatedAt: z.string().datetime() });
 const groupSchema = z.object({ id: z.string().uuid(), name: z.string().min(1).max(128), sortOrder: z.number().finite() });
 const tagSchema = z.object({ id: z.string().uuid(), name: z.string().min(1).max(128) });
