@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { decryptPackage, encryptPackage, type EncryptedPackage } from './package';
 import type { Target } from '../domain/targets';
+import { validateWebUrl } from '../domain/targets';
 import type { Group, Tag } from '../storage/db';
 
 const binaryToBase64 = (data: ArrayBuffer) => { const bytes = new Uint8Array(data); let text = ''; for (let start = 0; start < bytes.length; start += 0x8000) text += String.fromCharCode(...bytes.subarray(start, start + 0x8000)); return btoa(text); };
@@ -24,5 +25,11 @@ export async function parseBackup(encoded: string, password: string): Promise<Fu
   let envelope: EncryptedPackage;
   try { envelope = envelopeSchema.parse(JSON.parse(atob(padded))); } catch { throw new Error('无效的导入包'); }
   const decoded = backupSchema.parse(await decryptPackage(envelope, password));
+  const groupIds = new Set(decoded.groups.map((group) => group.id)); const tagIds = new Set(decoded.tags.map((tag) => tag.id));
+  for (const target of decoded.targets) {
+    if (target.groupId && !groupIds.has(target.groupId)) throw new Error('导入包包含未知分组引用');
+    if (target.tagIds.some((id) => !tagIds.has(id))) throw new Error('导入包包含未知标签引用');
+    if (target.kind === 'web' && (typeof target.config.url !== 'string' || !validateWebUrl(target.config.url))) throw new Error('导入包包含不安全的网站地址');
+  }
   return { mode: decoded.mode, targets: decoded.targets, groups: decoded.groups, tags: decoded.tags, vault: base64ToBinary(decoded.vault) };
 }
