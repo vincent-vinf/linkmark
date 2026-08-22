@@ -1,7 +1,7 @@
 import { ProtectedValue, type Kdbx } from 'kdbxweb';
 import type { Target } from '../domain/targets';
 import type { Group, Tag } from '../storage/db';
-import { addVaultItem, ensureLinkmarkStructure, type VaultItemInput, type VaultItemSummary } from './vault';
+import { ensureLinkmarkStructure, type VaultItemInput, type VaultItemSummary } from './vault';
 
 const dataField = 'LinkmarkData';
 const metadataTitle = '.linkmark-metadata';
@@ -44,6 +44,26 @@ export function addEntry(vault: Kdbx, entry: Target): void {
   const record = vault.createEntry(partition(vault, '入口'));
   record.fields.set('Title', entry.name);
   record.fields.set(dataField, ProtectedValue.fromString(JSON.stringify(entry)));
+}
+
+function entryRecord(vault: Kdbx, id: string) {
+  return partition(vault, '入口').entries.find((record) => {
+    try { return (JSON.parse(read(record.fields.get(dataField))) as Target).id === id; } catch { return false; }
+  });
+}
+
+export function updateEntry(vault: Kdbx, entry: Target): boolean {
+  const record = entryRecord(vault, entry.id);
+  if (!record) return false;
+  record.fields.set('Title', entry.name); record.fields.set(dataField, ProtectedValue.fromString(JSON.stringify(entry))); record.times.update();
+  return true;
+}
+
+export function deleteKey(vault: Kdbx, keyId: string): boolean {
+  const record = partition(vault, '密钥').entries.find((item) => item.uuid.toString() === keyId);
+  if (!record) return false;
+  for (const entry of getWorkspace(vault).entries.filter((item) => item.vaultItemIds.includes(keyId))) updateEntry(vault, { ...entry, vaultItemIds: entry.vaultItemIds.filter((id) => id !== keyId), updatedAt: new Date().toISOString() });
+  vault.createRecycleBin(); vault.remove(record); return true;
 }
 
 export function getWorkspace(vault: Kdbx): EncryptedWorkspace {
