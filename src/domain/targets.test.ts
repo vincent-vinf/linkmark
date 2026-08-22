@@ -44,4 +44,9 @@ describe('Target management seam', () => {
     const first = createTarget({ name: 'first', kind: 'generic' }); const second = createTarget({ name: 'second', kind: 'generic' });
     expect(reorderTargets([first, second], [second.id, first.id]).map((target) => target.sortOrder)).toEqual([1, 0]);
   });
+
+  it('initializes Target home-view metadata without putting it in the Vault', () => {
+    const target = createTarget({ name: 'first', kind: 'generic' });
+    expect(target).toMatchObject({ pinned: false, lastAccessAt: null });
+  });
 });

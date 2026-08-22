@@ -40,7 +40,7 @@ export default function App() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [query, setQuery] = useState('');
-  const [sortMode, setSortMode] = useState<'manual' | 'name' | 'updated'>('manual');
+  const [sortMode, setSortMode] = useState<'manual' | 'name' | 'updated' | 'pinned' | 'recent'>('manual');
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [isEditorOpen, setEditorOpen] = useState(false);
@@ -79,7 +79,7 @@ export default function App() {
     const words = `${target.name} ${target.kind} ${Object.values(target.config).join(' ')} ${groupName} ${tagNames}`.toLowerCase();
     const secretMatch = vaultUnlocked && vaultItems.some((item) => target.vaultItemIds.includes(item.id) && `${item.title} ${item.username}`.toLowerCase().includes(query.toLowerCase()));
     return (!activeGroup || target.groupId === activeGroup) && (words.includes(query.toLowerCase()) || secretMatch);
-  }).sort((left, right) => sortMode === 'name' ? left.name.localeCompare(right.name, 'zh-CN') : sortMode === 'updated' ? right.updatedAt.localeCompare(left.updatedAt) : left.sortOrder - right.sortOrder), [targets, groups, tags, activeGroup, query, sortMode, vaultUnlocked, vaultItems]);
+  }).sort((left, right) => sortMode === 'name' ? left.name.localeCompare(right.name, 'zh-CN') : sortMode === 'updated' ? right.updatedAt.localeCompare(left.updatedAt) : sortMode === 'pinned' ? Number(Boolean(right.pinned)) - Number(Boolean(left.pinned)) || left.sortOrder - right.sortOrder : sortMode === 'recent' ? (right.lastAccessAt ?? '').localeCompare(left.lastAccessAt ?? '') : left.sortOrder - right.sortOrder), [targets, groups, tags, activeGroup, query, sortMode, vaultUnlocked, vaultItems]);
   const orphanVaultItems = useMemo(() => vaultItems.filter((item) => !targets.some((target) => target.vaultItemIds.includes(item.id))), [targets, vaultItems]);
 
   const addGroup = async () => {
@@ -95,6 +95,8 @@ export default function App() {
     await db.targets.delete(id);
     await reload();
   };
+  const togglePinned = async (target: Target) => { await db.targets.put({ ...target, pinned: !target.pinned, updatedAt: new Date().toISOString() }); await reload(); };
+  const openWebTarget = async (target: Target) => { if (target.kind !== 'web') return; window.open(String(target.config.url), '_blank', 'noopener,noreferrer'); await db.targets.put({ ...target, lastAccessAt: new Date().toISOString(), updatedAt: target.updatedAt }); await reload(); };
   const editTarget = (target: Target) => { setEditingTarget(target); setEditorOpen(true); };
   const moveTarget = async (target: Target, direction: -1 | 1) => {
     const withinGroup = targets.filter((item) => item.groupId === target.groupId).sort((left, right) => left.sortOrder - right.sortOrder); const index = withinGroup.findIndex((item) => item.id === target.id); const adjacent = withinGroup[index + direction]; if (!adjacent) return;
@@ -181,12 +183,13 @@ export default function App() {
         <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => setRecycledItems(listRecycledVaultItems(vaultRef.current!))}>回收站</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void changeMasterPassword()}>改主密码</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => setImportOpen(true)}>导入</button></div>
       </header>
       <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={vaultUnlocked ? '搜索 Target、秘密标题或账号…' : '搜索名称、连接主机或数据库…'} /></label>
-      <div className="toolbar"><span>{visible.length} 个 Target</span><span><label className="sort-label">排序 <select value={sortMode} onChange={(event) => setSortMode(event.target.value as typeof sortMode)}><option value="manual">手动</option><option value="name">名称</option><option value="updated">最近更新</option></select></label><button aria-pressed={viewMode === 'list'} onClick={() => setViewMode(viewMode === 'cards' ? 'list' : 'cards')}>{viewMode === 'cards' ? '列表' : '卡片'}</button><button onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>新建</button></span></div>
-      {visible.length ? <div className={`grid ${viewMode === 'list' ? 'list-view' : ''}`}>{visible.map((target) => <article className="card" key={target.id} onDoubleClick={() => { if (target.kind === 'web') window.open(String(target.config.url), '_blank', 'noopener,noreferrer'); }}>
+      <div className="toolbar"><span>{visible.length} 个 Target</span><span><label className="sort-label">排序 <select value={sortMode} onChange={(event) => setSortMode(event.target.value as typeof sortMode)}><option value="manual">手动</option><option value="pinned">置顶优先</option><option value="recent">最近访问</option><option value="name">名称</option><option value="updated">最近更新</option></select></label><button aria-pressed={viewMode === 'list'} onClick={() => setViewMode(viewMode === 'cards' ? 'list' : 'cards')}>{viewMode === 'cards' ? '列表' : '卡片'}</button><button onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>新建</button></span></div>
+      {visible.length ? <div className={`grid ${viewMode === 'list' ? 'list-view' : ''}`}>{visible.map((target) => <article className="card" key={target.id} onDoubleClick={() => void openWebTarget(target)}>
         <div className={`kind kind-${target.kind}`}>{target.kind === 'web' ? '↗' : target.kind === 'postgresql' ? '◫' : target.kind === 'redis' ? '◆' : '◇'}</div>
         <div className="card-body"><p className="kind-label">{kinds[target.kind]}</p><h2>{target.name}</h2><p>{target.kind === 'web' ? String(target.config.url ?? '') : Object.values(target.config).filter(Boolean).join(' · ') || '未填写连接资料'}</p></div>
         {target.tagIds.length > 0 && <small>{target.tagIds.map((id) => tags.find((tag) => tag.id === id)?.name).filter(Boolean).join(' · ')}</small>}
         {vaultUnlocked && <button className="link-secret" onClick={() => void linkSecret(target)}>秘密 {target.vaultItemIds.length}</button>}
+        <button aria-label={target.pinned ? `取消置顶 ${target.name}` : `置顶 ${target.name}`} onClick={() => void togglePinned(target)}>{target.pinned ? '★' : '☆'}</button>
         <button className="edit-target" onClick={() => void editTarget(target)}>编辑</button>
         <button onClick={() => void editTags(target)}>标签</button>
         <button onClick={() => void moveTarget(target, -1)}>↑</button><button onClick={() => void moveTarget(target, 1)}>↓</button>

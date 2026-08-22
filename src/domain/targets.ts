@@ -9,6 +9,8 @@ export type Target = {
   sortOrder: number;
   config: Record<string, string | number | boolean>;
   vaultItemIds: string[];
+  pinned: boolean;
+  lastAccessAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -28,6 +30,8 @@ export function createTarget(input: NewTarget): Target {
     sortOrder: input.sortOrder ?? 0,
     config: input.config ?? {},
     vaultItemIds: input.vaultItemIds ?? [],
+    pinned: input.pinned ?? false,
+    lastAccessAt: input.lastAccessAt ?? null,
     createdAt: now,
     updatedAt: now,
   };
