@@ -50,4 +50,15 @@ export function addVaultItem(vault: Kdbx, input: VaultItemInput): string {
   return entry.uuid.toString();
 }
 
+export type VaultItemSummary = { id: string; title: string; username: string };
+export function listVaultItems(vault: Kdbx): VaultItemSummary[] {
+  const read = (value: unknown) => value instanceof ProtectedValue ? value.getText() : typeof value === 'string' ? value : '';
+  return vault.groups.flatMap((group) => group.entries.map((entry) => ({ id: entry.uuid.toString(), title: read(entry.fields.get('Title')), username: read(entry.fields.get('UserName')) })));
+}
+
+export function deleteVaultItem(vault: Kdbx, id: string): boolean {
+  for (const group of vault.groups) { const item = group.entries.find((entry) => entry.uuid.toString() === id); if (item) { vault.createRecycleBin(); vault.remove(item); return true; } }
+  return false;
+}
+
 export function clearPassword(value: string): void { text.encode(value).fill(0); }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addVaultItem, createVault, rekeyVault, unlockVault } from './vault';
+import { addVaultItem, createVault, deleteVaultItem, listVaultItems, rekeyVault, unlockVault } from './vault';
 
 describe('Vault item seam', () => {
   it('stores secret fields inside a password-protected KDBX vault', async () => {
@@ -11,6 +11,14 @@ describe('Vault item seam', () => {
     expect(vault.getDefaultGroup().entries[0]?.fields.get('Password')).toBeDefined();
     expect(Number(vault.header.kdfParameters?.get('M'))).toBe(65536);
     expect(Number(vault.header.kdfParameters?.get('I'))).toBe(3);
+  });
+
+  it('moves deleted Vault Items into the recycle bin', async () => {
+    const vault = await unlockVault(await createVault('test'), 'test');
+    const id = addVaultItem(vault, { title: 'temporary', password: 'x' });
+    expect(listVaultItems(vault)).toEqual([{ id, title: 'temporary', username: '' }]);
+    expect(deleteVaultItem(vault, id)).toBe(true);
+    expect(listVaultItems(vault)).toHaveLength(0);
   });
 
   it('can rekey a portable Vault without changing its entries', async () => {
