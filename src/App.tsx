@@ -138,7 +138,7 @@ export default function App() {
   };
   const lockVault = clearSensitiveState;
   const requestLock = () => { if (vaultDirty && !window.confirm('Vault 有未保存修改。确认锁定将放弃这些修改；取消则保留在当前页面并可重试保存。')) return; lockVault(); };
-  const saveDirtyVault = async () => { try { await persistVault(); } catch (error) { notifyVaultSaveFailure(error); } };
+  const saveDirtyVault = async () => { try { await persistVault(); await reload(); } catch (error) { notifyVaultSaveFailure(error); } };
   const changeMasterPassword = async () => {
     if (!vaultRef.current || !masterPasswordRef.current) return setVaultDialog(true);
     if (vaultDirty) return alert('请先保存或锁定并放弃未保存修改，再修改主密码。');
