@@ -15,6 +15,15 @@ function configureArgon2(): void {
 
 function credentials(password: string): Credentials { return new Credentials(ProtectedValue.fromString(password)); }
 
+function saveVaultInWorker(password: string, xml?: string): Promise<ArrayBuffer> {
+  const worker = new Worker(new URL('./vault-save.worker.ts', import.meta.url), { type: 'module' });
+  return new Promise<ArrayBuffer>((resolve, reject) => {
+    worker.onmessage = ({ data }) => { worker.terminate(); if (data.error) reject(new Error(data.error)); else resolve(data.result); };
+    worker.onerror = () => { worker.terminate(); reject(new Error('Vault save worker failed')); };
+    worker.postMessage({ xml, password });
+  });
+}
+
 /** Reads the unauthenticated KDBX header before any expensive password KDF runs. */
 export function assertVaultKdfParameters(data: ArrayBuffer): void {
   let header: KdbxHeader;
@@ -25,6 +34,7 @@ export function assertVaultKdfParameters(data: ArrayBuffer): void {
 }
 
 export async function createVault(password: string): Promise<ArrayBuffer> {
+  if (typeof Worker !== 'undefined') return saveVaultInWorker(password);
   configureArgon2();
   const vault = Kdbx.create(credentials(password), 'Linkmark Vault');
   vault.setKdf(Consts.KdfId.Argon2id);
@@ -43,12 +53,7 @@ export async function unlockVault(data: ArrayBuffer, password: string): Promise<
 export async function saveVault(vault: Kdbx, password?: string): Promise<ArrayBuffer> {
   if (!password || typeof Worker === 'undefined') return vault.save();
   const xml = await vault.saveXml();
-  const worker = new Worker(new URL('./vault-save.worker.ts', import.meta.url), { type: 'module' });
-  return new Promise<ArrayBuffer>((resolve, reject) => {
-    worker.onmessage = ({ data }) => { worker.terminate(); if (data.error) reject(new Error(data.error)); else resolve(data.result); };
-    worker.onerror = () => { worker.terminate(); reject(new Error('Vault save worker failed')); };
-    worker.postMessage({ xml, password });
-  });
+  return saveVaultInWorker(password, xml);
 }
 
 export async function rekeyVault(data: ArrayBuffer, currentPassword: string, nextPassword: string): Promise<ArrayBuffer> {

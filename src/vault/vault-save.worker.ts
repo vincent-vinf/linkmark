@@ -6,9 +6,10 @@ CryptoEngine.setArgon2Impl(async (password, salt, memory, iterations, length, pa
   return hash.buffer.slice(hash.byteOffset, hash.byteOffset + hash.byteLength);
 });
 
-self.onmessage = async ({ data }: MessageEvent<{ xml: string; password: string }>) => {
+self.onmessage = async ({ data }: MessageEvent<{ xml?: string; password: string }>) => {
   try {
-    const vault = await Kdbx.loadXml(data.xml, new Credentials(ProtectedValue.fromString(data.password)));
+    const credentials = new Credentials(ProtectedValue.fromString(data.password));
+    const vault = data.xml ? await Kdbx.loadXml(data.xml, credentials) : Kdbx.create(credentials, 'Linkmark Vault');
     vault.setKdf(Consts.KdfId.Argon2id);
     vault.header.kdfParameters?.set('M', VarDictionary.ValueType.UInt64, new Int64(64 * 1024 * 1024));
     vault.header.kdfParameters?.set('I', VarDictionary.ValueType.UInt64, new Int64(3));
