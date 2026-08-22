@@ -51,6 +51,7 @@ export default function App() {
     const secretMatch = vaultUnlocked && vaultItems.some((item) => target.vaultItemIds.includes(item.id) && `${item.title} ${item.username}`.toLowerCase().includes(query.toLowerCase()));
     return (!activeGroup || target.groupId === activeGroup) && (words.includes(query.toLowerCase()) || secretMatch);
   }).sort((left, right) => left.sortOrder - right.sortOrder), [targets, activeGroup, query, vaultUnlocked, vaultItems]);
+  const orphanVaultItems = useMemo(() => vaultItems.filter((item) => !targets.some((target) => target.vaultItemIds.includes(item.id))), [targets, vaultItems]);
 
   const addGroup = async () => {
     const name = window.prompt('分组名称')?.trim();
@@ -86,7 +87,7 @@ export default function App() {
     await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() });
     setVaultItems(listVaultItems(vaultRef.current));
   };
-  const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setVaultItems(listVaultItems(vaultRef.current)); };
+  const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); const data = await saveVault(vaultRef.current); const now = new Date().toISOString(); await db.transaction('rw', db.vaults, db.targets, async () => { await db.vaults.put({ id: 'primary', data, updatedAt: now }); await db.targets.bulkPut((await db.targets.toArray()).filter((target) => target.vaultItemIds.includes(id)).map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.filter((itemId) => itemId !== id), updatedAt: now }))); }); setVaultItems(listVaultItems(vaultRef.current)); await reload(); };
   const restoreSecret = async (id: string) => { if (!vaultRef.current) return; restoreVaultItem(vaultRef.current, id); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultItems(listVaultItems(vaultRef.current)); };
   const emptyRecycleBin = async () => { if (!vaultRef.current || !window.confirm('永久删除回收站中的全部秘密？')) return; emptyVaultRecycleBin(vaultRef.current); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setRecycledItems([]); };
   const saveSecret = async (item: VaultItemDetail) => { if (!vaultRef.current || !item.title.trim()) return; updateVaultItem(vaultRef.current, item.id, item); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setVaultItems(listVaultItems(vaultRef.current)); setSelectedVaultItem(null); };
@@ -153,6 +154,7 @@ export default function App() {
         <button className="delete" aria-label={`删除 ${target.name}`} onClick={() => void removeTarget(target.id)}>×</button>
       </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>新建 Target</button></div>}
       {vaultUnlocked && vaultItems.length > 0 && <section className="vault-list"><h2>Vault Items</h2>{vaultItems.filter((item) => `${item.title} ${item.username}`.toLowerCase().includes(query.toLowerCase())).map((item) => <div key={item.id}><button className="vault-item" onClick={() => setSelectedVaultItem(getVaultItem(vaultRef.current!, item.id))}><span>{item.title || '未命名秘密'}</span><small>{item.username}</small></button><button onClick={() => void removeSecret(item.id)}>删除</button></div>)}</section>}
+      {vaultUnlocked && orphanVaultItems.length > 0 && <section className="vault-list"><h2>未关联的秘密</h2>{orphanVaultItems.map((item) => <div key={item.id}><button className="vault-item" onClick={() => setSelectedVaultItem(getVaultItem(vaultRef.current!, item.id))}><span>{item.title || '未命名秘密'}</span><small>{item.username}</small></button><button onClick={() => void removeSecret(item.id)}>删除</button></div>)}</section>}
       {vaultUnlocked && recycledItems.length > 0 && <section className="vault-list"><h2>回收站 <button onClick={() => void emptyRecycleBin()}>清空</button></h2>{recycledItems.map((item, index) => <div key={item.id}><span>已删除秘密 {index + 1}</span><button onClick={() => void restoreSecret(item.id)}>恢复</button></div>)}</section>}
     </section>
     {isEditorOpen && <TargetEditor target={editingTarget} groups={groups} onClose={() => setEditorOpen(false)} onSaved={async () => { setEditorOpen(false); setEditingTarget(null); await reload(); }} />}
