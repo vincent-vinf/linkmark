@@ -10,6 +10,7 @@ import './responsive.css';
 
 const kinds: Record<TargetKind, string> = { web: '网站', postgresql: 'PostgreSQL', redis: 'Redis', generic: '通用' };
 const newId = () => crypto.randomUUID();
+type PasswordRequest = { label: string; resolve: (value: string | null) => void };
 
 export default function App() {
   const [targets, setTargets] = useState<Target[]>([]);
@@ -27,8 +28,10 @@ export default function App() {
   const [vaultItems, setVaultItems] = useState<VaultItemSummary[]>([]);
   const [recycledItems, setRecycledItems] = useState<VaultItemSummary[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [passwordRequest, setPasswordRequest] = useState<PasswordRequest | null>(null);
   const vaultRef = useRef<Kdbx | null>(null);
   const masterPasswordRef = useRef<string | null>(null);
+  const askPassword = (label: string) => new Promise<string | null>((resolve) => setPasswordRequest({ label, resolve }));
 
   const reload = async () => {
     setTargets(await db.targets.orderBy('updatedAt').reverse().toArray());
@@ -75,7 +78,7 @@ export default function App() {
   };
   const addSecret = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
-    const title = window.prompt('秘密条目名称')?.trim(); const username = window.prompt('账号（可留空）'); const password = window.prompt('密码、API Key 或 Token（可留空）'); const notes = window.prompt('备注（可留空）'); const custom = window.prompt('自定义字段，格式为 名称=值，多个用逗号分隔（可留空）');
+    const title = window.prompt('秘密条目名称')?.trim(); const username = window.prompt('账号（可留空）'); const password = await askPassword('密码、API Key 或 Token（可留空）'); const notes = window.prompt('备注（可留空）'); const custom = window.prompt('自定义字段，格式为 名称=值，多个用逗号分隔（可留空）');
     if (!title || password === null || username === null || notes === null || custom === null) return;
     const fields = Object.fromEntries(custom.split(',').map((part) => part.split('=').map((value) => value.trim())).filter(([key, value]) => key && value));
     addVaultItem(vaultRef.current, { title, username, password, notes, fields });
@@ -94,14 +97,14 @@ export default function App() {
   const lockVault = clearSensitiveState;
   const changeMasterPassword = async () => {
     if (!vaultRef.current || !masterPasswordRef.current) return setVaultDialog(true);
-    const next = window.prompt('输入新的主密码'); if (!next) return;
+    const next = await askPassword('输入新的主密码'); if (!next) return;
     if (!window.confirm('主密码将立即更新；忘记新密码将无法恢复 Vault。')) return;
     const data = await rekeyVault(await saveVault(vaultRef.current), masterPasswordRef.current, next);
     await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); vaultRef.current = await unlockVault(data, next); masterPasswordRef.current = next; alert('主密码已更新。请立即导出新的备份。');
   };
   const share = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
-    const password = window.prompt('设置独立分享口令'); if (!password) return;
+    const password = await askPassword('设置独立分享口令'); if (!password) return;
     const currentPassword = masterPasswordRef.current; if (!currentPassword) return lockVault();
     const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current)]);
     const text = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault: await rekeyVault(vault, currentPassword, password) }, password);
@@ -114,7 +117,7 @@ export default function App() {
     const url = URL.createObjectURL(new Blob([encoded], { type: 'text/plain' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `linkmark-backup-${new Date().toISOString().slice(0, 10)}.txt`; anchor.click(); URL.revokeObjectURL(url);
   };
   const importShare = async () => {
-    const text = window.prompt('粘贴加密备份或分享字符串'); const password = window.prompt('输入对应口令'); const nextPassword = window.prompt('设置导入后 Vault 的新主密码'); if (!text || password === null || !nextPassword) return;
+    const text = window.prompt('粘贴加密备份或分享字符串'); const password = await askPassword('输入对应口令'); const nextPassword = await askPassword('设置导入后 Vault 的新主密码'); if (!text || password === null || !nextPassword) return;
     try { const data = await parseBackup(text, password); const replace = window.confirm(`导入预览：${data.targets.length} 个 Target、${data.groups.length} 个分组、${data.tags.length} 个标签。确定替换本地数据；取消则合并。`); if (!replace) { if (!vaultRef.current) return alert('合并导入前必须先解锁当前 Vault。'); const incoming = await unlockVault(data.vault, password); const mapping = mergeVaultItems(vaultRef.current, incoming); const remapped = { ...data, targets: data.targets.map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.map((id) => mapping.get(id) ?? id) })) }; const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, remapped); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current) }); await reload(); alert('已合并导入。'); return; } const vault = await rekeyVault(data.vault, password, nextPassword); await replaceLocalData({ ...data, vault }); lockVault(); setHasVault(true); await reload(); alert('已导入。请使用新主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
   };
 
@@ -151,7 +154,13 @@ export default function App() {
     </section>
     {isEditorOpen && <TargetEditor groups={groups} onClose={() => setEditorOpen(false)} onSaved={async () => { setEditorOpen(false); await reload(); }} />}
     {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password, duration) => { try { const record = await db.vaults.get('primary'); const data = record?.data ?? await createVault(password); const vault = await unlockVault(data, password); const purged = purgeExpiredVaultItems(vault); if (!record || purged) await db.vaults.put({ id: 'primary', data: await saveVault(vault), updatedAt: new Date().toISOString() }); vaultRef.current = vault; masterPasswordRef.current = password; setVaultExpiry(Date.now() + duration); setVaultUnlocked(true); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
+    {passwordRequest && <PasswordPrompt label={passwordRequest.label} onClose={() => { passwordRequest.resolve(null); setPasswordRequest(null); }} onSubmit={(value) => { passwordRequest.resolve(value); setPasswordRequest(null); }} />}
   </main>;
+}
+
+function PasswordPrompt({ label, onClose, onSubmit }: { label: string; onClose: () => void; onSubmit: (value: string) => void }) {
+  const [value, setValue] = useState('');
+  return <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true"><h2>{label}</h2><label>口令<input type="password" autoFocus value={value} onChange={(event) => setValue(event.target.value)} /></label><div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!value} onClick={() => onSubmit(value)}>确认</button></div></section></div>;
 }
 
 function VaultDialog({ hasVault, onClose, onSubmit, error }: { hasVault: boolean; onClose: () => void; onSubmit: (password: string, duration: number) => Promise<void>; error: string }) {
