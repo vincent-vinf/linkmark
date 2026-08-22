@@ -4,7 +4,7 @@ import { createTarget, type Target, type TargetKind, validateWebUrl } from './do
 import { db, replaceLocalData, type Group } from './storage/db';
 import { parseBackup, serializeBackup } from './portability/backup';
 import { mergeMetadata } from './portability/merge';
-import { addVaultItem, createVault, mergeVaultItems, rekeyVault, saveVault, unlockVault } from './vault/vault';
+import { addVaultItem, createVault, listVaultItems, mergeVaultItems, rekeyVault, saveVault, unlockVault } from './vault/vault';
 import './app.css';
 
 const kinds: Record<TargetKind, string> = { web: '网站', postgresql: 'PostgreSQL', redis: 'Redis', generic: '通用' };
@@ -57,6 +57,13 @@ export default function App() {
     addVaultItem(vaultRef.current, { title, password });
     await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() });
   };
+  const linkSecret = async (target: Target) => {
+    if (!vaultRef.current) return setVaultDialog(true);
+    const options = listVaultItems(vaultRef.current); if (!options.length) return alert('请先创建秘密条目。');
+    const value = window.prompt(`输入要关联的秘密 ID：\n${options.map((item) => `${item.id}  ${item.title}`).join('\n')}`)?.trim();
+    if (!value || !options.some((item) => item.id === value)) return;
+    await db.targets.put({ ...target, vaultItemIds: [...new Set([...target.vaultItemIds, value])], updatedAt: new Date().toISOString() }); await reload();
+  };
   const lockVault = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultUnlocked(false); setVaultExpiry(null); };
   const share = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
@@ -92,6 +99,7 @@ export default function App() {
       {visible.length ? <div className="grid">{visible.map((target) => <article className="card" key={target.id}>
         <div className={`kind kind-${target.kind}`}>{target.kind === 'web' ? '↗' : target.kind === 'postgresql' ? '◫' : target.kind === 'redis' ? '◆' : '◇'}</div>
         <div className="card-body"><p className="kind-label">{kinds[target.kind]}</p><h2>{target.name}</h2><p>{target.kind === 'web' ? String(target.config.url ?? '') : Object.values(target.config).filter(Boolean).join(' · ') || '未填写连接资料'}</p></div>
+        {vaultUnlocked && <button className="link-secret" onClick={() => void linkSecret(target)}>秘密 {target.vaultItemIds.length}</button>}
         <button className="delete" aria-label={`删除 ${target.name}`} onClick={() => void removeTarget(target.id)}>×</button>
       </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => setEditorOpen(true)}>新建 Target</button></div>}
     </section>
