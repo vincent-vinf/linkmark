@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import type { Kdbx } from 'kdbxweb';
 import { createTarget, deleteGroup, reorderTargets, type Target, type TargetKind, validateConnectionHost, validateTargetConfig, validateWebUrl } from './domain/targets';
 import { db, replaceLocalData, type Group, type Tag } from './storage/db';
-import { parseBackup, serializeBackup } from './portability/backup';
+import { parseBackup, serializeBackup, type FullBackup } from './portability/backup';
 import { mergeMetadata } from './portability/merge';
 import { addVaultItem, createVault, deleteVaultItem, emptyVaultRecycleBin, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, permanentlyDeleteVaultItem, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, saveVault, unlockVault, updateVaultItem, type VaultItemDetail, type VaultItemSummary } from './vault/vault';
 import './app.css';
@@ -11,6 +11,7 @@ import './responsive.css';
 const kinds: Record<TargetKind, string> = { web: '网站', postgresql: 'PostgreSQL', redis: 'Redis', generic: '通用' };
 const newId = () => crypto.randomUUID();
 type PasswordRequest = { label: string; resolve: (value: string | null) => void };
+type ImportPreview = { data: FullBackup; password: string };
 const parseKeyValueFields = (value: string, delimiter: string | RegExp): Record<string, string> => Object.fromEntries(value.split(delimiter).flatMap((part) => {
   const index = part.indexOf('='); if (index < 1) return [];
   const key = part.slice(0, index).trim(); const fieldValue = part.slice(index + 1).trim();
@@ -55,6 +56,8 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [passwordRequest, setPasswordRequest] = useState<PasswordRequest | null>(null);
   const [selectedVaultItem, setSelectedVaultItem] = useState<VaultItemDetail | null>(null);
+  const [isImportOpen, setImportOpen] = useState(false);
+  const [importPreview, setImportPreview] = useState<ImportPreview | null>(null);
   const vaultRef = useRef<Kdbx | null>(null);
   const masterPasswordRef = useRef<string | null>(null);
   const askPassword = (label: string) => new Promise<string | null>((resolve) => setPasswordRequest({ label, resolve }));
@@ -148,9 +151,17 @@ export default function App() {
     const encoded = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault }, masterPasswordRef.current);
     const url = URL.createObjectURL(new Blob([encoded], { type: 'text/plain' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `linkmark-backup-${new Date().toISOString().slice(0, 10)}.txt`; anchor.click(); URL.revokeObjectURL(url);
   };
-  const importShare = async () => {
-    const text = window.prompt('粘贴加密备份或分享字符串'); const password = await askPassword('输入对应口令'); if (!text || password === null) return;
-    try { const data = await parseBackup(text, password); const nextPassword = data.mode === 'share' ? await askPassword('设置导入后 Vault 的新主密码') : password; if (!nextPassword) return; const replace = window.confirm(`导入预览：${data.targets.length} 个 Target、${data.groups.length} 个分组、${data.tags.length} 个标签。确定替换本地数据；取消则合并。`); if (!replace) { if (!vaultRef.current) return alert('合并导入前必须先解锁当前 Vault。'); const incoming = await unlockVault(data.vault, password); const mapping = mergeVaultItems(vaultRef.current, incoming); const remapped = { ...data, targets: data.targets.map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.map((id) => mapping.get(id) ?? id) })) }; const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, remapped); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current) }); await reload(); alert('已合并导入。'); return; } const vault = data.mode === 'share' ? await rekeyVault(data.vault, password, nextPassword) : data.vault; await unlockVault(vault, nextPassword); await replaceLocalData({ ...data, vault }); lockVault(); setHasVault(true); await reload(); alert(data.mode === 'share' ? '已导入。请使用新主密码解锁 Vault。' : '已恢复。请使用备份主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
+  const inspectImport = async (text: string, password: string) => {
+    const data = await parseBackup(text, password); setImportOpen(false); setImportPreview({ data, password });
+  };
+  const restoreImport = async (nextPassword: string) => {
+    if (!importPreview) return;
+    const { data, password } = importPreview; const localPassword = data.mode === 'share' ? nextPassword : password; const vault = data.mode === 'share' ? await rekeyVault(data.vault, password, localPassword) : data.vault; await unlockVault(vault, localPassword); await replaceLocalData({ ...data, vault }); setImportPreview(null); lockVault(); setHasVault(true); await reload(); alert(data.mode === 'share' ? '已导入。请使用新主密码解锁 Vault。' : '已恢复。请使用备份主密码解锁 Vault。');
+  };
+  const mergeImport = async () => {
+    if (!importPreview) return;
+    if (!vaultRef.current) throw new Error('合并导入前必须先解锁当前 Vault。');
+    const { data, password } = importPreview; const incoming = await unlockVault(data.vault, password); const mapping = mergeVaultItems(vaultRef.current, incoming); const remapped = { ...data, targets: data.targets.map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.map((id) => mapping.get(id) ?? id) })) }; const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, remapped); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current) }); setImportPreview(null); await reload(); alert('已合并导入。');
   };
 
   return <main className="shell">
@@ -167,7 +178,7 @@ export default function App() {
     <section className="content">
       <header>
         <div><button className="mobile-menu" onClick={() => setMenuOpen(!menuOpen)}>☰</button><p className="eyebrow">LOCAL-FIRST WORKSPACE</p><h1>{activeGroup ? groups.find((group) => group.id === activeGroup)?.name : '所有 Targets'}</h1></div>
-        <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => setRecycledItems(listRecycledVaultItems(vaultRef.current!))}>回收站</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void changeMasterPassword()}>改主密码</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => void importShare()}>导入</button></div>
+        <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => setRecycledItems(listRecycledVaultItems(vaultRef.current!))}>回收站</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void changeMasterPassword()}>改主密码</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => setImportOpen(true)}>导入</button></div>
       </header>
       <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={vaultUnlocked ? '搜索 Target、秘密标题或账号…' : '搜索名称、连接主机或数据库…'} /></label>
       <div className="toolbar"><span>{visible.length} 个 Target</span><span><label className="sort-label">排序 <select value={sortMode} onChange={(event) => setSortMode(event.target.value as typeof sortMode)}><option value="manual">手动</option><option value="name">名称</option><option value="updated">最近更新</option></select></label><button aria-pressed={viewMode === 'list'} onClick={() => setViewMode(viewMode === 'cards' ? 'list' : 'cards')}>{viewMode === 'cards' ? '列表' : '卡片'}</button><button onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>新建</button></span></div>
@@ -189,6 +200,8 @@ export default function App() {
     {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password, duration) => { try { const record = await db.vaults.get('primary'); const data = record?.data ?? await createVault(password); const vault = await unlockVault(data, password); const purged = purgeExpiredVaultItems(vault); if (!record || purged) await db.vaults.put({ id: 'primary', data: await saveVault(vault), updatedAt: new Date().toISOString() }); vaultRef.current = vault; masterPasswordRef.current = password; setVaultExpiry(Date.now() + duration); setVaultUnlocked(true); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
     {passwordRequest && <PasswordPrompt label={passwordRequest.label} onClose={() => { passwordRequest.resolve(null); setPasswordRequest(null); }} onSubmit={(value) => { passwordRequest.resolve(value); setPasswordRequest(null); }} />}
     {selectedVaultItem && <VaultItemDialog item={selectedVaultItem} onClose={() => setSelectedVaultItem(null)} onSave={saveSecret} />}
+    {isImportOpen && <ImportDialog onClose={() => setImportOpen(false)} onSubmit={inspectImport} />}
+    {importPreview && <ImportPreviewDialog preview={importPreview.data} onClose={() => setImportPreview(null)} onRestore={restoreImport} onMerge={mergeImport} />}
   </main>;
 }
 
@@ -205,6 +218,21 @@ function PasswordPrompt({ label, onClose, onSubmit }: { label: string; onClose: 
   const [value, setValue] = useState('');
   const dialogRef = useRef<HTMLElement>(null); useModalKeyboard(dialogRef, onClose);
   return <div className="modal-backdrop"><section ref={dialogRef} className="modal" role="dialog" aria-modal="true"><h2>{label}</h2><label>口令<input type="password" autoFocus value={value} onChange={(event) => setValue(event.target.value)} /></label><div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!value} onClick={() => onSubmit(value)}>确认</button></div></section></div>;
+}
+
+function ImportDialog({ onClose, onSubmit }: { onClose: () => void; onSubmit: (text: string, password: string) => Promise<void> }) {
+  const [text, setText] = useState(''); const [password, setPassword] = useState(''); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null); useModalKeyboard(dialogRef, onClose);
+  const inspect = async () => { setBusy(true); setError(''); try { await onSubmit(text.trim(), password); } catch (cause) { setError(cause instanceof Error ? cause.message : '无法读取导入包。'); } finally { setBusy(false); } };
+  return <div className="modal-backdrop"><section ref={dialogRef} className="modal" role="dialog" aria-modal="true" aria-label="导入加密数据"><div className="modal-heading"><div><p className="eyebrow">ENCRYPTED IMPORT</p><h2>导入备份或分享</h2></div><button onClick={onClose}>×</button></div><label>加密字符串<textarea autoFocus value={text} onChange={(event) => setText(event.target.value)} placeholder="粘贴 Linkmark 导出的完整加密字符串" /></label><label>备份主密码或分享口令<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>{error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!text.trim() || !password || busy} onClick={() => void inspect()}>{busy ? '正在验证…' : '验证并预览'}</button></div></section></div>;
+}
+
+function ImportPreviewDialog({ preview, onClose, onRestore, onMerge }: { preview: FullBackup; onClose: () => void; onRestore: (nextPassword: string) => Promise<void>; onMerge: () => Promise<void> }) {
+  const [newPassword, setNewPassword] = useState(''); const [confirmation, setConfirmation] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
+  const dialogRef = useRef<HTMLElement>(null); useModalKeyboard(dialogRef, onClose);
+  const restore = async () => { const password = preview.mode === 'share' ? newPassword : ''; if (preview.mode === 'share' && (!password || password !== confirmation)) return setError('请两次输入相同的新主密码。'); setBusy(true); setError(''); try { await onRestore(password); } catch (cause) { setError(cause instanceof Error ? cause.message : '恢复失败。'); } finally { setBusy(false); } };
+  const merge = async () => { setBusy(true); setError(''); try { await onMerge(); } catch (cause) { setError(cause instanceof Error ? cause.message : '合并失败。'); } finally { setBusy(false); } };
+  return <div className="modal-backdrop"><section ref={dialogRef} className="modal" role="dialog" aria-modal="true" aria-label="导入预览"><div className="modal-heading"><div><p className="eyebrow">IMPORT PREVIEW</p><h2>{preview.mode === 'share' ? '加密分享包' : '完整备份'}</h2></div><button onClick={onClose}>×</button></div><p>将导入 {preview.targets.length} 个 Target、{preview.groups.length} 个分组、{preview.tags.length} 个标签及加密 Vault。</p>{preview.mode === 'share' && <><label>导入后的新主密码<input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} /></label><label>确认新主密码<input type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} /></label><p className="error">分享口令不会成为本机长期主密码。</p></>}{error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={onClose}>取消</button><button disabled={busy} onClick={() => void merge()}>合并到当前数据</button><button className="primary" disabled={busy || (preview.mode === 'share' && (!newPassword || newPassword !== confirmation))} onClick={() => void restore()}>{busy ? '处理中…' : '替换并恢复'}</button></div></section></div>;
 }
 
 function VaultDialog({ hasVault, onClose, onSubmit, error }: { hasVault: boolean; onClose: () => void; onSubmit: (password: string, duration: number) => Promise<void>; error: string }) {
