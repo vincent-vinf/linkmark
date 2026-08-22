@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addVaultItem, createVault, deleteVaultItem, emptyVaultRecycleBin, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, unlockVault } from './vault';
+import { addVaultItem, createVault, deleteVaultItem, emptyVaultRecycleBin, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, unlockVault, updateVaultItem } from './vault';
 
 describe('Vault item seam', () => {
   it('stores secret fields inside a password-protected KDBX vault', async () => {
@@ -49,5 +49,13 @@ describe('Vault item seam', () => {
     const rekeyed = await rekeyVault(await vault.save(), 'old', 'new');
     await expect(unlockVault(rekeyed, 'old')).rejects.toBeDefined();
     expect((await unlockVault(rekeyed, 'new')).getDefaultGroup().entries).toHaveLength(1);
+  });
+
+  it('reads and updates an encrypted Vault Item without exposing it in Target storage', async () => {
+    const vault = await unlockVault(await createVault('test'), 'test');
+    const id = addVaultItem(vault, { title: 'Redis', username: 'default', password: 'old', notes: 'private', fields: { Token: 'one' } });
+    expect(getVaultItem(vault, id)).toMatchObject({ title: 'Redis', username: 'default', password: 'old', notes: 'private', fields: { Token: 'one' } });
+    expect(updateVaultItem(vault, id, { title: 'Redis prod', username: 'admin', password: 'new', fields: { Token: 'two' } })).toBe(true);
+    expect(getVaultItem(vault, id)).toMatchObject({ title: 'Redis prod', username: 'admin', password: 'new', notes: '', fields: { Token: 'two' } });
   });
 });

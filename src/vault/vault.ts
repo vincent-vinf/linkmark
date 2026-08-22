@@ -51,9 +51,37 @@ export function addVaultItem(vault: Kdbx, input: VaultItemInput): string {
 }
 
 export type VaultItemSummary = { id: string; title: string; username: string };
+export type VaultItemDetail = VaultItemSummary & { password: string; notes: string; fields: Record<string, string> };
+const standardFields = new Set(['Title', 'UserName', 'Password', 'Notes']);
+const readField = (value: unknown): string => value instanceof ProtectedValue ? value.getText() : typeof value === 'string' ? value : '';
 export function listVaultItems(vault: Kdbx): VaultItemSummary[] {
-  const read = (value: unknown) => value instanceof ProtectedValue ? value.getText() : typeof value === 'string' ? value : '';
-  return vault.groups.flatMap((group) => group.entries.map((entry) => ({ id: entry.uuid.toString(), title: read(entry.fields.get('Title')), username: read(entry.fields.get('UserName')) })));
+  return vault.groups.flatMap((group) => group.entries.map((entry) => ({ id: entry.uuid.toString(), title: readField(entry.fields.get('Title')), username: readField(entry.fields.get('UserName')) })));
+}
+
+export function getVaultItem(vault: Kdbx, id: string): VaultItemDetail | null {
+  for (const group of vault.groups) {
+    const entry = group.entries.find((item) => item.uuid.toString() === id);
+    if (!entry) continue;
+    const fields = Object.fromEntries([...entry.fields.entries()].filter(([name]) => !standardFields.has(name)).map(([name, value]) => [name, readField(value)]));
+    return { id, title: readField(entry.fields.get('Title')), username: readField(entry.fields.get('UserName')), password: readField(entry.fields.get('Password')), notes: readField(entry.fields.get('Notes')), fields };
+  }
+  return null;
+}
+
+export function updateVaultItem(vault: Kdbx, id: string, input: VaultItemInput): boolean {
+  for (const group of vault.groups) {
+    const entry = group.entries.find((item) => item.uuid.toString() === id);
+    if (!entry) continue;
+    entry.fields.clear();
+    entry.fields.set('Title', input.title);
+    if (input.username) entry.fields.set('UserName', input.username);
+    if (input.password) entry.fields.set('Password', ProtectedValue.fromString(input.password));
+    if (input.notes) entry.fields.set('Notes', ProtectedValue.fromString(input.notes));
+    for (const [name, value] of Object.entries(input.fields ?? {})) if (name.trim() && value) entry.fields.set(name.trim(), ProtectedValue.fromString(value));
+    entry.times.update();
+    return true;
+  }
+  return false;
 }
 
 export function deleteVaultItem(vault: Kdbx, id: string): boolean {

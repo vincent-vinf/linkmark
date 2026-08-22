@@ -4,7 +4,7 @@ import { createTarget, deleteGroup, reorderTargets, type Target, type TargetKind
 import { db, replaceLocalData, type Group, type Tag } from './storage/db';
 import { parseBackup, serializeBackup } from './portability/backup';
 import { mergeMetadata } from './portability/merge';
-import { addVaultItem, createVault, deleteVaultItem, emptyVaultRecycleBin, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, saveVault, unlockVault, type VaultItemSummary } from './vault/vault';
+import { addVaultItem, createVault, deleteVaultItem, emptyVaultRecycleBin, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, saveVault, unlockVault, updateVaultItem, type VaultItemDetail, type VaultItemSummary } from './vault/vault';
 import './app.css';
 import './responsive.css';
 
@@ -29,6 +29,7 @@ export default function App() {
   const [recycledItems, setRecycledItems] = useState<VaultItemSummary[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [passwordRequest, setPasswordRequest] = useState<PasswordRequest | null>(null);
+  const [selectedVaultItem, setSelectedVaultItem] = useState<VaultItemDetail | null>(null);
   const vaultRef = useRef<Kdbx | null>(null);
   const masterPasswordRef = useRef<string | null>(null);
   const askPassword = (label: string) => new Promise<string | null>((resolve) => setPasswordRequest({ label, resolve }));
@@ -40,14 +41,15 @@ export default function App() {
   };
   useEffect(() => { void reload(); void db.vaults.get('primary').then((record) => setHasVault(Boolean(record))); }, []);
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('linkmark-theme', theme); }, [theme]);
-  const clearSensitiveState = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultItems([]); setRecycledItems([]); setVaultUnlocked(false); setVaultExpiry(null); };
+  const clearSensitiveState = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultItems([]); setRecycledItems([]); setSelectedVaultItem(null); setVaultUnlocked(false); setVaultExpiry(null); };
   useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(clearSensitiveState, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry]);
   useEffect(() => { const clear = () => { vaultRef.current = null; masterPasswordRef.current = null; }; window.addEventListener('pagehide', clear); return () => window.removeEventListener('pagehide', clear); }, []);
 
   const visible = useMemo(() => targets.filter((target) => {
     const words = `${target.name} ${target.kind} ${Object.values(target.config).join(' ')}`.toLowerCase();
-    return (!activeGroup || target.groupId === activeGroup) && words.includes(query.toLowerCase());
-  }).sort((left, right) => left.sortOrder - right.sortOrder), [targets, activeGroup, query]);
+    const secretMatch = vaultUnlocked && vaultItems.some((item) => target.vaultItemIds.includes(item.id) && `${item.title} ${item.username}`.toLowerCase().includes(query.toLowerCase()));
+    return (!activeGroup || target.groupId === activeGroup) && (words.includes(query.toLowerCase()) || secretMatch);
+  }).sort((left, right) => left.sortOrder - right.sortOrder), [targets, activeGroup, query, vaultUnlocked, vaultItems]);
 
   const addGroup = async () => {
     const name = window.prompt('分组名称')?.trim();
@@ -89,6 +91,7 @@ export default function App() {
   const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setVaultItems(listVaultItems(vaultRef.current)); };
   const restoreSecret = async (id: string) => { if (!vaultRef.current) return; restoreVaultItem(vaultRef.current, id); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultItems(listVaultItems(vaultRef.current)); };
   const emptyRecycleBin = async () => { if (!vaultRef.current || !window.confirm('永久删除回收站中的全部秘密？')) return; emptyVaultRecycleBin(vaultRef.current); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setRecycledItems([]); };
+  const saveSecret = async (item: VaultItemDetail) => { if (!vaultRef.current || !item.title.trim()) return; updateVaultItem(vaultRef.current, item.id, item); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setVaultItems(listVaultItems(vaultRef.current)); setSelectedVaultItem(null); };
   const linkSecret = async (target: Target) => {
     if (!vaultRef.current) return setVaultDialog(true);
     const options = listVaultItems(vaultRef.current); if (!options.length) return alert('请先创建秘密条目。');
@@ -139,7 +142,7 @@ export default function App() {
         <div><button className="mobile-menu" onClick={() => setMenuOpen(!menuOpen)}>☰</button><p className="eyebrow">LOCAL-FIRST WORKSPACE</p><h1>{activeGroup ? groups.find((group) => group.id === activeGroup)?.name : '所有 Targets'}</h1></div>
         <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => setRecycledItems(listRecycledVaultItems(vaultRef.current!))}>回收站</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void changeMasterPassword()}>改主密码</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => void importShare()}>导入</button></div>
       </header>
-      <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索名称、连接主机或数据库…" /></label>
+      <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={vaultUnlocked ? '搜索 Target、秘密标题或账号…' : '搜索名称、连接主机或数据库…'} /></label>
       <div className="toolbar"><span>{visible.length} 个 Target</span><button onClick={() => setEditorOpen(true)}>新建</button></div>
       {visible.length ? <div className="grid">{visible.map((target) => <article className="card" key={target.id} onDoubleClick={() => { if (target.kind === 'web') window.open(String(target.config.url), '_blank', 'noopener,noreferrer'); }}>
         <div className={`kind kind-${target.kind}`}>{target.kind === 'web' ? '↗' : target.kind === 'postgresql' ? '◫' : target.kind === 'redis' ? '◆' : '◇'}</div>
@@ -151,13 +154,22 @@ export default function App() {
         <button onClick={() => void moveTarget(target, -1)}>↑</button><button onClick={() => void moveTarget(target, 1)}>↓</button>
         <button className="delete" aria-label={`删除 ${target.name}`} onClick={() => void removeTarget(target.id)}>×</button>
       </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => setEditorOpen(true)}>新建 Target</button></div>}
-      {vaultUnlocked && vaultItems.length > 0 && <section className="vault-list"><h2>Vault Items</h2>{vaultItems.map((item, index) => <div key={item.id}><span>秘密条目 {index + 1}</span><button onClick={() => void removeSecret(item.id)}>删除</button></div>)}</section>}
+      {vaultUnlocked && vaultItems.length > 0 && <section className="vault-list"><h2>Vault Items</h2>{vaultItems.filter((item) => `${item.title} ${item.username}`.toLowerCase().includes(query.toLowerCase())).map((item) => <div key={item.id}><button className="vault-item" onClick={() => setSelectedVaultItem(getVaultItem(vaultRef.current!, item.id))}><span>{item.title || '未命名秘密'}</span><small>{item.username}</small></button><button onClick={() => void removeSecret(item.id)}>删除</button></div>)}</section>}
       {vaultUnlocked && recycledItems.length > 0 && <section className="vault-list"><h2>回收站 <button onClick={() => void emptyRecycleBin()}>清空</button></h2>{recycledItems.map((item, index) => <div key={item.id}><span>已删除秘密 {index + 1}</span><button onClick={() => void restoreSecret(item.id)}>恢复</button></div>)}</section>}
     </section>
     {isEditorOpen && <TargetEditor groups={groups} onClose={() => setEditorOpen(false)} onSaved={async () => { setEditorOpen(false); await reload(); }} />}
     {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password, duration) => { try { const record = await db.vaults.get('primary'); const data = record?.data ?? await createVault(password); const vault = await unlockVault(data, password); const purged = purgeExpiredVaultItems(vault); if (!record || purged) await db.vaults.put({ id: 'primary', data: await saveVault(vault), updatedAt: new Date().toISOString() }); vaultRef.current = vault; masterPasswordRef.current = password; setVaultExpiry(Date.now() + duration); setVaultUnlocked(true); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
     {passwordRequest && <PasswordPrompt label={passwordRequest.label} onClose={() => { passwordRequest.resolve(null); setPasswordRequest(null); }} onSubmit={(value) => { passwordRequest.resolve(value); setPasswordRequest(null); }} />}
+    {selectedVaultItem && <VaultItemDialog item={selectedVaultItem} onClose={() => setSelectedVaultItem(null)} onSave={saveSecret} />}
   </main>;
+}
+
+function VaultItemDialog({ item, onClose, onSave }: { item: VaultItemDetail; onClose: () => void; onSave: (item: VaultItemDetail) => Promise<void> }) {
+  const [draft, setDraft] = useState(item); const [reveal, setReveal] = useState(false);
+  const set = (key: keyof VaultItemDetail, value: string) => setDraft((current) => ({ ...current, [key]: value }));
+  const copy = async (value: string) => { try { await navigator.clipboard.writeText(value); } catch { alert('无法写入剪贴板，请检查浏览器权限。'); } };
+  const customText = Object.entries(draft.fields).map(([key, value]) => `${key}=${value}`).join('\n');
+  return <div className="modal-backdrop"><section className="modal vault-detail" role="dialog" aria-modal="true" aria-label="编辑秘密条目"><div className="modal-heading"><div><p className="eyebrow">ENCRYPTED VAULT ITEM</p><h2>秘密条目</h2></div><button onClick={onClose}>×</button></div><label>名称<input autoFocus value={draft.title} onChange={(event) => set('title', event.target.value)} /></label><label>账号<div className="copy-field"><input value={draft.username} onChange={(event) => set('username', event.target.value)} /><button disabled={!draft.username} onClick={() => void copy(draft.username)}>复制</button></div></label><label>密码 / API Key / Token<div className="copy-field"><input type={reveal ? 'text' : 'password'} value={draft.password} onChange={(event) => set('password', event.target.value)} /><button onClick={() => setReveal(!reveal)}>{reveal ? '隐藏' : '显示'}</button><button disabled={!draft.password} onClick={() => void copy(draft.password)}>复制</button></div></label><label>备注<textarea value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></label><label>自定义字段（每行 名称=值）<textarea value={customText} onChange={(event) => setDraft((current) => ({ ...current, fields: Object.fromEntries(event.target.value.split('\n').map((line) => line.split('=').map((part) => part.trim())).filter(([key, value]) => key && value) ) }))} /></label><div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!draft.title.trim()} onClick={() => void onSave(draft)}>保存</button></div></section></div>;
 }
 
 function PasswordPrompt({ label, onClose, onSubmit }: { label: string; onClose: () => void; onSubmit: (value: string) => void }) {

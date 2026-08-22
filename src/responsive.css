@@ -4,3 +4,14 @@
   .mobile-menu { display: inline-block !important; }
 }
 .mobile-menu { display: none; }
+
+.modal textarea { padding: 11px; border-radius: 9px; border: 1px solid #314462; background: #0c1525; color: #eff4ff; outline-color: #82f5c4; min-height: 78px; resize: vertical; }
+.copy-field { display: flex; gap: 7px; }
+.copy-field input { min-width: 0; flex: 1; }
+.copy-field button, .vault-list button { border: 1px solid #314462; background: #15243c; color: inherit; border-radius: 8px; padding: 7px 9px; }
+.vault-list { margin-top: 28px; border: 1px solid #2a3b59; background: #131f35; border-radius: 14px; padding: 18px; }
+.vault-list h2 { font-size: 16px; margin: 0 0 12px; }
+.vault-list > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid #2a3b59; }
+.vault-item { display: grid; text-align: left; gap: 3px; flex: 1; }
+.vault-item small { color: #92a1ba; }
+[data-theme=light] .vault-list { background: #fff; color: #17233a; border-color: #d7e0ed; }
