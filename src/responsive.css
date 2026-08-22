@@ -5,6 +5,8 @@
 }
 .mobile-menu { display: none; }
 
+:where(button, input, select, textarea):focus-visible { outline: 3px solid #82f5c4; outline-offset: 2px; }
+
 .modal textarea { padding: 11px; border-radius: 9px; border: 1px solid #314462; background: #0c1525; color: #eff4ff; outline-color: #82f5c4; min-height: 78px; resize: vertical; }
 .copy-field { display: flex; gap: 7px; }
 .copy-field input { min-width: 0; flex: 1; }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import type { Kdbx } from 'kdbxweb';
 import { createTarget, deleteGroup, reorderTargets, type Target, type TargetKind, validateConnectionHost, validateTargetConfig, validateWebUrl } from './domain/targets';
 import { db, replaceLocalData, type Group, type Tag } from './storage/db';
@@ -16,6 +16,23 @@ const parseKeyValueFields = (value: string, delimiter: string | RegExp): Record<
   const key = part.slice(0, index).trim(); const fieldValue = part.slice(index + 1).trim();
   return key && fieldValue ? [[key, fieldValue]] : [];
 }));
+
+function useModalKeyboard(dialogRef: RefObject<HTMLElement>, onClose: () => void) {
+  useEffect(() => {
+    const dialog = dialogRef.current; if (!dialog) return;
+    const focusable = () => [...dialog.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+    focusable()[0]?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onClose(); return; }
+      if (event.key !== 'Tab') return;
+      const items = focusable(); if (!items.length) return;
+      const first = items[0]!; const last = items.at(-1)!;
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    dialog.addEventListener('keydown', onKeyDown); return () => dialog.removeEventListener('keydown', onKeyDown);
+  }, [dialogRef, onClose]);
+}
 
 export default function App() {
   const [targets, setTargets] = useState<Target[]>([]);
@@ -175,27 +192,31 @@ export default function App() {
 
 function VaultItemDialog({ item, onClose, onSave }: { item: VaultItemDetail; onClose: () => void; onSave: (item: VaultItemDetail) => Promise<void> }) {
   const [draft, setDraft] = useState(item); const [reveal, setReveal] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null); useModalKeyboard(dialogRef, onClose);
   const set = (key: keyof VaultItemDetail, value: string) => setDraft((current) => ({ ...current, [key]: value }));
   const copy = async (value: string) => { try { await navigator.clipboard.writeText(value); } catch { alert('无法写入剪贴板，请检查浏览器权限。'); } };
   const customText = Object.entries(draft.fields).map(([key, value]) => `${key}=${value}`).join('\n');
-  return <div className="modal-backdrop"><section className="modal vault-detail" role="dialog" aria-modal="true" aria-label="编辑秘密条目"><div className="modal-heading"><div><p className="eyebrow">ENCRYPTED VAULT ITEM</p><h2>秘密条目</h2></div><button onClick={onClose}>×</button></div><label>名称<input autoFocus value={draft.title} onChange={(event) => set('title', event.target.value)} /></label><label>账号<div className="copy-field"><input value={draft.username} onChange={(event) => set('username', event.target.value)} /><button disabled={!draft.username} onClick={() => void copy(draft.username)}>复制</button></div></label><label>密码 / API Key / Token<div className="copy-field"><input type={reveal ? 'text' : 'password'} value={draft.password} onChange={(event) => set('password', event.target.value)} /><button onClick={() => setReveal(!reveal)}>{reveal ? '隐藏' : '显示'}</button><button disabled={!draft.password} onClick={() => void copy(draft.password)}>复制</button></div></label><label>备注<textarea value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></label><label>自定义字段（每行 名称=值）<textarea value={customText} onChange={(event) => setDraft((current) => ({ ...current, fields: parseKeyValueFields(event.target.value, '\n') }))} /></label><div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!draft.title.trim()} onClick={() => void onSave(draft)}>保存</button></div></section></div>;
+  return <div className="modal-backdrop"><section ref={dialogRef} className="modal vault-detail" role="dialog" aria-modal="true" aria-label="编辑秘密条目"><div className="modal-heading"><div><p className="eyebrow">ENCRYPTED VAULT ITEM</p><h2>秘密条目</h2></div><button onClick={onClose}>×</button></div><label>名称<input autoFocus value={draft.title} onChange={(event) => set('title', event.target.value)} /></label><label>账号<div className="copy-field"><input value={draft.username} onChange={(event) => set('username', event.target.value)} /><button disabled={!draft.username} onClick={() => void copy(draft.username)}>复制</button></div></label><label>密码 / API Key / Token<div className="copy-field"><input type={reveal ? 'text' : 'password'} value={draft.password} onChange={(event) => set('password', event.target.value)} /><button onClick={() => setReveal(!reveal)}>{reveal ? '隐藏' : '显示'}</button><button disabled={!draft.password} onClick={() => void copy(draft.password)}>复制</button></div></label><label>备注<textarea value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></label><label>自定义字段（每行 名称=值）<textarea value={customText} onChange={(event) => setDraft((current) => ({ ...current, fields: parseKeyValueFields(event.target.value, '\n') }))} /></label><div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!draft.title.trim()} onClick={() => void onSave(draft)}>保存</button></div></section></div>;
 }
 
 function PasswordPrompt({ label, onClose, onSubmit }: { label: string; onClose: () => void; onSubmit: (value: string) => void }) {
   const [value, setValue] = useState('');
-  return <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true"><h2>{label}</h2><label>口令<input type="password" autoFocus value={value} onChange={(event) => setValue(event.target.value)} /></label><div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!value} onClick={() => onSubmit(value)}>确认</button></div></section></div>;
+  const dialogRef = useRef<HTMLElement>(null); useModalKeyboard(dialogRef, onClose);
+  return <div className="modal-backdrop"><section ref={dialogRef} className="modal" role="dialog" aria-modal="true"><h2>{label}</h2><label>口令<input type="password" autoFocus value={value} onChange={(event) => setValue(event.target.value)} /></label><div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!value} onClick={() => onSubmit(value)}>确认</button></div></section></div>;
 }
 
 function VaultDialog({ hasVault, onClose, onSubmit, error }: { hasVault: boolean; onClose: () => void; onSubmit: (password: string, duration: number) => Promise<void>; error: string }) {
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [duration, setDuration] = useState(300_000);
-  return <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true"><div className="modal-heading"><div><p className="eyebrow">ENCRYPTED VAULT</p><h2>{hasVault ? '解锁 Vault' : '创建 Vault'}</h2></div><button onClick={onClose}>×</button></div><label>主密码<input type="password" autoFocus value={password} onChange={(event) => setPassword(event.target.value)} /></label>{!hasVault && <><label>确认主密码<input type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} /></label><p className="error">主密码无法找回。创建后请立即导出加密备份。</p></>}<label>免密时长<select value={duration} onChange={(event) => setDuration(Number(event.target.value))}><option value={300000}>5 分钟</option><option value={1800000}>30 分钟</option><option value={7200000}>2 小时</option><option value={86400000}>24 小时</option><option value={604800000}>7 天</option></select></label>{error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!password || (!hasVault && password !== confirmation)} onClick={() => void onSubmit(password, duration)}>{hasVault ? '解锁' : '创建'}</button></div></section></div>;
+  const dialogRef = useRef<HTMLElement>(null); useModalKeyboard(dialogRef, onClose);
+  return <div className="modal-backdrop"><section ref={dialogRef} className="modal" role="dialog" aria-modal="true"><div className="modal-heading"><div><p className="eyebrow">ENCRYPTED VAULT</p><h2>{hasVault ? '解锁 Vault' : '创建 Vault'}</h2></div><button onClick={onClose}>×</button></div><label>主密码<input type="password" autoFocus value={password} onChange={(event) => setPassword(event.target.value)} /></label>{!hasVault && <><label>确认主密码<input type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} /></label><p className="error">主密码无法找回。创建后请立即导出加密备份。</p></>}<label>免密时长<select value={duration} onChange={(event) => setDuration(Number(event.target.value))}><option value={300000}>5 分钟</option><option value={1800000}>30 分钟</option><option value={7200000}>2 小时</option><option value={86400000}>24 小时</option><option value={604800000}>7 天</option></select></label>{error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!password || (!hasVault && password !== confirmation)} onClick={() => void onSubmit(password, duration)}>{hasVault ? '解锁' : '创建'}</button></div></section></div>;
 }
 
 function TargetEditor({ target, groups, onClose, onSaved }: { target: Target | null; groups: Group[]; onClose: () => void; onSaved: () => Promise<void> }) {
   const config = target?.config ?? {};
   const [name, setName] = useState(target?.name ?? ''); const [kind, setKind] = useState<TargetKind>(target?.kind ?? 'web'); const [address, setAddress] = useState(String(config.url ?? '')); const [host, setHost] = useState(String(config.host ?? '')); const [port, setPort] = useState(String(config.port ?? '')); const [database, setDatabase] = useState(String(config.database ?? '')); const [sslMode, setSslMode] = useState(String(config.sslMode ?? 'prefer')); const [tls, setTls] = useState(Boolean(config.tls)); const [genericFields, setGenericFields] = useState(() => Object.entries(config).map(([key, value]) => `${key}=${value}`).join('\n')); const [groupId, setGroupId] = useState(target?.groupId ?? ''); const [error, setError] = useState('');
+  const dialogRef = useRef<HTMLElement>(null); useModalKeyboard(dialogRef, onClose);
   const save = async () => {
     if (!name.trim()) return setError('请输入名称。');
     if (kind === 'web' && !validateWebUrl(address)) return setError('网站地址必须是 HTTP 或 HTTPS URL。');
@@ -208,7 +229,7 @@ function TargetEditor({ target, groups, onClose, onSaved }: { target: Target | n
     await db.targets.put(next);
     await onSaved();
   };
-  return <div className="modal-backdrop" role="presentation"><section className="modal" role="dialog" aria-modal="true" aria-label={target ? '编辑 Target' : '新建 Target'}><div className="modal-heading"><div><p className="eyebrow">{target ? 'EDIT TARGET' : 'NEW TARGET'}</p><h2>{target ? '编辑入口' : '添加入口'}</h2></div><button onClick={onClose}>×</button></div>
+  return <div className="modal-backdrop" role="presentation"><section ref={dialogRef} className="modal" role="dialog" aria-modal="true" aria-label={target ? '编辑 Target' : '新建 Target'}><div className="modal-heading"><div><p className="eyebrow">{target ? 'EDIT TARGET' : 'NEW TARGET'}</p><h2>{target ? '编辑入口' : '添加入口'}</h2></div><button onClick={onClose}>×</button></div>
     <label>名称<input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="例如：生产数据库" /></label>
     <label>类型<select value={kind} onChange={(event) => setKind(event.target.value as TargetKind)}>{Object.entries(kinds).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
     {kind === 'web' ? <label>URL<input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="https://example.com" /></label> : kind === 'generic' ? <label>非敏感字段（每行 名称=值）<textarea value={genericFields} onChange={(event) => setGenericFields(event.target.value)} placeholder="host=example.com&#10;environment=production" /></label> : <><label>主机<input value={host} onChange={(event) => setHost(event.target.value)} placeholder="db.example.com" /></label><label>端口<input inputMode="numeric" value={port} onChange={(event) => setPort(event.target.value)} placeholder={kind === 'postgresql' ? '5432' : '6379'} /></label><label>{kind === 'postgresql' ? '数据库' : '数据库编号'}<input value={database} onChange={(event) => setDatabase(event.target.value)} /></label>{kind === 'postgresql' ? <label>SSL 模式<select value={sslMode} onChange={(event) => setSslMode(event.target.value)}><option value="disable">禁用</option><option value="prefer">优先</option><option value="require">要求</option><option value="verify-ca">验证 CA</option><option value="verify-full">完整验证</option></select></label> : <label className="checkbox"><input type="checkbox" checked={tls} onChange={(event) => setTls(event.target.checked)} /> 使用 TLS</label>}</>}
