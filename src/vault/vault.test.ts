@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { addVaultItem, assertVaultKdfParameters, createVault, deleteVaultItem, emptyVaultRecycleBin, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, permanentlyDeleteVaultItem, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, saveVault, unlockVault, updateVaultItem } from './vault';
+import { addVaultItem, assertVaultKdfParameters, createVault, deleteVaultItem, emptyVaultRecycleBin, ensureLinkmarkStructure, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, permanentlyDeleteVaultItem, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, saveVault, unlockVault, updateVaultItem } from './vault';
 
 describe('Vault item seam', () => {
+  it('creates fixed encrypted partitions for all Linkmark records', async () => {
+    const vault = await unlockVault(await createVault('test'), 'test');
+    ensureLinkmarkStructure(vault);
+    expect(vault.getDefaultGroup().groups.map((group) => group.name).sort()).toEqual(['入口', '密钥', '回收站', '应用元数据'].sort());
+  });
   it('stores secret fields inside a password-protected KDBX vault', async () => {
     const data = await createVault('correct horse battery staple');
     const vault = await unlockVault(data, 'correct horse battery staple');

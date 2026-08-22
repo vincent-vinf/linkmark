@@ -3,6 +3,16 @@ import { deriveArgon2id } from '../crypto/argon2';
 
 const text = new TextEncoder();
 let configured = false;
+export const linkmarkPartitions = ['入口', '密钥', '回收站', '应用元数据'] as const;
+
+/** Ensures every user record stays in one encrypted KDBX structure. */
+export function ensureLinkmarkStructure(vault: Kdbx): void {
+  const root = vault.getDefaultGroup();
+  vault.createRecycleBin();
+  const recycleBin = vault.meta.recycleBinUuid ? vault.getGroup(vault.meta.recycleBinUuid) : undefined;
+  if (recycleBin) recycleBin.name = '回收站';
+  for (const name of linkmarkPartitions.filter((name) => name !== '回收站')) if (!root.groups.some((group) => group.name === name)) vault.createGroup(root, name);
+}
 
 function configureArgon2(): void {
   if (configured) return;
