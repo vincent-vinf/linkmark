@@ -3,7 +3,7 @@ import type { Kdbx } from 'kdbxweb';
 import { createTarget, type Target, type TargetKind, validateWebUrl } from './domain/targets';
 import { db, replaceLocalData, type Group } from './storage/db';
 import { parseBackup, serializeBackup } from './portability/backup';
-import { addVaultItem, createVault, saveVault, unlockVault } from './vault/vault';
+import { addVaultItem, createVault, rekeyVault, saveVault, unlockVault } from './vault/vault';
 import './app.css';
 
 const kinds: Record<TargetKind, string> = { web: '网站', postgresql: 'PostgreSQL', redis: 'Redis', generic: '通用' };
@@ -22,6 +22,7 @@ export default function App() {
   const [vaultUnlocked, setVaultUnlocked] = useState(false);
   const [vaultExpiry, setVaultExpiry] = useState<number | null>(null);
   const vaultRef = useRef<Kdbx | null>(null);
+  const masterPasswordRef = useRef<string | null>(null);
 
   const reload = async () => {
     setTargets(await db.targets.orderBy('updatedAt').reverse().toArray());
@@ -29,7 +30,7 @@ export default function App() {
   };
   useEffect(() => { void reload(); void db.vaults.get('primary').then((record) => setHasVault(Boolean(record))); }, []);
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
-  useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(() => { vaultRef.current = null; setVaultUnlocked(false); setVaultExpiry(null); }, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry]);
+  useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(() => { vaultRef.current = null; masterPasswordRef.current = null; setVaultUnlocked(false); setVaultExpiry(null); }, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry]);
 
   const visible = useMemo(() => targets.filter((target) => {
     const words = `${target.name} ${target.kind} ${Object.values(target.config).join(' ')}`.toLowerCase();
@@ -55,17 +56,18 @@ export default function App() {
     addVaultItem(vaultRef.current, { title, password });
     await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() });
   };
-  const lockVault = () => { vaultRef.current = null; setVaultUnlocked(false); setVaultExpiry(null); };
+  const lockVault = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultUnlocked(false); setVaultExpiry(null); };
   const share = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
     const password = window.prompt('设置独立分享口令'); if (!password) return;
+    const currentPassword = masterPasswordRef.current; if (!currentPassword) return lockVault();
     const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current)]);
-    const text = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault }, password);
+    const text = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault: await rekeyVault(vault, currentPassword, password) }, password);
     await navigator.clipboard.writeText(text); alert('已复制加密分享字符串。');
   };
   const importShare = async () => {
-    const text = window.prompt('粘贴加密备份或分享字符串'); const password = window.prompt('输入对应口令'); if (!text || password === null) return;
-    try { const data = await parseBackup(text, password); await replaceLocalData({ targets: data.targets as Target[], groups: data.groups as Group[], tags: data.tags as [], vault: data.vault }); lockVault(); setHasVault(true); await reload(); alert('已替换本地数据，请使用导出时的主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
+    const text = window.prompt('粘贴加密备份或分享字符串'); const password = window.prompt('输入对应口令'); const nextPassword = window.prompt('设置导入后 Vault 的新主密码'); if (!text || password === null || !nextPassword) return;
+    try { const data = await parseBackup(text, password); const vault = await rekeyVault(data.vault, password, nextPassword); await replaceLocalData({ targets: data.targets as Target[], groups: data.groups as Group[], tags: data.tags as [], vault }); lockVault(); setHasVault(true); await reload(); alert('已导入。请使用新主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
   };
 
   return <main className="shell">
@@ -93,7 +95,7 @@ export default function App() {
       </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => setEditorOpen(true)}>新建 Target</button></div>}
     </section>
     {isEditorOpen && <TargetEditor groups={groups} onClose={() => setEditorOpen(false)} onSaved={async () => { setEditorOpen(false); await reload(); }} />}
-    {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password, duration) => { try { const record = await db.vaults.get('primary'); const data = record?.data ?? await createVault(password); const vault = await unlockVault(data, password); if (!record) await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); vaultRef.current = vault; setVaultExpiry(Date.now() + duration); setVaultUnlocked(true); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
+    {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password, duration) => { try { const record = await db.vaults.get('primary'); const data = record?.data ?? await createVault(password); const vault = await unlockVault(data, password); if (!record) await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); vaultRef.current = vault; masterPasswordRef.current = password; setVaultExpiry(Date.now() + duration); setVaultUnlocked(true); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
   </main>;
 }
 

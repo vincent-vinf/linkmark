@@ -32,6 +32,12 @@ export async function unlockVault(data: ArrayBuffer, password: string): Promise<
 
 export async function saveVault(vault: Kdbx): Promise<ArrayBuffer> { return vault.save(); }
 
+export async function rekeyVault(data: ArrayBuffer, currentPassword: string, nextPassword: string): Promise<ArrayBuffer> {
+  const vault = await unlockVault(data, currentPassword);
+  await vault.credentials.setPassword(ProtectedValue.fromString(nextPassword));
+  return vault.save();
+}
+
 export type VaultItemInput = { title: string; username?: string; password?: string; notes?: string; fields?: Record<string, string> };
 
 export function addVaultItem(vault: Kdbx, input: VaultItemInput): string {
