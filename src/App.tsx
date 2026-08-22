@@ -81,6 +81,13 @@ export default function App() {
     return (!activeGroup || target.groupId === activeGroup) && (words.includes(query.toLowerCase()) || secretMatch);
   }).sort((left, right) => sortMode === 'name' ? left.name.localeCompare(right.name, 'zh-CN') : sortMode === 'updated' ? right.updatedAt.localeCompare(left.updatedAt) : sortMode === 'pinned' ? Number(Boolean(right.pinned)) - Number(Boolean(left.pinned)) || left.sortOrder - right.sortOrder : sortMode === 'recent' ? (right.lastAccessAt ?? '').localeCompare(left.lastAccessAt ?? '') : left.sortOrder - right.sortOrder), [targets, groups, tags, activeGroup, query, sortMode, vaultUnlocked, vaultItems]);
   const orphanVaultItems = useMemo(() => vaultItems.filter((item) => !targets.some((target) => target.vaultItemIds.includes(item.id))), [targets, vaultItems]);
+  const persistVault = async (): Promise<ArrayBuffer> => {
+    if (!vaultRef.current) throw new Error('Vault 已锁定。');
+    const data = await saveVault(vaultRef.current);
+    try { await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); } catch { throw new Error('无法保存 Vault。请检查浏览器存储空间后重试；本次修改仍只在当前页面内存中。'); }
+    return data;
+  };
+  const notifyVaultSaveFailure = (error: unknown) => alert(error instanceof Error ? error.message : 'Vault 未能保存。');
 
   const addGroup = async () => {
     const name = window.prompt('分组名称')?.trim();
@@ -115,14 +122,13 @@ export default function App() {
     if (!title || password === null || username === null || notes === null || custom === null) return;
     const fields = parseKeyValueFields(custom, ',');
     addVaultItem(vaultRef.current, { title, username, password, notes, fields });
-    await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() });
-    setVaultItems(listVaultItems(vaultRef.current));
+    try { await persistVault(); setVaultItems(listVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); }
   };
-  const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); const data = await saveVault(vaultRef.current); const now = new Date().toISOString(); await db.transaction('rw', db.vaults, db.targets, async () => { await db.vaults.put({ id: 'primary', data, updatedAt: now }); await db.targets.bulkPut((await db.targets.toArray()).filter((target) => target.vaultItemIds.includes(id)).map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.filter((itemId) => itemId !== id), updatedAt: now }))); }); setVaultItems(listVaultItems(vaultRef.current)); await reload(); };
-  const restoreSecret = async (id: string) => { if (!vaultRef.current) return; restoreVaultItem(vaultRef.current, id); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultItems(listVaultItems(vaultRef.current)); };
-  const emptyRecycleBin = async () => { if (!vaultRef.current || !window.confirm('永久删除回收站中的全部秘密？')) return; emptyVaultRecycleBin(vaultRef.current); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setRecycledItems([]); };
-  const permanentlyRemoveSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('永久删除此秘密且无法恢复？')) return; permanentlyDeleteVaultItem(vaultRef.current, id); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setRecycledItems(listRecycledVaultItems(vaultRef.current)); };
-  const saveSecret = async (item: VaultItemDetail) => { if (!vaultRef.current || !item.title.trim()) return; updateVaultItem(vaultRef.current, item.id, item); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setVaultItems(listVaultItems(vaultRef.current)); setSelectedVaultItem(null); };
+  const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); try { const data = await saveVault(vaultRef.current); const now = new Date().toISOString(); await db.transaction('rw', db.vaults, db.targets, async () => { await db.vaults.put({ id: 'primary', data, updatedAt: now }); await db.targets.bulkPut((await db.targets.toArray()).filter((target) => target.vaultItemIds.includes(id)).map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.filter((itemId) => itemId !== id), updatedAt: now }))); }); setVaultItems(listVaultItems(vaultRef.current)); await reload(); } catch (error) { notifyVaultSaveFailure(error); } };
+  const restoreSecret = async (id: string) => { if (!vaultRef.current) return; restoreVaultItem(vaultRef.current, id); try { await persistVault(); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultItems(listVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); } };
+  const emptyRecycleBin = async () => { if (!vaultRef.current || !window.confirm('永久删除回收站中的全部秘密？')) return; emptyVaultRecycleBin(vaultRef.current); try { await persistVault(); setRecycledItems([]); } catch (error) { notifyVaultSaveFailure(error); } };
+  const permanentlyRemoveSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('永久删除此秘密且无法恢复？')) return; permanentlyDeleteVaultItem(vaultRef.current, id); try { await persistVault(); setRecycledItems(listRecycledVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); } };
+  const saveSecret = async (item: VaultItemDetail) => { if (!vaultRef.current || !item.title.trim()) return; updateVaultItem(vaultRef.current, item.id, item); try { await persistVault(); setVaultItems(listVaultItems(vaultRef.current)); setSelectedVaultItem(null); } catch (error) { notifyVaultSaveFailure(error); } };
   const linkSecret = async (target: Target) => {
     if (!vaultRef.current) return setVaultDialog(true);
     const options = listVaultItems(vaultRef.current); if (!options.length) return alert('请先创建秘密条目。');
