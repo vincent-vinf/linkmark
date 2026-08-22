@@ -107,7 +107,7 @@ export default function App() {
     const password = await askPassword('设置独立分享口令'); if (!password) return;
     const currentPassword = masterPasswordRef.current; if (!currentPassword) return lockVault();
     const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current)]);
-    const text = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault: await rekeyVault(vault, currentPassword, password) }, password);
+    const text = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault: await rekeyVault(vault, currentPassword, password) }, password, 'share');
     await navigator.clipboard.writeText(text); alert('已复制加密分享字符串。');
   };
   const downloadBackup = async () => {
@@ -117,8 +117,8 @@ export default function App() {
     const url = URL.createObjectURL(new Blob([encoded], { type: 'text/plain' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `linkmark-backup-${new Date().toISOString().slice(0, 10)}.txt`; anchor.click(); URL.revokeObjectURL(url);
   };
   const importShare = async () => {
-    const text = window.prompt('粘贴加密备份或分享字符串'); const password = await askPassword('输入对应口令'); const nextPassword = await askPassword('设置导入后 Vault 的新主密码'); if (!text || password === null || !nextPassword) return;
-    try { const data = await parseBackup(text, password); const replace = window.confirm(`导入预览：${data.targets.length} 个 Target、${data.groups.length} 个分组、${data.tags.length} 个标签。确定替换本地数据；取消则合并。`); if (!replace) { if (!vaultRef.current) return alert('合并导入前必须先解锁当前 Vault。'); const incoming = await unlockVault(data.vault, password); const mapping = mergeVaultItems(vaultRef.current, incoming); const remapped = { ...data, targets: data.targets.map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.map((id) => mapping.get(id) ?? id) })) }; const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, remapped); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current) }); await reload(); alert('已合并导入。'); return; } const vault = await rekeyVault(data.vault, password, nextPassword); await replaceLocalData({ ...data, vault }); lockVault(); setHasVault(true); await reload(); alert('已导入。请使用新主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
+    const text = window.prompt('粘贴加密备份或分享字符串'); const password = await askPassword('输入对应口令'); if (!text || password === null) return;
+    try { const data = await parseBackup(text, password); const nextPassword = data.mode === 'share' ? await askPassword('设置导入后 Vault 的新主密码') : password; if (!nextPassword) return; const replace = window.confirm(`导入预览：${data.targets.length} 个 Target、${data.groups.length} 个分组、${data.tags.length} 个标签。确定替换本地数据；取消则合并。`); if (!replace) { if (!vaultRef.current) return alert('合并导入前必须先解锁当前 Vault。'); const incoming = await unlockVault(data.vault, password); const mapping = mergeVaultItems(vaultRef.current, incoming); const remapped = { ...data, targets: data.targets.map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.map((id) => mapping.get(id) ?? id) })) }; const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, remapped); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current) }); await reload(); alert('已合并导入。'); return; } const vault = data.mode === 'share' ? await rekeyVault(data.vault, password, nextPassword) : data.vault; await replaceLocalData({ ...data, vault }); lockVault(); setHasVault(true); await reload(); alert(data.mode === 'share' ? '已导入。请使用新主密码解锁 Vault。' : '已恢复。请使用备份主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
   };
 
   return <main className="shell">

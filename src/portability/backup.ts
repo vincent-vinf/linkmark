@@ -9,12 +9,12 @@ const envelopeSchema = z.object({ formatVersion: z.literal(1), algorithm: z.lite
 const targetSchema = z.object({ id: z.string().uuid(), name: z.string().min(1).max(256), kind: z.enum(['web', 'postgresql', 'redis', 'generic']), groupId: z.string().uuid().nullable(), tagIds: z.array(z.string().uuid()), sortOrder: z.number().finite(), config: z.record(z.union([z.string(), z.number(), z.boolean()])), vaultItemIds: z.array(z.string()), createdAt: z.string().datetime(), updatedAt: z.string().datetime() });
 const groupSchema = z.object({ id: z.string().uuid(), name: z.string().min(1).max(128), sortOrder: z.number().finite() });
 const tagSchema = z.object({ id: z.string().uuid(), name: z.string().min(1).max(128) });
-const backupSchema = z.object({ formatVersion: z.literal(1), targets: z.array(targetSchema), groups: z.array(groupSchema), tags: z.array(tagSchema), vault: z.string().max(20_000_000) });
+const backupSchema = z.object({ formatVersion: z.literal(1), mode: z.enum(['backup', 'share']), targets: z.array(targetSchema), groups: z.array(groupSchema), tags: z.array(tagSchema), vault: z.string().max(20_000_000) });
 
-export type FullBackup = { targets: Target[]; groups: Group[]; tags: Tag[]; vault: ArrayBuffer };
+export type FullBackup = { mode: 'backup' | 'share'; targets: Target[]; groups: Group[]; tags: Tag[]; vault: ArrayBuffer };
 
-export async function serializeBackup(backup: FullBackup, password: string): Promise<string> {
-  const envelope = await encryptPackage({ formatVersion: 1, targets: backup.targets, groups: backup.groups, tags: backup.tags, vault: binaryToBase64(backup.vault) }, password);
+export async function serializeBackup(backup: Omit<FullBackup, 'mode'>, password: string, mode: FullBackup['mode'] = 'backup'): Promise<string> {
+  const envelope = await encryptPackage({ formatVersion: 1, mode, targets: backup.targets, groups: backup.groups, tags: backup.tags, vault: binaryToBase64(backup.vault) }, password);
   return btoa(JSON.stringify(envelope)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
 }
 
@@ -24,5 +24,5 @@ export async function parseBackup(encoded: string, password: string): Promise<Fu
   let envelope: EncryptedPackage;
   try { envelope = envelopeSchema.parse(JSON.parse(atob(padded))); } catch { throw new Error('无效的导入包'); }
   const decoded = backupSchema.parse(await decryptPackage(envelope, password));
-  return { targets: decoded.targets, groups: decoded.groups, tags: decoded.tags, vault: base64ToBinary(decoded.vault) };
+  return { mode: decoded.mode, targets: decoded.targets, groups: decoded.groups, tags: decoded.tags, vault: base64ToBinary(decoded.vault) };
 }
