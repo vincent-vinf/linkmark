@@ -102,6 +102,7 @@ export default function App() {
   const changeMasterPassword = async () => {
     if (!vaultRef.current || !masterPasswordRef.current) return setVaultDialog(true);
     const next = await askPassword('输入新的主密码'); if (!next) return;
+    const confirmation = await askPassword('再次输入新的主密码'); if (next !== confirmation) return alert('两次输入的主密码不一致。');
     if (!window.confirm('主密码将立即更新；忘记新密码将无法恢复 Vault。')) return;
     const data = await rekeyVault(await saveVault(vaultRef.current), masterPasswordRef.current, next);
     await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); vaultRef.current = await unlockVault(data, next); masterPasswordRef.current = next; alert('主密码已更新。请立即导出新的备份。');
@@ -112,7 +113,7 @@ export default function App() {
     const currentPassword = masterPasswordRef.current; if (!currentPassword) return lockVault();
     const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current)]);
     const text = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault: await rekeyVault(vault, currentPassword, password) }, password, 'share');
-    await navigator.clipboard.writeText(text); alert('已复制加密分享字符串。');
+    try { await navigator.clipboard.writeText(text); alert('已复制加密分享字符串。'); } catch { alert('无法写入剪贴板，请检查浏览器权限。'); }
   };
   const downloadBackup = async () => {
     if (!vaultRef.current || !masterPasswordRef.current) return setVaultDialog(true);
