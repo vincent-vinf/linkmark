@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createTarget, deleteGroup, deleteTarget, reorderTargets, validateConnectionHost, validateTargetConfig, validateWebUrl } from './targets';
 
 describe('Target management seam', () => {
-  it('moves Targets to Inbox when a Group is deleted', () => {
+  it('moves Targets to the default group when a Group is deleted', () => {
     const target = createTarget({ name: '文档', kind: 'web', groupId: 'work', config: { url: 'https://example.com' } });
     const result = deleteGroup([target], 'work');
 

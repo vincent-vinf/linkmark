@@ -96,7 +96,7 @@ export default function App() {
     await db.groups.add({ id: newId(), name, sortOrder: groups.length });
     await reload();
   };
-  const removeGroup = async (group: Group) => { if (!window.confirm(`删除分组“${group.name}”？其中 Target 将移入收件箱。`)) return; await db.targets.bulkPut(deleteGroup(targets, group.id)); await db.groups.delete(group.id); if (activeGroup === group.id) setActiveGroup(null); await reload(); };
+  const removeGroup = async (group: Group) => { if (!window.confirm(`删除分组“${group.name}”？其中 Target 将移入默认分组。`)) return; await db.targets.bulkPut(deleteGroup(targets, group.id)); await db.groups.delete(group.id); if (activeGroup === group.id) setActiveGroup(null); await reload(); };
 
   const removeTarget = async (id: string) => {
     if (!window.confirm('删除此 Target？关联的秘密不会被删除。')) return;
@@ -183,7 +183,7 @@ export default function App() {
       <div className="brand"><span>✦</span> Linkmark</div>
       <button className="new-button" onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>＋ 新建 Target</button>
       <nav>
-        <button className={!activeGroup ? 'active' : ''} onClick={() => setActiveGroup(null)}>收件箱 <small>{targets.filter((item) => !item.groupId).length}</small></button>
+        <button className={!activeGroup ? 'active' : ''} onClick={() => setActiveGroup(null)}>默认分组 <small>{targets.filter((item) => !item.groupId).length}</small></button>
         <div className="section-title">分组 <button aria-label="添加分组" onClick={() => void addGroup()}>＋</button></div>
         {groups.map((group) => <div key={group.id}><button className={activeGroup === group.id ? 'active' : ''} onClick={() => setActiveGroup(group.id)}>{group.name}<small>{targets.filter((item) => item.groupId === group.id).length}</small></button><button aria-label={`删除分组 ${group.name}`} onClick={() => void removeGroup(group)}>×</button></div>)}
       </nav>
@@ -199,12 +199,14 @@ export default function App() {
       {visible.length ? <div className={`grid ${viewMode === 'list' ? 'list-view' : ''}`}>{visible.map((target) => <article className="card" key={target.id} onDoubleClick={() => void openWebTarget(target)}>
         <div className={`kind kind-${target.kind}`}>{target.kind === 'web' ? '↗' : target.kind === 'postgresql' ? '◫' : target.kind === 'redis' ? '◆' : '◇'}</div>
         <div className="card-body"><p className="kind-label">{kinds[target.kind]}</p><h2>{target.name}</h2><p>{target.kind === 'web' ? String(target.config.url ?? '') : Object.values(target.config).filter(Boolean).join(' · ') || '未填写连接资料'}</p></div>
-        {target.tagIds.length > 0 && <small>{target.tagIds.map((id) => tags.find((tag) => tag.id === id)?.name).filter(Boolean).join(' · ')}</small>}
-        {vaultUnlocked && <button className="link-secret" onClick={() => void linkSecret(target)}>秘密 {target.vaultItemIds.length}</button>}
-        <button aria-label={target.pinned ? `取消置顶 ${target.name}` : `置顶 ${target.name}`} onClick={() => void togglePinned(target)}>{target.pinned ? '★' : '☆'}</button>
-        <button className="edit-target" onClick={() => void editTarget(target)}>编辑</button>
-        <button onClick={() => void editTags(target)}>标签</button>
-        <button onClick={() => void moveTarget(target, -1)}>↑</button><button onClick={() => void moveTarget(target, 1)}>↓</button>
+        {target.tagIds.length > 0 && <small className="card-tags">{target.tagIds.map((id) => tags.find((tag) => tag.id === id)?.name).filter(Boolean).join(' · ')}</small>}
+        <div className="card-actions">
+          {vaultUnlocked && <button className="link-secret" onClick={() => void linkSecret(target)}>秘密 {target.vaultItemIds.length}</button>}
+          <button className="pin-target" aria-label={target.pinned ? `取消置顶 ${target.name}` : `置顶 ${target.name}`} onClick={() => void togglePinned(target)}>{target.pinned ? '★' : '☆'}</button>
+          <button className="edit-target" onClick={() => void editTarget(target)}>编辑</button>
+          <button onClick={() => void editTags(target)}>标签</button>
+          <button aria-label="上移" onClick={() => void moveTarget(target, -1)}>↑</button><button aria-label="下移" onClick={() => void moveTarget(target, 1)}>↓</button>
+        </div>
         <button className="delete" aria-label={`删除 ${target.name}`} onClick={() => void removeTarget(target.id)}>×</button>
       </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>新建 Target</button></div>}
       {vaultUnlocked && vaultItems.length > 0 && <section className="vault-list"><h2>Vault Items</h2>{vaultItems.filter((item) => `${item.title} ${item.username}`.toLowerCase().includes(query.toLowerCase())).map((item) => <div key={item.id}><button className="vault-item" onClick={() => setSelectedVaultItem(getVaultItem(vaultRef.current!, item.id))}><span>{item.title || '未命名秘密'}</span><small>{item.username}</small></button><button onClick={() => void removeSecret(item.id)}>删除</button></div>)}</section>}
@@ -277,7 +279,7 @@ function TargetEditor({ target, groups, onClose, onSaved }: { target: Target | n
     <label>名称<input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="例如：生产数据库" /></label>
     <label>类型<select value={kind} onChange={(event) => setKind(event.target.value as TargetKind)}>{Object.entries(kinds).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
     {kind === 'web' ? <label>URL<input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="https://example.com" /></label> : kind === 'generic' ? <label>非敏感字段（每行 名称=值）<textarea value={genericFields} onChange={(event) => setGenericFields(event.target.value)} placeholder="host=example.com&#10;environment=production" /></label> : <><label>主机<input value={host} onChange={(event) => setHost(event.target.value)} placeholder="db.example.com" /></label><label>端口<input inputMode="numeric" value={port} onChange={(event) => setPort(event.target.value)} placeholder={kind === 'postgresql' ? '5432' : '6379'} /></label><label>{kind === 'postgresql' ? '数据库' : '数据库编号'}<input value={database} onChange={(event) => setDatabase(event.target.value)} /></label>{kind === 'postgresql' ? <label>SSL 模式<select value={sslMode} onChange={(event) => setSslMode(event.target.value)}><option value="disable">禁用</option><option value="prefer">优先</option><option value="require">要求</option><option value="verify-ca">验证 CA</option><option value="verify-full">完整验证</option></select></label> : <label className="checkbox"><input type="checkbox" checked={tls} onChange={(event) => setTls(event.target.checked)} /> 使用 TLS</label>}</>}
-    <label>分组<select value={groupId} onChange={(event) => setGroupId(event.target.value)}><option value="">收件箱</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label>
+    <label>分组<select value={groupId} onChange={(event) => setGroupId(event.target.value)}><option value="">默认分组</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label>
     {error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" onClick={() => void save()}>保存</button></div>
   </section></div>;
 }
