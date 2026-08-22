@@ -51,6 +51,7 @@ export default function App() {
   const [vaultError, setVaultError] = useState('');
   const [vaultUnlocked, setVaultUnlocked] = useState(false);
   const [vaultExpiry, setVaultExpiry] = useState<number | null>(null);
+  const [vaultDirty, setVaultDirty] = useState(false);
   const [vaultItems, setVaultItems] = useState<VaultItemSummary[]>([]);
   const [recycledItems, setRecycledItems] = useState<VaultItemSummary[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -69,7 +70,7 @@ export default function App() {
   };
   useEffect(() => { void reload(); void db.vaults.get('primary').then((record) => setHasVault(Boolean(record))); }, []);
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('linkmark-theme', theme); }, [theme]);
-  const clearSensitiveState = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultItems([]); setRecycledItems([]); setSelectedVaultItem(null); setVaultUnlocked(false); setVaultExpiry(null); };
+  const clearSensitiveState = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultItems([]); setRecycledItems([]); setSelectedVaultItem(null); setVaultDirty(false); setVaultUnlocked(false); setVaultExpiry(null); };
   useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(clearSensitiveState, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry]);
   useEffect(() => { const clear = () => clearSensitiveState(); window.addEventListener('pagehide', clear); return () => window.removeEventListener('pagehide', clear); }, []);
 
@@ -84,10 +85,10 @@ export default function App() {
   const persistVault = async (): Promise<ArrayBuffer> => {
     if (!vaultRef.current) throw new Error('Vault 已锁定。');
     const data = await saveVault(vaultRef.current, masterPasswordRef.current ?? undefined);
-    try { await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); } catch { throw new Error('无法保存 Vault。请检查浏览器存储空间后重试；本次修改仍只在当前页面内存中。'); }
+    try { const activeIds = new Set(listVaultItems(vaultRef.current).map((item) => item.id)); const now = new Date().toISOString(); await db.transaction('rw', db.vaults, db.targets, async () => { await db.vaults.put({ id: 'primary', data, updatedAt: now }); await db.targets.bulkPut((await db.targets.toArray()).filter((target) => target.vaultItemIds.some((id) => !activeIds.has(id))).map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.filter((id) => activeIds.has(id)), updatedAt: now }))); }); setVaultDirty(false); } catch { throw new Error('无法保存 Vault。请检查浏览器存储空间后重试；本次修改仍只在当前页面内存中。'); }
     return data;
   };
-  const notifyVaultSaveFailure = (error: unknown) => alert(error instanceof Error ? error.message : 'Vault 未能保存。');
+  const notifyVaultSaveFailure = (error: unknown) => { setVaultDirty(true); alert(error instanceof Error ? error.message : 'Vault 未能保存。'); };
 
   const addGroup = async () => {
     const name = window.prompt('分组名称')?.trim();
@@ -124,7 +125,7 @@ export default function App() {
     addVaultItem(vaultRef.current, { title, username, password, notes, fields });
     try { await persistVault(); setVaultItems(listVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); }
   };
-  const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); try { const data = await saveVault(vaultRef.current, masterPasswordRef.current ?? undefined); const now = new Date().toISOString(); await db.transaction('rw', db.vaults, db.targets, async () => { await db.vaults.put({ id: 'primary', data, updatedAt: now }); await db.targets.bulkPut((await db.targets.toArray()).filter((target) => target.vaultItemIds.includes(id)).map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.filter((itemId) => itemId !== id), updatedAt: now }))); }); setVaultItems(listVaultItems(vaultRef.current)); await reload(); } catch (error) { notifyVaultSaveFailure(error); } };
+  const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); try { await persistVault(); setVaultItems(listVaultItems(vaultRef.current)); await reload(); } catch (error) { notifyVaultSaveFailure(error); } };
   const restoreSecret = async (id: string) => { if (!vaultRef.current) return; restoreVaultItem(vaultRef.current, id); try { await persistVault(); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultItems(listVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); } };
   const emptyRecycleBin = async () => { if (!vaultRef.current || !window.confirm('永久删除回收站中的全部秘密？')) return; emptyVaultRecycleBin(vaultRef.current); try { await persistVault(); setRecycledItems([]); } catch (error) { notifyVaultSaveFailure(error); } };
   const permanentlyRemoveSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('永久删除此秘密且无法恢复？')) return; permanentlyDeleteVaultItem(vaultRef.current, id); try { await persistVault(); setRecycledItems(listRecycledVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); } };
@@ -137,6 +138,8 @@ export default function App() {
     await db.targets.put({ ...target, vaultItemIds: [...new Set([...target.vaultItemIds, value])], updatedAt: new Date().toISOString() }); await reload();
   };
   const lockVault = clearSensitiveState;
+  const requestLock = () => { if (vaultDirty && !window.confirm('Vault 有未保存修改。确认锁定将放弃这些修改；取消则保留在当前页面并可重试保存。')) return; lockVault(); };
+  const saveDirtyVault = async () => { try { await persistVault(); } catch (error) { notifyVaultSaveFailure(error); } };
   const changeMasterPassword = async () => {
     if (!vaultRef.current || !masterPasswordRef.current) return setVaultDialog(true);
     const next = await askPassword('输入新的主密码'); if (!next) return;
@@ -147,6 +150,7 @@ export default function App() {
   };
   const share = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
+    if (vaultDirty) return alert('当前 Vault 有未保存修改，请先保存后再分享。');
     const password = await askPassword('设置独立分享口令'); if (!password) return;
     const currentPassword = masterPasswordRef.current; if (!currentPassword) return lockVault();
     const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current, currentPassword)]);
@@ -155,6 +159,7 @@ export default function App() {
   };
   const downloadBackup = async () => {
     if (!vaultRef.current || !masterPasswordRef.current) return setVaultDialog(true);
+    if (vaultDirty) return alert('当前 Vault 有未保存修改，请先保存后再导出。');
     const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current, masterPasswordRef.current)]);
     const encoded = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault }, masterPasswordRef.current);
     const url = URL.createObjectURL(new Blob([encoded], { type: 'text/plain' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `linkmark-backup-${new Date().toISOString().slice(0, 10)}.txt`; anchor.click(); URL.revokeObjectURL(url);
@@ -181,12 +186,12 @@ export default function App() {
         <div className="section-title">分组 <button aria-label="添加分组" onClick={() => void addGroup()}>＋</button></div>
         {groups.map((group) => <div key={group.id}><button className={activeGroup === group.id ? 'active' : ''} onClick={() => setActiveGroup(group.id)}>{group.name}<small>{targets.filter((item) => item.groupId === group.id).length}</small></button><button aria-label={`删除分组 ${group.name}`} onClick={() => void removeGroup(group)}>×</button></div>)}
       </nav>
-      <div className="sidebar-footer"><span className={vaultUnlocked ? 'lock-dot unlocked' : 'lock-dot'} /> Vault {vaultUnlocked ? '已解锁' : '已锁定'} <button onClick={vaultUnlocked ? lockVault : () => setVaultDialog(true)}>{vaultUnlocked ? '锁定' : hasVault ? '解锁' : '创建'}</button></div>
+      <div className="sidebar-footer"><span className={vaultUnlocked ? 'lock-dot unlocked' : 'lock-dot'} /> Vault {vaultUnlocked ? vaultDirty ? '未保存' : '已解锁' : '已锁定'} <button onClick={vaultUnlocked ? requestLock : () => setVaultDialog(true)}>{vaultUnlocked ? '锁定' : hasVault ? '解锁' : '创建'}</button></div>
     </aside>
     <section className="content">
       <header>
         <div><button className="mobile-menu" onClick={() => setMenuOpen(!menuOpen)}>☰</button><p className="eyebrow">LOCAL-FIRST WORKSPACE</p><h1>{activeGroup ? groups.find((group) => group.id === activeGroup)?.name : '所有 Targets'}</h1></div>
-        <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => setRecycledItems(listRecycledVaultItems(vaultRef.current!))}>回收站</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void changeMasterPassword()}>改主密码</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => setImportOpen(true)}>导入</button></div>
+        <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button disabled={!vaultDirty} onClick={() => void saveDirtyVault()}>保存</button>}{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => setRecycledItems(listRecycledVaultItems(vaultRef.current!))}>回收站</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void changeMasterPassword()}>改主密码</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => setImportOpen(true)}>导入</button></div>
       </header>
       <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={vaultUnlocked ? '搜索 Target、秘密标题或账号…' : '搜索名称、连接主机或数据库…'} /></label>
       <div className="toolbar"><span>{visible.length} 个 Target</span><span><label className="sort-label">排序 <select value={sortMode} onChange={(event) => setSortMode(event.target.value as typeof sortMode)}><option value="manual">手动</option><option value="pinned">置顶优先</option><option value="recent">最近访问</option><option value="name">名称</option><option value="updated">最近更新</option></select></label><button aria-pressed={viewMode === 'list'} onClick={() => setViewMode(viewMode === 'cards' ? 'list' : 'cards')}>{viewMode === 'cards' ? '列表' : '卡片'}</button><button onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>新建</button></span></div>
