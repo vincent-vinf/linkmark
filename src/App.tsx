@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Kdbx } from 'kdbxweb';
 import { createTarget, reorderTargets, type Target, type TargetKind, validateWebUrl } from './domain/targets';
-import { db, replaceLocalData, type Group } from './storage/db';
+import { db, replaceLocalData, type Group, type Tag } from './storage/db';
 import { parseBackup, serializeBackup } from './portability/backup';
 import { mergeMetadata } from './portability/merge';
 import { addVaultItem, createVault, deleteVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, saveVault, unlockVault, type VaultItemSummary } from './vault/vault';
@@ -14,6 +14,7 @@ const newId = () => crypto.randomUUID();
 export default function App() {
   const [targets, setTargets] = useState<Target[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [query, setQuery] = useState('');
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [isEditorOpen, setEditorOpen] = useState(false);
@@ -32,6 +33,7 @@ export default function App() {
   const reload = async () => {
     setTargets(await db.targets.orderBy('updatedAt').reverse().toArray());
     setGroups(await db.groups.orderBy('sortOrder').toArray());
+    setTags(await db.tags.orderBy('name').toArray());
   };
   useEffect(() => { void reload(); void db.vaults.get('primary').then((record) => setHasVault(Boolean(record))); }, []);
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
@@ -62,6 +64,13 @@ export default function App() {
   const moveTarget = async (target: Target, direction: -1 | 1) => {
     const withinGroup = targets.filter((item) => item.groupId === target.groupId).sort((left, right) => left.sortOrder - right.sortOrder); const index = withinGroup.findIndex((item) => item.id === target.id); const adjacent = withinGroup[index + direction]; if (!adjacent) return;
     await db.targets.bulkPut(reorderTargets(targets, withinGroup.map((item, position) => position === index ? adjacent.id : position === index + direction ? target.id : item.id))); await reload();
+  };
+  const editTags = async (target: Target) => {
+    const current = target.tagIds.map((id) => tags.find((tag) => tag.id === id)?.name).filter(Boolean).join(', ');
+    const value = window.prompt('用逗号分隔标签', current); if (value === null) return;
+    const names = [...new Set(value.split(',').map((name) => name.trim()).filter(Boolean))]; const ids: string[] = [];
+    for (const name of names) { const existing = tags.find((tag) => tag.name === name); const id = existing?.id ?? newId(); if (!existing) await db.tags.add({ id, name }); ids.push(id); }
+    await db.targets.put({ ...target, tagIds: ids, updatedAt: new Date().toISOString() }); await reload();
   };
   const addSecret = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
@@ -128,8 +137,10 @@ export default function App() {
       {visible.length ? <div className="grid">{visible.map((target) => <article className="card" key={target.id}>
         <div className={`kind kind-${target.kind}`}>{target.kind === 'web' ? '↗' : target.kind === 'postgresql' ? '◫' : target.kind === 'redis' ? '◆' : '◇'}</div>
         <div className="card-body"><p className="kind-label">{kinds[target.kind]}</p><h2>{target.name}</h2><p>{target.kind === 'web' ? String(target.config.url ?? '') : Object.values(target.config).filter(Boolean).join(' · ') || '未填写连接资料'}</p></div>
+        {target.tagIds.length > 0 && <small>{target.tagIds.map((id) => tags.find((tag) => tag.id === id)?.name).filter(Boolean).join(' · ')}</small>}
         {vaultUnlocked && <button className="link-secret" onClick={() => void linkSecret(target)}>秘密 {target.vaultItemIds.length}</button>}
         <button className="edit-target" onClick={() => void editTarget(target)}>编辑</button>
+        <button onClick={() => void editTags(target)}>标签</button>
         <button onClick={() => void moveTarget(target, -1)}>↑</button><button onClick={() => void moveTarget(target, 1)}>↓</button>
         <button className="delete" aria-label={`删除 ${target.name}`} onClick={() => void removeTarget(target.id)}>×</button>
       </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => setEditorOpen(true)}>新建 Target</button></div>}
