@@ -74,9 +74,10 @@ export default function App() {
   };
   const addSecret = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
-    const title = window.prompt('秘密条目名称')?.trim(); const password = window.prompt('密码、API Key 或 Token');
-    if (!title || password === null) return;
-    addVaultItem(vaultRef.current, { title, password });
+    const title = window.prompt('秘密条目名称')?.trim(); const username = window.prompt('账号（可留空）'); const password = window.prompt('密码、API Key 或 Token（可留空）'); const notes = window.prompt('备注（可留空）'); const custom = window.prompt('自定义字段，格式为 名称=值，多个用逗号分隔（可留空）');
+    if (!title || password === null || username === null || notes === null || custom === null) return;
+    const fields = Object.fromEntries(custom.split(',').map((part) => part.split('=').map((value) => value.trim())).filter(([key, value]) => key && value));
+    addVaultItem(vaultRef.current, { title, username, password, notes, fields });
     await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() });
     setVaultItems(listVaultItems(vaultRef.current));
   };
