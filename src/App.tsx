@@ -67,7 +67,7 @@ export default function App() {
   };
   const importShare = async () => {
     const text = window.prompt('粘贴加密备份或分享字符串'); const password = window.prompt('输入对应口令'); const nextPassword = window.prompt('设置导入后 Vault 的新主密码'); if (!text || password === null || !nextPassword) return;
-    try { const data = await parseBackup(text, password); const vault = await rekeyVault(data.vault, password, nextPassword); await replaceLocalData({ targets: data.targets as Target[], groups: data.groups as Group[], tags: data.tags as [], vault }); lockVault(); setHasVault(true); await reload(); alert('已导入。请使用新主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
+    try { const data = await parseBackup(text, password); const vault = await rekeyVault(data.vault, password, nextPassword); await replaceLocalData({ ...data, vault }); lockVault(); setHasVault(true); await reload(); alert('已导入。请使用新主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
   };
 
   return <main className="shell">

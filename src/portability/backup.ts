@@ -1,12 +1,17 @@
 import { z } from 'zod';
 import { decryptPackage, encryptPackage, type EncryptedPackage } from './package';
+import type { Target } from '../domain/targets';
+import type { Group, Tag } from '../storage/db';
 
 const binaryToBase64 = (data: ArrayBuffer) => { const bytes = new Uint8Array(data); let text = ''; for (let start = 0; start < bytes.length; start += 0x8000) text += String.fromCharCode(...bytes.subarray(start, start + 0x8000)); return btoa(text); };
 const base64ToBinary = (data: string) => Uint8Array.from(atob(data), (char) => char.charCodeAt(0)).buffer;
 const envelopeSchema = z.object({ formatVersion: z.literal(1), algorithm: z.literal('Argon2id/AES-GCM'), compression: z.literal('gzip'), salt: z.string().max(128), iv: z.string().max(64), memoryKiB: z.number().int(), iterations: z.number().int(), parallelism: z.number().int(), ciphertext: z.string().max(20_000_000) });
-const backupSchema = z.object({ formatVersion: z.literal(1), targets: z.array(z.unknown()), groups: z.array(z.unknown()), tags: z.array(z.unknown()), vault: z.string().max(20_000_000) });
+const targetSchema = z.object({ id: z.string().uuid(), name: z.string().min(1).max(256), kind: z.enum(['web', 'postgresql', 'redis', 'generic']), groupId: z.string().uuid().nullable(), tagIds: z.array(z.string().uuid()), sortOrder: z.number().finite(), config: z.record(z.union([z.string(), z.number(), z.boolean()])), vaultItemIds: z.array(z.string()), createdAt: z.string().datetime(), updatedAt: z.string().datetime() });
+const groupSchema = z.object({ id: z.string().uuid(), name: z.string().min(1).max(128), sortOrder: z.number().finite() });
+const tagSchema = z.object({ id: z.string().uuid(), name: z.string().min(1).max(128) });
+const backupSchema = z.object({ formatVersion: z.literal(1), targets: z.array(targetSchema), groups: z.array(groupSchema), tags: z.array(tagSchema), vault: z.string().max(20_000_000) });
 
-export type FullBackup = { targets: unknown[]; groups: unknown[]; tags: unknown[]; vault: ArrayBuffer };
+export type FullBackup = { targets: Target[]; groups: Group[]; tags: Tag[]; vault: ArrayBuffer };
 
 export async function serializeBackup(backup: FullBackup, password: string): Promise<string> {
   const envelope = await encryptPackage({ formatVersion: 1, targets: backup.targets, groups: backup.groups, tags: backup.tags, vault: binaryToBase64(backup.vault) }, password);
