@@ -19,7 +19,7 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [isEditorOpen, setEditorOpen] = useState(false);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => localStorage.getItem('linkmark-theme') as 'dark' | 'light' ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
   const [hasVault, setHasVault] = useState(false);
   const [vaultDialog, setVaultDialog] = useState(false);
   const [vaultError, setVaultError] = useState('');
@@ -39,7 +39,7 @@ export default function App() {
     setTags(await db.tags.orderBy('name').toArray());
   };
   useEffect(() => { void reload(); void db.vaults.get('primary').then((record) => setHasVault(Boolean(record))); }, []);
-  useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
+  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('linkmark-theme', theme); }, [theme]);
   const clearSensitiveState = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultItems([]); setRecycledItems([]); setVaultUnlocked(false); setVaultExpiry(null); };
   useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(clearSensitiveState, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry]);
   useEffect(() => { const clear = () => { vaultRef.current = null; masterPasswordRef.current = null; }; window.addEventListener('pagehide', clear); return () => window.removeEventListener('pagehide', clear); }, []);
