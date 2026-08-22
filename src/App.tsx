@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Kdbx } from 'kdbxweb';
 import { createTarget, type Target, type TargetKind, validateWebUrl } from './domain/targets';
-import { db, type Group } from './storage/db';
+import { db, replaceLocalData, type Group } from './storage/db';
+import { parseBackup, serializeBackup } from './portability/backup';
 import { addVaultItem, createVault, saveVault, unlockVault } from './vault/vault';
 import './app.css';
 
@@ -55,6 +56,17 @@ export default function App() {
     await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() });
   };
   const lockVault = () => { vaultRef.current = null; setVaultUnlocked(false); setVaultExpiry(null); };
+  const share = async () => {
+    if (!vaultRef.current) return setVaultDialog(true);
+    const password = window.prompt('设置独立分享口令'); if (!password) return;
+    const [allTargets, allGroups, allTags, vault] = await Promise.all([db.targets.toArray(), db.groups.toArray(), db.tags.toArray(), saveVault(vaultRef.current)]);
+    const text = await serializeBackup({ targets: allTargets, groups: allGroups, tags: allTags, vault }, password);
+    await navigator.clipboard.writeText(text); alert('已复制加密分享字符串。');
+  };
+  const importShare = async () => {
+    const text = window.prompt('粘贴加密备份或分享字符串'); const password = window.prompt('输入对应口令'); if (!text || password === null) return;
+    try { const data = await parseBackup(text, password); await replaceLocalData({ targets: data.targets as Target[], groups: data.groups as Group[], tags: data.tags as [], vault: data.vault }); lockVault(); setHasVault(true); await reload(); alert('已替换本地数据，请使用导出时的主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
+  };
 
   return <main className="shell">
     <aside className="sidebar">
@@ -70,7 +82,7 @@ export default function App() {
     <section className="content">
       <header>
         <div><p className="eyebrow">LOCAL-FIRST WORKSPACE</p><h1>{activeGroup ? groups.find((group) => group.id === activeGroup)?.name : '所有 Targets'}</h1></div>
-        <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}<button onClick={() => alert('加密备份与分享导入将在下一切片接入界面。')}>导入 / 导出</button></div>
+        <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => void importShare()}>导入</button></div>
       </header>
       <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索名称、连接主机或数据库…" /></label>
       <div className="toolbar"><span>{visible.length} 个 Target</span><button onClick={() => setEditorOpen(true)}>新建</button></div>
