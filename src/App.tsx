@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Kdbx } from 'kdbxweb';
-import { createTarget, deleteGroup, reorderTargets, type Target, type TargetKind, validateWebUrl } from './domain/targets';
+import { createTarget, deleteGroup, reorderTargets, type Target, type TargetKind, validateConnectionHost, validateWebUrl } from './domain/targets';
 import { db, replaceLocalData, type Group, type Tag } from './storage/db';
 import { parseBackup, serializeBackup } from './portability/backup';
 import { mergeMetadata } from './portability/merge';
@@ -190,7 +190,7 @@ function TargetEditor({ target, groups, onClose, onSaved }: { target: Target | n
   const save = async () => {
     if (!name.trim()) return setError('请输入名称。');
     if (kind === 'web' && !validateWebUrl(address)) return setError('网站地址必须是 HTTP 或 HTTPS URL。');
-    if ((kind === 'postgresql' || kind === 'redis') && (!host.trim() || !/^\d{1,5}$/.test(port) || Number(port) > 65535)) return setError('请填写主机和 1–65535 的端口。');
+    if ((kind === 'postgresql' || kind === 'redis') && (!validateConnectionHost(host) || !/^\d{1,5}$/.test(port) || Number(port) > 65535)) return setError('请填写不含凭据的主机，以及 1–65535 的端口。');
     const generic: Record<string, string> = Object.fromEntries(genericFields.split('\n').map((line) => line.split('=').map((part) => part.trim())).filter(([key, value]) => key && value));
     if (kind === 'generic' && (Object.keys(generic).some((key) => /pass(word)?|secret|token|api.?key|dsn|uri/i.test(key)) || Object.values(generic).some((value) => /:\/\//.test(value)))) return setError('敏感字段、DSN 和 URI 请保存到关联的 Vault Item。');
     const nextConfig: Record<string, string | boolean> = kind === 'web' ? { url: address } : kind === 'postgresql' ? { host, port, database, sslMode } : kind === 'redis' ? { host, port, database, tls } : generic;

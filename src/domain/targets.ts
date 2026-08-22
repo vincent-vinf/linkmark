@@ -58,6 +58,13 @@ export function validateWebUrl(value: string): boolean {
   }
 }
 
+/** Allows host names, IPv4 and bracketed IPv6 only; credentials and URI syntax belong in Vault Items. */
+export function validateConnectionHost(value: string): boolean {
+  const host = value.trim();
+  if (!host || /[\s@/?#]/.test(host)) return false;
+  return /^\[[0-9a-fA-F:.]+\]$/.test(host) || /^[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?$/.test(host);
+}
+
 export function reorderTargets(targets: Target[], orderedIds: string[]): Target[] {
   const order = new Map(orderedIds.map((id, index) => [id, index]));
   return targets.map((target) => order.has(target.id) ? { ...target, sortOrder: order.get(target.id)!, updatedAt: new Date().toISOString() } : target);
