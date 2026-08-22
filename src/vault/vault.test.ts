@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addVaultItem, createVault, deleteVaultItem, emptyVaultRecycleBin, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, unlockVault, updateVaultItem } from './vault';
+import { addVaultItem, assertVaultKdfParameters, createVault, deleteVaultItem, emptyVaultRecycleBin, getVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, unlockVault, updateVaultItem } from './vault';
 
 describe('Vault item seam', () => {
   it('stores secret fields inside a password-protected KDBX vault', async () => {
@@ -57,5 +57,9 @@ describe('Vault item seam', () => {
     expect(getVaultItem(vault, id)).toMatchObject({ title: 'Redis', username: 'default', password: 'old', notes: 'private', fields: { Token: 'one' } });
     expect(updateVaultItem(vault, id, { title: 'Redis prod', username: 'admin', password: 'new', fields: { Token: 'two' } })).toBe(true);
     expect(getVaultItem(vault, id)).toMatchObject({ title: 'Redis prod', username: 'admin', password: 'new', notes: '', fields: { Token: 'two' } });
+  });
+
+  it('rejects malformed Vault bytes before attempting a password KDF', () => {
+    expect(() => assertVaultKdfParameters(new Uint8Array([1, 2, 3]).buffer)).toThrow('Vault');
   });
 });

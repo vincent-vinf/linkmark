@@ -1,4 +1,4 @@
-import { Consts, Credentials, CryptoEngine, Int64, Kdbx, ProtectedValue, VarDictionary } from 'kdbxweb';
+import { BinaryStream, Consts, Credentials, CryptoEngine, Int64, Kdbx, KdbxHeader, ProtectedValue, VarDictionary } from 'kdbxweb';
 import { deriveArgon2id } from '../crypto/argon2';
 
 const text = new TextEncoder();
@@ -15,6 +15,15 @@ function configureArgon2(): void {
 
 function credentials(password: string): Credentials { return new Credentials(ProtectedValue.fromString(password)); }
 
+/** Reads the unauthenticated KDBX header before any expensive password KDF runs. */
+export function assertVaultKdfParameters(data: ArrayBuffer): void {
+  let header: KdbxHeader;
+  try { header = KdbxHeader.read(new BinaryStream(data), undefined as never); } catch { throw new Error('无效的 Vault 文件'); }
+  const parameters = header.kdfParameters;
+  const memory = Number(parameters?.get('M')); const iterations = Number(parameters?.get('I')); const parallelism = Number(parameters?.get('P'));
+  if (header.versionMajor !== 4 || !Number.isFinite(memory) || !Number.isFinite(iterations) || !Number.isFinite(parallelism) || memory > 64 * 1024 * 1024 || iterations > 6 || parallelism > 2) throw new Error('Vault KDF 参数超出安全限制');
+}
+
 export async function createVault(password: string): Promise<ArrayBuffer> {
   configureArgon2();
   const vault = Kdbx.create(credentials(password), 'Linkmark Vault');
@@ -27,6 +36,7 @@ export async function createVault(password: string): Promise<ArrayBuffer> {
 
 export async function unlockVault(data: ArrayBuffer, password: string): Promise<Kdbx> {
   configureArgon2();
+  assertVaultKdfParameters(data);
   return Kdbx.load(data, credentials(password));
 }
 
