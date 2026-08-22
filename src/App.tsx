@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Kdbx } from 'kdbxweb';
-import { createTarget, deleteGroup, reorderTargets, type Target, type TargetKind, validateConnectionHost, validateWebUrl } from './domain/targets';
+import { createTarget, deleteGroup, reorderTargets, type Target, type TargetKind, validateConnectionHost, validateTargetConfig, validateWebUrl } from './domain/targets';
 import { db, replaceLocalData, type Group, type Tag } from './storage/db';
 import { parseBackup, serializeBackup } from './portability/backup';
 import { mergeMetadata } from './portability/merge';
@@ -44,7 +44,7 @@ export default function App() {
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('linkmark-theme', theme); }, [theme]);
   const clearSensitiveState = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultItems([]); setRecycledItems([]); setSelectedVaultItem(null); setVaultUnlocked(false); setVaultExpiry(null); };
   useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(clearSensitiveState, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry]);
-  useEffect(() => { const clear = () => { vaultRef.current = null; masterPasswordRef.current = null; }; window.addEventListener('pagehide', clear); return () => window.removeEventListener('pagehide', clear); }, []);
+  useEffect(() => { const clear = () => clearSensitiveState(); window.addEventListener('pagehide', clear); return () => window.removeEventListener('pagehide', clear); }, []);
 
   const visible = useMemo(() => targets.filter((target) => {
     const words = `${target.name} ${target.kind} ${Object.values(target.config).join(' ')}`.toLowerCase();
@@ -195,6 +195,7 @@ function TargetEditor({ target, groups, onClose, onSaved }: { target: Target | n
     const generic: Record<string, string> = Object.fromEntries(genericFields.split('\n').map((line) => line.split('=').map((part) => part.trim())).filter(([key, value]) => key && value));
     if (kind === 'generic' && (Object.keys(generic).some((key) => /pass(word)?|secret|token|api.?key|dsn|uri/i.test(key)) || Object.values(generic).some((value) => /:\/\//.test(value)))) return setError('敏感字段、DSN 和 URI 请保存到关联的 Vault Item。');
     const nextConfig: Record<string, string | boolean> = kind === 'web' ? { url: address } : kind === 'postgresql' ? { host, port, database, sslMode } : kind === 'redis' ? { host, port, database, tls } : generic;
+    if (!validateTargetConfig(kind, nextConfig)) return setError('Target 配置无效，凭据、DSN 和 URI 请保存到关联的 Vault Item。');
     const next = target ? { ...target, name: name.trim(), kind, groupId: groupId || null, config: nextConfig, updatedAt: new Date().toISOString() } : createTarget({ name, kind, groupId: groupId || null, config: nextConfig });
     await db.targets.put(next);
     await onSaved();

@@ -65,6 +65,16 @@ export function validateConnectionHost(value: string): boolean {
   return /^\[[0-9a-fA-F:.]+\]$/.test(host) || /^[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?$/.test(host);
 }
 
+export function validateTargetConfig(kind: TargetKind, config: Target['config']): boolean {
+  if (kind === 'web') return Object.keys(config).length === 1 && typeof config.url === 'string' && validateWebUrl(config.url);
+  if (Object.keys(config).some((key) => /pass(word)?|secret|token|api.?key|dsn|uri|user(name)?/i.test(key))) return false;
+  if (Object.values(config).some((value) => typeof value === 'string' && /:\/\//.test(value))) return false;
+  const port = config.port;
+  if (kind === 'postgresql') return validateConnectionHost(String(config.host ?? '')) && typeof port === 'string' && /^\d{1,5}$/.test(port) && Number(port) <= 65535 && typeof config.database === 'string' && ['disable', 'prefer', 'require', 'verify-ca', 'verify-full'].includes(String(config.sslMode));
+  if (kind === 'redis') return validateConnectionHost(String(config.host ?? '')) && typeof port === 'string' && /^\d{1,5}$/.test(port) && Number(port) <= 65535 && typeof config.database === 'string' && typeof config.tls === 'boolean';
+  return true;
+}
+
 export function reorderTargets(targets: Target[], orderedIds: string[]): Target[] {
   const order = new Map(orderedIds.map((id, index) => [id, index]));
   return targets.map((target) => order.has(target.id) ? { ...target, sortOrder: order.get(target.id)!, updatedAt: new Date().toISOString() } : target);

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { decryptPackage, encryptPackage, type EncryptedPackage } from './package';
 import type { Target } from '../domain/targets';
-import { validateWebUrl } from '../domain/targets';
+import { validateTargetConfig } from '../domain/targets';
 import type { Group, Tag } from '../storage/db';
 
 const binaryToBase64 = (data: ArrayBuffer) => { const bytes = new Uint8Array(data); let text = ''; for (let start = 0; start < bytes.length; start += 0x8000) text += String.fromCharCode(...bytes.subarray(start, start + 0x8000)); return btoa(text); };
@@ -29,7 +29,7 @@ export async function parseBackup(encoded: string, password: string): Promise<Fu
   for (const target of decoded.targets) {
     if (target.groupId && !groupIds.has(target.groupId)) throw new Error('导入包包含未知分组引用');
     if (target.tagIds.some((id) => !tagIds.has(id))) throw new Error('导入包包含未知标签引用');
-    if (target.kind === 'web' && (typeof target.config.url !== 'string' || !validateWebUrl(target.config.url))) throw new Error('导入包包含不安全的网站地址');
+    if (!validateTargetConfig(target.kind, target.config)) throw new Error('导入包包含无效或敏感的 Target 配置');
   }
   return { mode: decoded.mode, targets: decoded.targets, groups: decoded.groups, tags: decoded.tags, vault: base64ToBinary(decoded.vault) };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createTarget, deleteGroup, deleteTarget, reorderTargets, validateConnectionHost, validateWebUrl } from './targets';
+import { createTarget, deleteGroup, deleteTarget, reorderTargets, validateConnectionHost, validateTargetConfig, validateWebUrl } from './targets';
 
 describe('Target management seam', () => {
   it('moves Targets to Inbox when a Group is deleted', () => {
@@ -31,6 +31,13 @@ describe('Target management seam', () => {
     expect(validateConnectionHost('[::1]')).toBe(true);
     expect(validateConnectionHost('postgres://user:password@db.example.com')).toBe(false);
     expect(validateConnectionHost('user@db.example.com')).toBe(false);
+  });
+
+  it('accepts only non-sensitive typed Target configuration', () => {
+    expect(validateTargetConfig('postgresql', { host: 'db.example.com', port: '5432', database: 'app', sslMode: 'require' })).toBe(true);
+    expect(validateTargetConfig('postgresql', { host: 'user:password@db.example.com', port: '5432', database: 'app', sslMode: 'require' })).toBe(false);
+    expect(validateTargetConfig('generic', { password: 'not-allowed' })).toBe(false);
+    expect(validateTargetConfig('generic', { endpoint: 'redis://secret@host' })).toBe(false);
   });
 
   it('persists a requested ordering inside a Group', () => {
