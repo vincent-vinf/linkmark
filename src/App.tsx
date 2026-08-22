@@ -19,6 +19,7 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [isEditorOpen, setEditorOpen] = useState(false);
+  const [editingTarget, setEditingTarget] = useState<Target | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => localStorage.getItem('linkmark-theme') as 'dark' | 'light' ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
   const [hasVault, setHasVault] = useState(false);
   const [vaultDialog, setVaultDialog] = useState(false);
@@ -64,10 +65,7 @@ export default function App() {
     await db.targets.delete(id);
     await reload();
   };
-  const editTarget = async (target: Target) => {
-    const name = window.prompt('Target 名称', target.name)?.trim(); if (!name) return;
-    await db.targets.put({ ...target, name, updatedAt: new Date().toISOString() }); await reload();
-  };
+  const editTarget = (target: Target) => { setEditingTarget(target); setEditorOpen(true); };
   const moveTarget = async (target: Target, direction: -1 | 1) => {
     const withinGroup = targets.filter((item) => item.groupId === target.groupId).sort((left, right) => left.sortOrder - right.sortOrder); const index = withinGroup.findIndex((item) => item.id === target.id); const adjacent = withinGroup[index + direction]; if (!adjacent) return;
     await db.targets.bulkPut(reorderTargets(targets, withinGroup.map((item, position) => position === index ? adjacent.id : position === index + direction ? target.id : item.id))); await reload();
@@ -129,7 +127,7 @@ export default function App() {
   return <main className="shell">
     <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
       <div className="brand"><span>✦</span> Linkmark</div>
-      <button className="new-button" onClick={() => setEditorOpen(true)}>＋ 新建 Target</button>
+      <button className="new-button" onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>＋ 新建 Target</button>
       <nav>
         <button className={!activeGroup ? 'active' : ''} onClick={() => setActiveGroup(null)}>收件箱 <small>{targets.filter((item) => !item.groupId).length}</small></button>
         <div className="section-title">分组 <button aria-label="添加分组" onClick={() => void addGroup()}>＋</button></div>
@@ -143,7 +141,7 @@ export default function App() {
         <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => setRecycledItems(listRecycledVaultItems(vaultRef.current!))}>回收站</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void changeMasterPassword()}>改主密码</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => void importShare()}>导入</button></div>
       </header>
       <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={vaultUnlocked ? '搜索 Target、秘密标题或账号…' : '搜索名称、连接主机或数据库…'} /></label>
-      <div className="toolbar"><span>{visible.length} 个 Target</span><button onClick={() => setEditorOpen(true)}>新建</button></div>
+      <div className="toolbar"><span>{visible.length} 个 Target</span><button onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>新建</button></div>
       {visible.length ? <div className="grid">{visible.map((target) => <article className="card" key={target.id} onDoubleClick={() => { if (target.kind === 'web') window.open(String(target.config.url), '_blank', 'noopener,noreferrer'); }}>
         <div className={`kind kind-${target.kind}`}>{target.kind === 'web' ? '↗' : target.kind === 'postgresql' ? '◫' : target.kind === 'redis' ? '◆' : '◇'}</div>
         <div className="card-body"><p className="kind-label">{kinds[target.kind]}</p><h2>{target.name}</h2><p>{target.kind === 'web' ? String(target.config.url ?? '') : Object.values(target.config).filter(Boolean).join(' · ') || '未填写连接资料'}</p></div>
@@ -153,11 +151,11 @@ export default function App() {
         <button onClick={() => void editTags(target)}>标签</button>
         <button onClick={() => void moveTarget(target, -1)}>↑</button><button onClick={() => void moveTarget(target, 1)}>↓</button>
         <button className="delete" aria-label={`删除 ${target.name}`} onClick={() => void removeTarget(target.id)}>×</button>
-      </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => setEditorOpen(true)}>新建 Target</button></div>}
+      </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => { setEditingTarget(null); setEditorOpen(true); }}>新建 Target</button></div>}
       {vaultUnlocked && vaultItems.length > 0 && <section className="vault-list"><h2>Vault Items</h2>{vaultItems.filter((item) => `${item.title} ${item.username}`.toLowerCase().includes(query.toLowerCase())).map((item) => <div key={item.id}><button className="vault-item" onClick={() => setSelectedVaultItem(getVaultItem(vaultRef.current!, item.id))}><span>{item.title || '未命名秘密'}</span><small>{item.username}</small></button><button onClick={() => void removeSecret(item.id)}>删除</button></div>)}</section>}
       {vaultUnlocked && recycledItems.length > 0 && <section className="vault-list"><h2>回收站 <button onClick={() => void emptyRecycleBin()}>清空</button></h2>{recycledItems.map((item, index) => <div key={item.id}><span>已删除秘密 {index + 1}</span><button onClick={() => void restoreSecret(item.id)}>恢复</button></div>)}</section>}
     </section>
-    {isEditorOpen && <TargetEditor groups={groups} onClose={() => setEditorOpen(false)} onSaved={async () => { setEditorOpen(false); await reload(); }} />}
+    {isEditorOpen && <TargetEditor target={editingTarget} groups={groups} onClose={() => setEditorOpen(false)} onSaved={async () => { setEditorOpen(false); setEditingTarget(null); await reload(); }} />}
     {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password, duration) => { try { const record = await db.vaults.get('primary'); const data = record?.data ?? await createVault(password); const vault = await unlockVault(data, password); const purged = purgeExpiredVaultItems(vault); if (!record || purged) await db.vaults.put({ id: 'primary', data: await saveVault(vault), updatedAt: new Date().toISOString() }); vaultRef.current = vault; masterPasswordRef.current = password; setVaultExpiry(Date.now() + duration); setVaultUnlocked(true); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
     {passwordRequest && <PasswordPrompt label={passwordRequest.label} onClose={() => { passwordRequest.resolve(null); setPasswordRequest(null); }} onSubmit={(value) => { passwordRequest.resolve(value); setPasswordRequest(null); }} />}
     {selectedVaultItem && <VaultItemDialog item={selectedVaultItem} onClose={() => setSelectedVaultItem(null)} onSave={saveSecret} />}
@@ -184,20 +182,24 @@ function VaultDialog({ hasVault, onClose, onSubmit, error }: { hasVault: boolean
   return <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true"><div className="modal-heading"><div><p className="eyebrow">ENCRYPTED VAULT</p><h2>{hasVault ? '解锁 Vault' : '创建 Vault'}</h2></div><button onClick={onClose}>×</button></div><label>主密码<input type="password" autoFocus value={password} onChange={(event) => setPassword(event.target.value)} /></label>{!hasVault && <><label>确认主密码<input type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} /></label><p className="error">主密码无法找回。创建后请立即导出加密备份。</p></>}<label>免密时长<select value={duration} onChange={(event) => setDuration(Number(event.target.value))}><option value={300000}>5 分钟</option><option value={1800000}>30 分钟</option><option value={7200000}>2 小时</option><option value={86400000}>24 小时</option><option value={604800000}>7 天</option></select></label>{error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!password || (!hasVault && password !== confirmation)} onClick={() => void onSubmit(password, duration)}>{hasVault ? '解锁' : '创建'}</button></div></section></div>;
 }
 
-function TargetEditor({ groups, onClose, onSaved }: { groups: Group[]; onClose: () => void; onSaved: () => Promise<void> }) {
-  const [name, setName] = useState(''); const [kind, setKind] = useState<TargetKind>('web'); const [address, setAddress] = useState(''); const [host, setHost] = useState(''); const [port, setPort] = useState(''); const [database, setDatabase] = useState(''); const [groupId, setGroupId] = useState(''); const [error, setError] = useState('');
+function TargetEditor({ target, groups, onClose, onSaved }: { target: Target | null; groups: Group[]; onClose: () => void; onSaved: () => Promise<void> }) {
+  const config = target?.config ?? {};
+  const [name, setName] = useState(target?.name ?? ''); const [kind, setKind] = useState<TargetKind>(target?.kind ?? 'web'); const [address, setAddress] = useState(String(config.url ?? '')); const [host, setHost] = useState(String(config.host ?? '')); const [port, setPort] = useState(String(config.port ?? '')); const [database, setDatabase] = useState(String(config.database ?? '')); const [sslMode, setSslMode] = useState(String(config.sslMode ?? 'prefer')); const [tls, setTls] = useState(Boolean(config.tls)); const [genericFields, setGenericFields] = useState(() => Object.entries(config).map(([key, value]) => `${key}=${value}`).join('\n')); const [groupId, setGroupId] = useState(target?.groupId ?? ''); const [error, setError] = useState('');
   const save = async () => {
     if (!name.trim()) return setError('请输入名称。');
     if (kind === 'web' && !validateWebUrl(address)) return setError('网站地址必须是 HTTP 或 HTTPS URL。');
     if ((kind === 'postgresql' || kind === 'redis') && (!host.trim() || !/^\d{1,5}$/.test(port) || Number(port) > 65535)) return setError('请填写主机和 1–65535 的端口。');
-    const config: Record<string, string> = kind === 'web' ? { url: address } : kind === 'postgresql' ? { host, port, database } : kind === 'redis' ? { host, port, database } : { note: address };
-    await db.targets.add(createTarget({ name, kind, groupId: groupId || null, config }));
+    const generic: Record<string, string> = Object.fromEntries(genericFields.split('\n').map((line) => line.split('=').map((part) => part.trim())).filter(([key, value]) => key && value));
+    if (kind === 'generic' && (Object.keys(generic).some((key) => /pass(word)?|secret|token|api.?key|dsn|uri/i.test(key)) || Object.values(generic).some((value) => /:\/\//.test(value)))) return setError('敏感字段、DSN 和 URI 请保存到关联的 Vault Item。');
+    const nextConfig: Record<string, string | boolean> = kind === 'web' ? { url: address } : kind === 'postgresql' ? { host, port, database, sslMode } : kind === 'redis' ? { host, port, database, tls } : generic;
+    const next = target ? { ...target, name: name.trim(), kind, groupId: groupId || null, config: nextConfig, updatedAt: new Date().toISOString() } : createTarget({ name, kind, groupId: groupId || null, config: nextConfig });
+    await db.targets.put(next);
     await onSaved();
   };
-  return <div className="modal-backdrop" role="presentation"><section className="modal" role="dialog" aria-modal="true" aria-label="新建 Target"><div className="modal-heading"><div><p className="eyebrow">NEW TARGET</p><h2>添加入口</h2></div><button onClick={onClose}>×</button></div>
+  return <div className="modal-backdrop" role="presentation"><section className="modal" role="dialog" aria-modal="true" aria-label={target ? '编辑 Target' : '新建 Target'}><div className="modal-heading"><div><p className="eyebrow">{target ? 'EDIT TARGET' : 'NEW TARGET'}</p><h2>{target ? '编辑入口' : '添加入口'}</h2></div><button onClick={onClose}>×</button></div>
     <label>名称<input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="例如：生产数据库" /></label>
     <label>类型<select value={kind} onChange={(event) => setKind(event.target.value as TargetKind)}>{Object.entries(kinds).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-    {kind === 'web' || kind === 'generic' ? <label>{kind === 'web' ? 'URL' : '非敏感说明'}<input value={address} onChange={(event) => setAddress(event.target.value)} placeholder={kind === 'web' ? 'https://example.com' : '仅保存资料，不执行'} /></label> : <><label>主机<input value={host} onChange={(event) => setHost(event.target.value)} placeholder="db.example.com" /></label><label>端口<input inputMode="numeric" value={port} onChange={(event) => setPort(event.target.value)} placeholder={kind === 'postgresql' ? '5432' : '6379'} /></label><label>{kind === 'postgresql' ? '数据库' : '数据库编号'}<input value={database} onChange={(event) => setDatabase(event.target.value)} /></label></>}
+    {kind === 'web' ? <label>URL<input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="https://example.com" /></label> : kind === 'generic' ? <label>非敏感字段（每行 名称=值）<textarea value={genericFields} onChange={(event) => setGenericFields(event.target.value)} placeholder="host=example.com&#10;environment=production" /></label> : <><label>主机<input value={host} onChange={(event) => setHost(event.target.value)} placeholder="db.example.com" /></label><label>端口<input inputMode="numeric" value={port} onChange={(event) => setPort(event.target.value)} placeholder={kind === 'postgresql' ? '5432' : '6379'} /></label><label>{kind === 'postgresql' ? '数据库' : '数据库编号'}<input value={database} onChange={(event) => setDatabase(event.target.value)} /></label>{kind === 'postgresql' ? <label>SSL 模式<select value={sslMode} onChange={(event) => setSslMode(event.target.value)}><option value="disable">禁用</option><option value="prefer">优先</option><option value="require">要求</option><option value="verify-ca">验证 CA</option><option value="verify-full">完整验证</option></select></label> : <label className="checkbox"><input type="checkbox" checked={tls} onChange={(event) => setTls(event.target.checked)} /> 使用 TLS</label>}</>}
     <label>分组<select value={groupId} onChange={(event) => setGroupId(event.target.value)}><option value="">收件箱</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label>
     {error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" onClick={() => void save()}>保存</button></div>
   </section></div>;
