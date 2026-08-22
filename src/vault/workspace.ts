@@ -59,6 +59,12 @@ export function updateEntry(vault: Kdbx, entry: Target): boolean {
   return true;
 }
 
+export function deleteEntry(vault: Kdbx, id: string): boolean {
+  const record = entryRecord(vault, id);
+  if (!record) return false;
+  vault.createRecycleBin(); vault.remove(record); return true;
+}
+
 export function deleteKey(vault: Kdbx, keyId: string): boolean {
   const record = partition(vault, '密钥').entries.find((item) => item.uuid.toString() === keyId);
   if (!record) return false;
