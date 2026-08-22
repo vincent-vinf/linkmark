@@ -9,5 +9,7 @@ describe('Vault item seam', () => {
 
     expect(vault.getDefaultGroup().entries).toHaveLength(1);
     expect(vault.getDefaultGroup().entries[0]?.fields.get('Password')).toBeDefined();
+    expect(Number(vault.header.kdfParameters?.get('M'))).toBe(65536);
+    expect(Number(vault.header.kdfParameters?.get('I'))).toBe(3);
   });
 });

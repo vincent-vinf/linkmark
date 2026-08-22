@@ -1,5 +1,5 @@
 import { argon2id } from 'hash-wasm';
-import { Consts, Credentials, CryptoEngine, Kdbx, ProtectedValue } from 'kdbxweb';
+import { Consts, Credentials, CryptoEngine, Int64, Kdbx, ProtectedValue, VarDictionary } from 'kdbxweb';
 
 const text = new TextEncoder();
 let configured = false;
@@ -19,6 +19,9 @@ export async function createVault(password: string): Promise<ArrayBuffer> {
   configureArgon2();
   const vault = Kdbx.create(credentials(password), 'Linkmark Vault');
   vault.setKdf(Consts.KdfId.Argon2id);
+  vault.header.kdfParameters?.set('M', VarDictionary.ValueType.UInt64, new Int64(65536));
+  vault.header.kdfParameters?.set('I', VarDictionary.ValueType.UInt64, new Int64(3));
+  vault.header.kdfParameters?.set('P', VarDictionary.ValueType.UInt32, 1);
   return vault.save();
 }
 
