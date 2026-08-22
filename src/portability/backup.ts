@@ -33,3 +33,21 @@ export async function parseBackup(encoded: string, password: string): Promise<Fu
   }
   return { mode: decoded.mode, targets: decoded.targets, groups: decoded.groups, tags: decoded.tags, vault: base64ToBinary(decoded.vault) };
 }
+
+export type KeyStoreBackup = { mode: 'backup' | 'share'; vault: ArrayBuffer };
+const keyStoreSchema = z.object({ formatVersion: z.literal(2), mode: z.enum(['backup', 'share']), vault: z.string().max(20_000_000) });
+
+/** The v2 portable form deliberately contains only encrypted KDBX bytes. */
+export async function serializeKeyStoreBackup(vault: ArrayBuffer, password: string, mode: KeyStoreBackup['mode'] = 'backup'): Promise<string> {
+  const envelope = await encryptPackage({ formatVersion: 2, mode, vault: binaryToBase64(vault) }, password);
+  return btoa(JSON.stringify(envelope)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
+export async function parseKeyStoreBackup(encoded: string, password: string): Promise<KeyStoreBackup> {
+  if (encoded.length > 25_000_000) throw new Error('导入包过大');
+  const padded = encoded.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - encoded.length % 4) % 4);
+  let envelope: EncryptedPackage;
+  try { envelope = envelopeSchema.parse(JSON.parse(atob(padded))); } catch { throw new Error('无效的导入包'); }
+  const decoded = keyStoreSchema.parse(await decryptPackage(envelope, password));
+  return { mode: decoded.mode, vault: base64ToBinary(decoded.vault) };
+}
