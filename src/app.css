@@ -107,8 +107,8 @@ h1 { max-width: 700px; margin: 0; font-size: clamp(29px, 3vw, 40px); line-height
 .card-tags { align-self: end; grid-column: 1 / -1; overflow: hidden; color: var(--blue); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .card-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 5px; padding-top: 14px; border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); opacity: .67; transition: opacity .16s; }
 .card:hover .card-actions, .card:focus-within .card-actions { opacity: 1; }
-.card-actions button, .delete { border: 0; border-radius: 7px; padding: 5px 7px; color: var(--muted); background: transparent; font-size: 11px; }
-.card-actions button:hover { color: var(--ink); background: color-mix(in srgb, var(--blue) 15%, transparent); }
+.card-actions button, .card-actions a, .delete { border: 0; border-radius: 7px; padding: 5px 7px; color: var(--muted); background: transparent; font-size: 11px; text-decoration: none; }
+.card-actions button:hover, .card-actions a:hover { color: var(--ink); background: color-mix(in srgb, var(--blue) 15%, transparent); }
 .card-actions .link-secret { margin-right: auto; color: var(--mint); background: color-mix(in srgb, var(--mint) 11%, transparent); }
 .card-actions .pin-target { font-size: 15px; line-height: 1; }.card-actions .edit-target { color: var(--soft); }
 .delete { position: absolute; top: 10px; right: 9px; font-size: 19px; line-height: 1; }.delete:hover { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); }
