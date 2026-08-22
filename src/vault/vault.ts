@@ -61,4 +61,9 @@ export function deleteVaultItem(vault: Kdbx, id: string): boolean {
   return false;
 }
 
+export function mergeVaultItems(target: Kdbx, incoming: Kdbx): void {
+  const group = target.getDefaultGroup();
+  for (const sourceGroup of incoming.groups) for (const entry of sourceGroup.entries) target.importEntry(entry, group, incoming);
+}
+
 export function clearPassword(value: string): void { text.encode(value).fill(0); }

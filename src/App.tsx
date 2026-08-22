@@ -3,7 +3,8 @@ import type { Kdbx } from 'kdbxweb';
 import { createTarget, type Target, type TargetKind, validateWebUrl } from './domain/targets';
 import { db, replaceLocalData, type Group } from './storage/db';
 import { parseBackup, serializeBackup } from './portability/backup';
-import { addVaultItem, createVault, rekeyVault, saveVault, unlockVault } from './vault/vault';
+import { mergeMetadata } from './portability/merge';
+import { addVaultItem, createVault, mergeVaultItems, rekeyVault, saveVault, unlockVault } from './vault/vault';
 import './app.css';
 
 const kinds: Record<TargetKind, string> = { web: '网站', postgresql: 'PostgreSQL', redis: 'Redis', generic: '通用' };
@@ -67,7 +68,7 @@ export default function App() {
   };
   const importShare = async () => {
     const text = window.prompt('粘贴加密备份或分享字符串'); const password = window.prompt('输入对应口令'); const nextPassword = window.prompt('设置导入后 Vault 的新主密码'); if (!text || password === null || !nextPassword) return;
-    try { const data = await parseBackup(text, password); const vault = await rekeyVault(data.vault, password, nextPassword); await replaceLocalData({ ...data, vault }); lockVault(); setHasVault(true); await reload(); alert('已导入。请使用新主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
+    try { const data = await parseBackup(text, password); const replace = window.confirm(`导入预览：${data.targets.length} 个 Target、${data.groups.length} 个分组、${data.tags.length} 个标签。确定替换本地数据；取消则合并。`); if (!replace && vaultRef.current) { const incoming = await unlockVault(data.vault, password); mergeVaultItems(vaultRef.current, incoming); const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, data); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current) }); await reload(); alert('已合并导入。'); return; } const vault = await rekeyVault(data.vault, password, nextPassword); await replaceLocalData({ ...data, vault }); lockVault(); setHasVault(true); await reload(); alert('已导入。请使用新主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
   };
 
   return <main className="shell">
