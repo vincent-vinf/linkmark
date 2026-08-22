@@ -6,6 +6,7 @@ import { parseBackup, serializeBackup } from './portability/backup';
 import { mergeMetadata } from './portability/merge';
 import { addVaultItem, createVault, deleteVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, saveVault, unlockVault, type VaultItemSummary } from './vault/vault';
 import './app.css';
+import './responsive.css';
 
 const kinds: Record<TargetKind, string> = { web: '网站', postgresql: 'PostgreSQL', redis: 'Redis', generic: '通用' };
 const newId = () => crypto.randomUUID();
@@ -24,6 +25,7 @@ export default function App() {
   const [vaultExpiry, setVaultExpiry] = useState<number | null>(null);
   const [vaultItems, setVaultItems] = useState<VaultItemSummary[]>([]);
   const [recycledItems, setRecycledItems] = useState<VaultItemSummary[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
   const vaultRef = useRef<Kdbx | null>(null);
   const masterPasswordRef = useRef<string | null>(null);
 
@@ -52,6 +54,10 @@ export default function App() {
     if (!window.confirm('删除此 Target？关联的秘密不会被删除。')) return;
     await db.targets.delete(id);
     await reload();
+  };
+  const editTarget = async (target: Target) => {
+    const name = window.prompt('Target 名称', target.name)?.trim(); if (!name) return;
+    await db.targets.put({ ...target, name, updatedAt: new Date().toISOString() }); await reload();
   };
   const addSecret = async () => {
     if (!vaultRef.current) return setVaultDialog(true);
@@ -98,7 +104,7 @@ export default function App() {
   };
 
   return <main className="shell">
-    <aside className="sidebar">
+    <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
       <div className="brand"><span>✦</span> Linkmark</div>
       <button className="new-button" onClick={() => setEditorOpen(true)}>＋ 新建 Target</button>
       <nav>
@@ -110,7 +116,7 @@ export default function App() {
     </aside>
     <section className="content">
       <header>
-        <div><p className="eyebrow">LOCAL-FIRST WORKSPACE</p><h1>{activeGroup ? groups.find((group) => group.id === activeGroup)?.name : '所有 Targets'}</h1></div>
+        <div><button className="mobile-menu" onClick={() => setMenuOpen(!menuOpen)}>☰</button><p className="eyebrow">LOCAL-FIRST WORKSPACE</p><h1>{activeGroup ? groups.find((group) => group.id === activeGroup)?.name : '所有 Targets'}</h1></div>
         <div className="actions"><button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☀︎' : '☾'}</button>{vaultUnlocked && <button onClick={() => setVaultItems(listVaultItems(vaultRef.current!))}>Vault</button>}{vaultUnlocked && <button onClick={() => setRecycledItems(listRecycledVaultItems(vaultRef.current!))}>回收站</button>}{vaultUnlocked && <button onClick={() => void addSecret()}>＋ 秘密</button>}{vaultUnlocked && <button onClick={() => void changeMasterPassword()}>改主密码</button>}{vaultUnlocked && <button onClick={() => void downloadBackup()}>备份</button>}{vaultUnlocked && <button onClick={() => void share()}>分享</button>}<button onClick={() => void importShare()}>导入</button></div>
       </header>
       <label className="search"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索名称、连接主机或数据库…" /></label>
@@ -119,6 +125,7 @@ export default function App() {
         <div className={`kind kind-${target.kind}`}>{target.kind === 'web' ? '↗' : target.kind === 'postgresql' ? '◫' : target.kind === 'redis' ? '◆' : '◇'}</div>
         <div className="card-body"><p className="kind-label">{kinds[target.kind]}</p><h2>{target.name}</h2><p>{target.kind === 'web' ? String(target.config.url ?? '') : Object.values(target.config).filter(Boolean).join(' · ') || '未填写连接资料'}</p></div>
         {vaultUnlocked && <button className="link-secret" onClick={() => void linkSecret(target)}>秘密 {target.vaultItemIds.length}</button>}
+        <button className="edit-target" onClick={() => void editTarget(target)}>编辑</button>
         <button className="delete" aria-label={`删除 ${target.name}`} onClick={() => void removeTarget(target.id)}>×</button>
       </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => setEditorOpen(true)}>新建 Target</button></div>}
       {vaultUnlocked && vaultItems.length > 0 && <section className="vault-list"><h2>Vault Items</h2>{vaultItems.map((item) => <div key={item.id}><span>{item.title}</span><small>{item.username}</small><button onClick={() => void removeSecret(item.id)}>删除</button></div>)}</section>}
