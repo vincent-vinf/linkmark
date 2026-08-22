@@ -82,6 +82,12 @@ export function purgeExpiredVaultItems(vault: Kdbx, now = Date.now(), retentionM
   return expired.length;
 }
 
+export function emptyVaultRecycleBin(vault: Kdbx): number {
+  const recycleBin = vault.meta.recycleBinUuid ? vault.getGroup(vault.meta.recycleBinUuid) : undefined;
+  if (!recycleBin) return 0;
+  const count = recycleBin.entries.length; recycleBin.entries.splice(0, count); return count;
+}
+
 export function mergeVaultItems(target: Kdbx, incoming: Kdbx): Map<string, string> {
   const group = target.getDefaultGroup();
   const ids = new Map<string, string>();

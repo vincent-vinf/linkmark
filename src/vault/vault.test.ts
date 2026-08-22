@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addVaultItem, createVault, deleteVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, unlockVault } from './vault';
+import { addVaultItem, createVault, deleteVaultItem, emptyVaultRecycleBin, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, unlockVault } from './vault';
 
 describe('Vault item seam', () => {
   it('stores secret fields inside a password-protected KDBX vault', async () => {
@@ -11,6 +11,11 @@ describe('Vault item seam', () => {
     expect(vault.getDefaultGroup().entries[0]?.fields.get('Password')).toBeDefined();
     expect(Number(vault.header.kdfParameters?.get('M'))).toBe(65536);
     expect(Number(vault.header.kdfParameters?.get('I'))).toBe(3);
+  });
+
+  it('permanently empties the recycle bin on request', async () => {
+    const vault = await unlockVault(await createVault('test'), 'test'); const id = addVaultItem(vault, { title: 'remove' }); deleteVaultItem(vault, id);
+    expect(emptyVaultRecycleBin(vault)).toBe(1); expect(listRecycledVaultItems(vault)).toEqual([]);
   });
 
   it('purges recycle-bin entries after the retention window', async () => {

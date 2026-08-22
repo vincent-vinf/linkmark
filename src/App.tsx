@@ -4,7 +4,7 @@ import { createTarget, deleteGroup, reorderTargets, type Target, type TargetKind
 import { db, replaceLocalData, type Group, type Tag } from './storage/db';
 import { parseBackup, serializeBackup } from './portability/backup';
 import { mergeMetadata } from './portability/merge';
-import { addVaultItem, createVault, deleteVaultItem, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, saveVault, unlockVault, type VaultItemSummary } from './vault/vault';
+import { addVaultItem, createVault, deleteVaultItem, emptyVaultRecycleBin, listRecycledVaultItems, listVaultItems, mergeVaultItems, purgeExpiredVaultItems, rekeyVault, restoreVaultItem, saveVault, unlockVault, type VaultItemSummary } from './vault/vault';
 import './app.css';
 import './responsive.css';
 
@@ -88,6 +88,7 @@ export default function App() {
   };
   const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setVaultItems(listVaultItems(vaultRef.current)); };
   const restoreSecret = async (id: string) => { if (!vaultRef.current) return; restoreVaultItem(vaultRef.current, id); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultItems(listVaultItems(vaultRef.current)); };
+  const emptyRecycleBin = async () => { if (!vaultRef.current || !window.confirm('永久删除回收站中的全部秘密？')) return; emptyVaultRecycleBin(vaultRef.current); await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() }); setRecycledItems([]); };
   const linkSecret = async (target: Target) => {
     if (!vaultRef.current) return setVaultDialog(true);
     const options = listVaultItems(vaultRef.current); if (!options.length) return alert('请先创建秘密条目。');
@@ -151,7 +152,7 @@ export default function App() {
         <button className="delete" aria-label={`删除 ${target.name}`} onClick={() => void removeTarget(target.id)}>×</button>
       </article>)}</div> : <div className="empty"><span>✦</span><h2>建立你的第一个入口</h2><p>网站、PostgreSQL、Redis 与通用连接资料都会保存在这台设备上。</p><button onClick={() => setEditorOpen(true)}>新建 Target</button></div>}
       {vaultUnlocked && vaultItems.length > 0 && <section className="vault-list"><h2>Vault Items</h2>{vaultItems.map((item, index) => <div key={item.id}><span>秘密条目 {index + 1}</span><button onClick={() => void removeSecret(item.id)}>删除</button></div>)}</section>}
-      {vaultUnlocked && recycledItems.length > 0 && <section className="vault-list"><h2>回收站</h2>{recycledItems.map((item, index) => <div key={item.id}><span>已删除秘密 {index + 1}</span><button onClick={() => void restoreSecret(item.id)}>恢复</button></div>)}</section>}
+      {vaultUnlocked && recycledItems.length > 0 && <section className="vault-list"><h2>回收站 <button onClick={() => void emptyRecycleBin()}>清空</button></h2>{recycledItems.map((item, index) => <div key={item.id}><span>已删除秘密 {index + 1}</span><button onClick={() => void restoreSecret(item.id)}>恢复</button></div>)}</section>}
     </section>
     {isEditorOpen && <TargetEditor groups={groups} onClose={() => setEditorOpen(false)} onSaved={async () => { setEditorOpen(false); await reload(); }} />}
     {vaultDialog && <VaultDialog hasVault={hasVault} onClose={() => setVaultDialog(false)} onSubmit={async (password, duration) => { try { const record = await db.vaults.get('primary'); const data = record?.data ?? await createVault(password); const vault = await unlockVault(data, password); const purged = purgeExpiredVaultItems(vault); if (!record || purged) await db.vaults.put({ id: 'primary', data: await saveVault(vault), updatedAt: new Date().toISOString() }); vaultRef.current = vault; masterPasswordRef.current = password; setVaultExpiry(Date.now() + duration); setVaultUnlocked(true); setHasVault(true); setVaultDialog(false); } catch { setVaultError('无法解锁 Vault，请检查主密码。'); } }} error={vaultError} />}
