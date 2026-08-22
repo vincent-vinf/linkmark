@@ -58,10 +58,10 @@ describe('Vault item seam', () => {
 
   it('reads and updates an encrypted Vault Item without exposing it in Target storage', async () => {
     const vault = await unlockVault(await createVault('test'), 'test');
-    const id = addVaultItem(vault, { title: 'Redis', username: 'default', password: 'old', notes: 'private', fields: { Token: 'one' } });
-    expect(getVaultItem(vault, id)).toMatchObject({ title: 'Redis', username: 'default', password: 'old', notes: 'private', fields: { Token: 'one' } });
-    expect(updateVaultItem(vault, id, { title: 'Redis prod', username: 'admin', password: 'new', fields: { Token: 'two' } })).toBe(true);
-    expect(getVaultItem(vault, id)).toMatchObject({ title: 'Redis prod', username: 'admin', password: 'new', notes: '', fields: { Token: 'two' } });
+    const id = addVaultItem(vault, { title: 'Redis', username: 'default', password: 'old', notes: 'private', fields: { Token: 'one==' } });
+    expect(getVaultItem(vault, id)).toMatchObject({ title: 'Redis', username: 'default', password: 'old', notes: 'private', fields: { Token: 'one==' } });
+    expect(updateVaultItem(vault, id, { title: 'Redis prod', username: 'admin', password: 'new', fields: { Token: 'two==' } })).toBe(true);
+    expect(getVaultItem(vault, id)).toMatchObject({ title: 'Redis prod', username: 'admin', password: 'new', notes: '', fields: { Token: 'two==' } });
   });
 
   it('rejects malformed Vault bytes before attempting a password KDF', () => {

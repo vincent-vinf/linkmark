@@ -11,6 +11,11 @@ import './responsive.css';
 const kinds: Record<TargetKind, string> = { web: '网站', postgresql: 'PostgreSQL', redis: 'Redis', generic: '通用' };
 const newId = () => crypto.randomUUID();
 type PasswordRequest = { label: string; resolve: (value: string | null) => void };
+const parseKeyValueFields = (value: string, delimiter: string | RegExp): Record<string, string> => Object.fromEntries(value.split(delimiter).flatMap((part) => {
+  const index = part.indexOf('='); if (index < 1) return [];
+  const key = part.slice(0, index).trim(); const fieldValue = part.slice(index + 1).trim();
+  return key && fieldValue ? [[key, fieldValue]] : [];
+}));
 
 export default function App() {
   const [targets, setTargets] = useState<Target[]>([]);
@@ -84,7 +89,7 @@ export default function App() {
     if (!vaultRef.current) return setVaultDialog(true);
     const title = (await askPassword('秘密条目名称'))?.trim(); const username = await askPassword('账号（可留空）'); const password = await askPassword('密码、API Key 或 Token（可留空）'); const notes = await askPassword('备注（可留空）'); const custom = await askPassword('自定义字段，格式为 名称=值，多个用逗号分隔（可留空）');
     if (!title || password === null || username === null || notes === null || custom === null) return;
-    const fields = Object.fromEntries(custom.split(',').map((part) => part.split('=').map((value) => value.trim())).filter(([key, value]) => key && value));
+    const fields = parseKeyValueFields(custom, ',');
     addVaultItem(vaultRef.current, { title, username, password, notes, fields });
     await db.vaults.put({ id: 'primary', data: await saveVault(vaultRef.current), updatedAt: new Date().toISOString() });
     setVaultItems(listVaultItems(vaultRef.current));
@@ -173,7 +178,7 @@ function VaultItemDialog({ item, onClose, onSave }: { item: VaultItemDetail; onC
   const set = (key: keyof VaultItemDetail, value: string) => setDraft((current) => ({ ...current, [key]: value }));
   const copy = async (value: string) => { try { await navigator.clipboard.writeText(value); } catch { alert('无法写入剪贴板，请检查浏览器权限。'); } };
   const customText = Object.entries(draft.fields).map(([key, value]) => `${key}=${value}`).join('\n');
-  return <div className="modal-backdrop"><section className="modal vault-detail" role="dialog" aria-modal="true" aria-label="编辑秘密条目"><div className="modal-heading"><div><p className="eyebrow">ENCRYPTED VAULT ITEM</p><h2>秘密条目</h2></div><button onClick={onClose}>×</button></div><label>名称<input autoFocus value={draft.title} onChange={(event) => set('title', event.target.value)} /></label><label>账号<div className="copy-field"><input value={draft.username} onChange={(event) => set('username', event.target.value)} /><button disabled={!draft.username} onClick={() => void copy(draft.username)}>复制</button></div></label><label>密码 / API Key / Token<div className="copy-field"><input type={reveal ? 'text' : 'password'} value={draft.password} onChange={(event) => set('password', event.target.value)} /><button onClick={() => setReveal(!reveal)}>{reveal ? '隐藏' : '显示'}</button><button disabled={!draft.password} onClick={() => void copy(draft.password)}>复制</button></div></label><label>备注<textarea value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></label><label>自定义字段（每行 名称=值）<textarea value={customText} onChange={(event) => setDraft((current) => ({ ...current, fields: Object.fromEntries(event.target.value.split('\n').map((line) => line.split('=').map((part) => part.trim())).filter(([key, value]) => key && value) ) }))} /></label><div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!draft.title.trim()} onClick={() => void onSave(draft)}>保存</button></div></section></div>;
+  return <div className="modal-backdrop"><section className="modal vault-detail" role="dialog" aria-modal="true" aria-label="编辑秘密条目"><div className="modal-heading"><div><p className="eyebrow">ENCRYPTED VAULT ITEM</p><h2>秘密条目</h2></div><button onClick={onClose}>×</button></div><label>名称<input autoFocus value={draft.title} onChange={(event) => set('title', event.target.value)} /></label><label>账号<div className="copy-field"><input value={draft.username} onChange={(event) => set('username', event.target.value)} /><button disabled={!draft.username} onClick={() => void copy(draft.username)}>复制</button></div></label><label>密码 / API Key / Token<div className="copy-field"><input type={reveal ? 'text' : 'password'} value={draft.password} onChange={(event) => set('password', event.target.value)} /><button onClick={() => setReveal(!reveal)}>{reveal ? '隐藏' : '显示'}</button><button disabled={!draft.password} onClick={() => void copy(draft.password)}>复制</button></div></label><label>备注<textarea value={draft.notes} onChange={(event) => set('notes', event.target.value)} /></label><label>自定义字段（每行 名称=值）<textarea value={customText} onChange={(event) => setDraft((current) => ({ ...current, fields: parseKeyValueFields(event.target.value, '\n') }))} /></label><div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!draft.title.trim()} onClick={() => void onSave(draft)}>保存</button></div></section></div>;
 }
 
 function PasswordPrompt({ label, onClose, onSubmit }: { label: string; onClose: () => void; onSubmit: (value: string) => void }) {
@@ -195,7 +200,7 @@ function TargetEditor({ target, groups, onClose, onSaved }: { target: Target | n
     if (!name.trim()) return setError('请输入名称。');
     if (kind === 'web' && !validateWebUrl(address)) return setError('网站地址必须是 HTTP 或 HTTPS URL。');
     if ((kind === 'postgresql' || kind === 'redis') && (!validateConnectionHost(host) || !/^\d{1,5}$/.test(port) || Number(port) > 65535)) return setError('请填写不含凭据的主机，以及 1–65535 的端口。');
-    const generic: Record<string, string> = Object.fromEntries(genericFields.split('\n').map((line) => line.split('=').map((part) => part.trim())).filter(([key, value]) => key && value));
+    const generic = parseKeyValueFields(genericFields, '\n');
     if (kind === 'generic' && (Object.keys(generic).some((key) => /pass(word)?|secret|token|api.?key|dsn|uri/i.test(key)) || Object.values(generic).some((value) => /:\/\//.test(value)))) return setError('敏感字段、DSN 和 URI 请保存到关联的 Vault Item。');
     const nextConfig: Record<string, string | boolean> = kind === 'web' ? { url: address } : kind === 'postgresql' ? { host, port, database, sslMode } : kind === 'redis' ? { host, port, database, tls } : generic;
     if (!validateTargetConfig(kind, nextConfig)) return setError('Target 配置无效，凭据、DSN 和 URI 请保存到关联的 Vault Item。');
