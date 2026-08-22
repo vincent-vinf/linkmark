@@ -169,7 +169,7 @@ export default function App() {
   const mergeImport = async () => {
     if (!importPreview) return;
     if (!vaultRef.current) throw new Error('合并导入前必须先解锁当前 Vault。');
-    const { data, password } = importPreview; const incoming = await unlockVault(data.vault, password); const mapping = mergeVaultItems(vaultRef.current, incoming); const remapped = { ...data, targets: data.targets.map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.map((id) => mapping.get(id) ?? id) })) }; const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, remapped); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current, masterPasswordRef.current ?? undefined) }); setImportPreview(null); await reload(); alert('已合并导入。');
+    const { data, password } = importPreview; const currentPassword = masterPasswordRef.current; if (!currentPassword) throw new Error('合并导入前必须先解锁当前 Vault。'); const currentData = await saveVault(vaultRef.current, currentPassword); const mergedVault = await unlockVault(currentData, currentPassword); const incoming = await unlockVault(data.vault, password); const mapping = mergeVaultItems(mergedVault, incoming); const remapped = { ...data, targets: data.targets.map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.map((id) => mapping.get(id) ?? id) })) }; const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, remapped); const mergedData = await saveVault(mergedVault, currentPassword); await replaceLocalData({ ...merged, vault: mergedData }); vaultRef.current = mergedVault; setImportPreview(null); await reload(); alert('已合并导入。');
   };
 
   return <main className="shell">
@@ -261,7 +261,6 @@ function TargetEditor({ target, groups, onClose, onSaved }: { target: Target | n
     if (kind === 'web' && !validateWebUrl(address)) return setError('网站地址必须是 HTTP 或 HTTPS URL。');
     if ((kind === 'postgresql' || kind === 'redis') && (!validateConnectionHost(host) || !/^\d{1,5}$/.test(port) || Number(port) > 65535)) return setError('请填写不含凭据的主机，以及 1–65535 的端口。');
     const generic = parseKeyValueFields(genericFields, '\n');
-    if (kind === 'generic' && (Object.keys(generic).some((key) => /pass(word)?|secret|token|api.?key|dsn|uri/i.test(key)) || Object.values(generic).some((value) => /:\/\//.test(value)))) return setError('敏感字段、DSN 和 URI 请保存到关联的 Vault Item。');
     const nextConfig: Record<string, string | boolean> = kind === 'web' ? { url: address } : kind === 'postgresql' ? { host, port, database, sslMode } : kind === 'redis' ? { host, port, database, tls } : generic;
     if (!validateTargetConfig(kind, nextConfig)) return setError('Target 配置无效，凭据、DSN 和 URI 请保存到关联的 Vault Item。');
     const next = target ? { ...target, name: name.trim(), kind, groupId: groupId || null, config: nextConfig, updatedAt: new Date().toISOString() } : createTarget({ name, kind, groupId: groupId || null, config: nextConfig });
