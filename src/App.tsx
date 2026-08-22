@@ -71,7 +71,7 @@ export default function App() {
   useEffect(() => { void reload(); void db.vaults.get('primary').then((record) => setHasVault(Boolean(record))); }, []);
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('linkmark-theme', theme); }, [theme]);
   const clearSensitiveState = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultItems([]); setRecycledItems([]); setSelectedVaultItem(null); setVaultDirty(false); setVaultUnlocked(false); setVaultExpiry(null); };
-  useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(clearSensitiveState, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry]);
+  useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(() => { void (async () => { if (vaultDirty && vaultRef.current) { try { await persistVault(); } catch (error) { notifyVaultSaveFailure(error); } } clearSensitiveState(); })(); }, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry, vaultDirty]);
   useEffect(() => { const clear = () => clearSensitiveState(); window.addEventListener('pagehide', clear); return () => window.removeEventListener('pagehide', clear); }, []);
 
   const visible = useMemo(() => targets.filter((target) => {
@@ -122,14 +122,13 @@ export default function App() {
     const title = (await askPassword('秘密条目名称'))?.trim(); const username = await askPassword('账号（可留空）'); const password = await askPassword('密码、API Key 或 Token（可留空）'); const notes = await askPassword('备注（可留空）'); const custom = await askPassword('自定义字段，格式为 名称=值，多个用逗号分隔（可留空）');
     if (!title || password === null || username === null || notes === null || custom === null) return;
     const fields = parseKeyValueFields(custom, ',');
-    addVaultItem(vaultRef.current, { title, username, password, notes, fields });
-    try { await persistVault(); setVaultItems(listVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); }
+    addVaultItem(vaultRef.current, { title, username, password, notes, fields }); setVaultItems(listVaultItems(vaultRef.current)); setVaultDirty(true);
   };
-  const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); try { await persistVault(); setVaultItems(listVaultItems(vaultRef.current)); await reload(); } catch (error) { notifyVaultSaveFailure(error); } };
-  const restoreSecret = async (id: string) => { if (!vaultRef.current) return; restoreVaultItem(vaultRef.current, id); try { await persistVault(); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultItems(listVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); } };
-  const emptyRecycleBin = async () => { if (!vaultRef.current || !window.confirm('永久删除回收站中的全部秘密？')) return; emptyVaultRecycleBin(vaultRef.current); try { await persistVault(); setRecycledItems([]); } catch (error) { notifyVaultSaveFailure(error); } };
-  const permanentlyRemoveSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('永久删除此秘密且无法恢复？')) return; permanentlyDeleteVaultItem(vaultRef.current, id); try { await persistVault(); setRecycledItems(listRecycledVaultItems(vaultRef.current)); } catch (error) { notifyVaultSaveFailure(error); } };
-  const saveSecret = async (item: VaultItemDetail) => { if (!vaultRef.current || !item.title.trim()) return; updateVaultItem(vaultRef.current, item.id, item); try { await persistVault(); setVaultItems(listVaultItems(vaultRef.current)); setSelectedVaultItem(null); } catch (error) { notifyVaultSaveFailure(error); } };
+  const removeSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('将秘密条目移入回收站？')) return; deleteVaultItem(vaultRef.current, id); setVaultItems(listVaultItems(vaultRef.current)); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultDirty(true); };
+  const restoreSecret = async (id: string) => { if (!vaultRef.current) return; restoreVaultItem(vaultRef.current, id); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultItems(listVaultItems(vaultRef.current)); setVaultDirty(true); };
+  const emptyRecycleBin = async () => { if (!vaultRef.current || !window.confirm('永久删除回收站中的全部秘密？')) return; emptyVaultRecycleBin(vaultRef.current); setRecycledItems([]); setVaultDirty(true); };
+  const permanentlyRemoveSecret = async (id: string) => { if (!vaultRef.current || !window.confirm('永久删除此秘密且无法恢复？')) return; permanentlyDeleteVaultItem(vaultRef.current, id); setRecycledItems(listRecycledVaultItems(vaultRef.current)); setVaultDirty(true); };
+  const saveSecret = async (item: VaultItemDetail) => { if (!vaultRef.current || !item.title.trim()) return; updateVaultItem(vaultRef.current, item.id, item); setVaultItems(listVaultItems(vaultRef.current)); setSelectedVaultItem(null); setVaultDirty(true); };
   const linkSecret = async (target: Target) => {
     if (!vaultRef.current) return setVaultDialog(true);
     const options = listVaultItems(vaultRef.current); if (!options.length) return alert('请先创建秘密条目。');
@@ -142,6 +141,7 @@ export default function App() {
   const saveDirtyVault = async () => { try { await persistVault(); } catch (error) { notifyVaultSaveFailure(error); } };
   const changeMasterPassword = async () => {
     if (!vaultRef.current || !masterPasswordRef.current) return setVaultDialog(true);
+    if (vaultDirty) return alert('请先保存或锁定并放弃未保存修改，再修改主密码。');
     const next = await askPassword('输入新的主密码'); if (!next) return;
     const confirmation = await askPassword('再次输入新的主密码'); if (next !== confirmation) return alert('两次输入的主密码不一致。');
     if (!window.confirm('主密码将立即更新；忘记新密码将无法恢复 Vault。静态加密不能防护正在运行页面的 XSS、恶意扩展或已失陷设备。')) return;
@@ -174,6 +174,7 @@ export default function App() {
   const mergeImport = async () => {
     if (!importPreview) return;
     if (!vaultRef.current) throw new Error('合并导入前必须先解锁当前 Vault。');
+    if (vaultDirty) throw new Error('当前 Vault 有未保存修改，请先保存后再合并。');
     const { data, password } = importPreview; const currentPassword = masterPasswordRef.current; if (!currentPassword) throw new Error('合并导入前必须先解锁当前 Vault。'); const currentData = await saveVault(vaultRef.current, currentPassword); const mergedVault = await unlockVault(currentData, currentPassword); const incoming = await unlockVault(data.vault, password); const mapping = mergeVaultItems(mergedVault, incoming); const remapped = { ...data, targets: data.targets.map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.map((id) => mapping.get(id) ?? id) })) }; const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, remapped); const mergedData = await saveVault(mergedVault, currentPassword); await replaceLocalData({ ...merged, vault: mergedData }); vaultRef.current = mergedVault; setImportPreview(null); await reload(); alert('已合并导入。');
   };
 
