@@ -23,6 +23,7 @@ describe('Target management seam', () => {
     expect(validateWebUrl('https://linkmark.example')).toBe(true);
     expect(validateWebUrl('javascript:alert(1)')).toBe(false);
     expect(validateWebUrl('file:///etc/passwd')).toBe(false);
+    expect(validateWebUrl('https://user:password@example.com')).toBe(false);
   });
 
   it('persists a requested ordering inside a Group', () => {

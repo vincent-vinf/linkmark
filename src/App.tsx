@@ -37,7 +37,8 @@ export default function App() {
   };
   useEffect(() => { void reload(); void db.vaults.get('primary').then((record) => setHasVault(Boolean(record))); }, []);
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
-  useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(() => { vaultRef.current = null; masterPasswordRef.current = null; setVaultUnlocked(false); setVaultExpiry(null); }, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry]);
+  const clearSensitiveState = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultItems([]); setRecycledItems([]); setVaultUnlocked(false); setVaultExpiry(null); };
+  useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(clearSensitiveState, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry]);
   useEffect(() => { const clear = () => { vaultRef.current = null; masterPasswordRef.current = null; }; window.addEventListener('pagehide', clear); return () => window.removeEventListener('pagehide', clear); }, []);
 
   const visible = useMemo(() => targets.filter((target) => {
@@ -90,7 +91,7 @@ export default function App() {
     if (!value || !options.some((item) => item.id === value)) return;
     await db.targets.put({ ...target, vaultItemIds: [...new Set([...target.vaultItemIds, value])], updatedAt: new Date().toISOString() }); await reload();
   };
-  const lockVault = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultUnlocked(false); setVaultExpiry(null); };
+  const lockVault = clearSensitiveState;
   const changeMasterPassword = async () => {
     if (!vaultRef.current || !masterPasswordRef.current) return setVaultDialog(true);
     const next = window.prompt('输入新的主密码'); if (!next) return;
@@ -114,7 +115,7 @@ export default function App() {
   };
   const importShare = async () => {
     const text = window.prompt('粘贴加密备份或分享字符串'); const password = window.prompt('输入对应口令'); const nextPassword = window.prompt('设置导入后 Vault 的新主密码'); if (!text || password === null || !nextPassword) return;
-    try { const data = await parseBackup(text, password); const replace = window.confirm(`导入预览：${data.targets.length} 个 Target、${data.groups.length} 个分组、${data.tags.length} 个标签。确定替换本地数据；取消则合并。`); if (!replace && vaultRef.current) { const incoming = await unlockVault(data.vault, password); mergeVaultItems(vaultRef.current, incoming); const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, data); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current) }); await reload(); alert('已合并导入。'); return; } const vault = await rekeyVault(data.vault, password, nextPassword); await replaceLocalData({ ...data, vault }); lockVault(); setHasVault(true); await reload(); alert('已导入。请使用新主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
+    try { const data = await parseBackup(text, password); const replace = window.confirm(`导入预览：${data.targets.length} 个 Target、${data.groups.length} 个分组、${data.tags.length} 个标签。确定替换本地数据；取消则合并。`); if (!replace) { if (!vaultRef.current) return alert('合并导入前必须先解锁当前 Vault。'); const incoming = await unlockVault(data.vault, password); mergeVaultItems(vaultRef.current, incoming); const merged = mergeMetadata({ targets: await db.targets.toArray(), groups: await db.groups.toArray(), tags: await db.tags.toArray() }, data); await replaceLocalData({ ...merged, vault: await saveVault(vaultRef.current) }); await reload(); alert('已合并导入。'); return; } const vault = await rekeyVault(data.vault, password, nextPassword); await replaceLocalData({ ...data, vault }); lockVault(); setHasVault(true); await reload(); alert('已导入。请使用新主密码解锁 Vault。'); } catch (error) { alert(error instanceof Error ? error.message : '导入失败'); }
   };
 
   return <main className="shell">
