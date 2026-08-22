@@ -71,7 +71,7 @@ export default function App() {
   useEffect(() => { void reload(); void db.vaults.get('primary').then((record) => setHasVault(Boolean(record))); }, []);
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('linkmark-theme', theme); }, [theme]);
   const clearSensitiveState = () => { vaultRef.current = null; masterPasswordRef.current = null; setVaultItems([]); setRecycledItems([]); setSelectedVaultItem(null); setVaultDirty(false); setVaultUnlocked(false); setVaultExpiry(null); };
-  useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(() => { void (async () => { if (vaultDirty && vaultRef.current) { try { await persistVault(); } catch (error) { notifyVaultSaveFailure(error); } } clearSensitiveState(); })(); }, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry, vaultDirty]);
+  useEffect(() => { if (!vaultExpiry) return; const timer = window.setTimeout(() => { void (async () => { if (vaultDirty && vaultRef.current && window.confirm('Vault 解锁时间已到。确定保存修改后锁定；取消将放弃未保存修改并锁定。')) { try { await persistVault(); } catch (error) { notifyVaultSaveFailure(error); return; } } clearSensitiveState(); })(); }, Math.max(0, vaultExpiry - Date.now())); return () => window.clearTimeout(timer); }, [vaultExpiry, vaultDirty]);
   useEffect(() => { const clear = () => clearSensitiveState(); window.addEventListener('pagehide', clear); return () => window.removeEventListener('pagehide', clear); }, []);
 
   const visible = useMemo(() => targets.filter((target) => {
@@ -85,7 +85,7 @@ export default function App() {
   const persistVault = async (): Promise<ArrayBuffer> => {
     if (!vaultRef.current) throw new Error('Vault 已锁定。');
     const data = await saveVault(vaultRef.current, masterPasswordRef.current ?? undefined);
-    try { const activeIds = new Set(listVaultItems(vaultRef.current).map((item) => item.id)); const now = new Date().toISOString(); await db.transaction('rw', db.vaults, db.targets, async () => { await db.vaults.put({ id: 'primary', data, updatedAt: now }); await db.targets.bulkPut((await db.targets.toArray()).filter((target) => target.vaultItemIds.some((id) => !activeIds.has(id))).map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.filter((id) => activeIds.has(id)), updatedAt: now }))); }); setVaultDirty(false); } catch { throw new Error('无法保存 Vault。请检查浏览器存储空间后重试；本次修改仍只在当前页面内存中。'); }
+    try { const presentIds = new Set([...listVaultItems(vaultRef.current), ...listRecycledVaultItems(vaultRef.current)].map((item) => item.id)); const now = new Date().toISOString(); await db.transaction('rw', db.vaults, db.targets, async () => { await db.vaults.put({ id: 'primary', data, updatedAt: now }); await db.targets.bulkPut((await db.targets.toArray()).filter((target) => target.vaultItemIds.some((id) => !presentIds.has(id))).map((target) => ({ ...target, vaultItemIds: target.vaultItemIds.filter((id) => presentIds.has(id)), updatedAt: now }))); }); setVaultDirty(false); } catch { throw new Error('无法保存 Vault。请检查浏览器存储空间后重试；本次修改仍只在当前页面内存中。'); }
     return data;
   };
   const notifyVaultSaveFailure = (error: unknown) => { setVaultDirty(true); alert(error instanceof Error ? error.message : 'Vault 未能保存。'); };
