@@ -13,6 +13,7 @@
 .sort-label { margin-right: 9px; }
 .sort-label select { margin-left: 5px; border: 1px solid #2c3c5b; border-radius: 8px; padding: 8px; color: inherit; background: #121d31; }
 [data-theme=light] .sort-label select { background: #fff; border-color: #d7e0ed; }
+.security-note { color: #b7c5db; font-size: 12px; line-height: 1.5; }
 .grid.list-view { grid-template-columns: 1fr; }
 .list-view .card { min-height: 78px; align-items: center; }
 .list-view .card-body { display: flex; min-width: 0; align-items: baseline; gap: 10px; }
