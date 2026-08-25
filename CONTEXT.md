@@ -5,7 +5,7 @@ Linkmark 是一个浏览器本地优先的网站入口、书签与轻量密钥�
 ## Language
 
 **入口**:
-一个用户保存的访问位置，包含名称、类别、分组、标签和非敏感连接信息，并可关联零个或多个密钥。入口与密钥是可复用的多对多关系。网页、数据库和缓存服务都是入口；入口仅存在于已解锁的密钥库中。
+一个用户保存的访问位置，包含名称、类别、分组和非敏感连接信息，并可关联零个或多个密钥。入口与密钥是可复用的多对多关系。网页、数据库和缓存服务都是入口；入口仅存在于已解锁的密钥库中。
 _Avoid_: Target, resource, connection
 
 **Bookmark**:
@@ -20,12 +20,8 @@ _Avoid_: Connection string, DSN
 入口的单层、互斥归属，用于导航和持久化的手动排序；未归属的入口位于默认分组。
 _Avoid_: Folder, category
 
-**Tag**:
-可附加到任意数量入口的交叉分类标签；它不定义入口的持久化顺序。
-_Avoid_: Label, keyword
-
 **密钥库**:
-由主密码解锁的唯一加密数据集合；它强制承载全部入口、分组、标签和密钥，其中的明文只在已解锁的浏览器内存中存在。
+由主密码解锁的唯一加密数据集合；它强制承载全部入口、分组和密钥，其中的明文只在已解锁的浏览器内存中存在。
 _Avoid_: Vault, password database, secret store
 
 **Master Password**:
@@ -49,7 +45,7 @@ _Avoid_: Orphan Vault Item, unused password, dangling secret
 _Avoid_: Vault Item, secret, password entry
 
 **导入包**:
-可导出、导入或分享的数据载体；完整包携带版本化的密钥库密文，不含任何明文入口、分组、标签或密钥数据。
+可导出、导入或分享的数据载体；完整包携带版本化的密钥库密文，不含任何明文入口、分组或密钥数据。
 _Avoid_: Backup, share link
 
 **分享包**:

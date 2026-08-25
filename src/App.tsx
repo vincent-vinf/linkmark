@@ -1,134 +1,1962 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Kdbx } from 'kdbxweb';
-import { createTarget, validateTargetConfig, type Target, type TargetKind } from './domain/targets';
-import { db, type Group, type Tag } from './storage/db';
-import { createVault, saveVault, unlockVault } from './vault/vault';
-import { addEntry, addKey, deleteEntry, deleteKey, deleteWorkspaceGroup, deleteWorkspaceTag, emptyRecycledRecords, getKey, getWorkspace, initializeWorkspace, listRecycledRecords, mergeWorkspace, permanentlyDeleteRecycledRecord, purgeExpiredRecycledRecords, restoreRecycledRecord, setWorkspaceMetadata, updateEntry, updateKey, type EncryptedWorkspace, type RecycledRecord } from './vault/workspace';
-import { parseKeyStoreBackup, serializeKeyStoreBackup } from './portability/backup';
-import './app.css';
-import './responsive.css';
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Kdbx } from "kdbxweb";
+import {
+  createTarget,
+  validateTargetConfig,
+  type Target,
+  type TargetKind,
+} from "./domain/targets";
+import { db, type Group } from "./storage/db";
+import { createVault, saveVault, unlockVault } from "./vault/vault";
+import {
+  addEntry,
+  addKey,
+  deleteEntry,
+  deleteKey,
+  deleteWorkspaceGroup,
+  emptyRecycledRecords,
+  getKey,
+  getWorkspace,
+  initializeWorkspace,
+  listRecycledRecords,
+  mergeWorkspace,
+  permanentlyDeleteRecycledRecord,
+  purgeExpiredRecycledRecords,
+  restoreRecycledRecord,
+  setWorkspaceMetadata,
+  updateEntry,
+  updateKey,
+  type EncryptedWorkspace,
+  type RecycledRecord,
+} from "./vault/workspace";
+import {
+  parseKeyStoreBackup,
+  serializeKeyStoreBackup,
+} from "./portability/backup";
+import "./app.css";
+import "./responsive.css";
 
-const emptyWorkspace: EncryptedWorkspace = { entries: [], groups: [], tags: [], keys: [] };
-const durations = [[300_000, '5 分钟'], [1_800_000, '30 分钟'], [7_200_000, '2 小时'], [86_400_000, '24 小时'], [604_800_000, '7 天']] as const;
-const kindNames: Record<TargetKind, string> = { web: '网站', postgresql: 'PostgreSQL', redis: 'Redis', generic: '通用' };
+const emptyWorkspace: EncryptedWorkspace = {
+  entries: [],
+  groups: [],
+  keys: [],
+};
+const durations = [
+  [300_000, "5 分钟"],
+  [1_800_000, "30 分钟"],
+  [7_200_000, "2 小时"],
+  [86_400_000, "24 小时"],
+  [604_800_000, "7 天"],
+] as const;
+const kindNames: Record<TargetKind, string> = {
+  web: "网站",
+  postgresql: "PostgreSQL",
+  redis: "Redis",
+  generic: "通用",
+};
 
 export default function App() {
-  const vaultRef = useRef<Kdbx | null>(null); const passwordRef = useRef('');
-  const [hasVault, setHasVault] = useState(false); const [workspace, setWorkspace] = useState(emptyWorkspace); const [locked, setLocked] = useState(true); const [theme, setTheme] = useState<'dark' | 'light'>(() => localStorage.getItem('linkmark-theme') === 'light' ? 'light' : 'dark');
-  const [password, setPassword] = useState(''); const [confirm, setConfirm] = useState(''); const [error, setError] = useState(''); const [duration, setDuration] = useState(300_000); const [expiry, setExpiry] = useState<number | null>(null);
-  const [query, setQuery] = useState(''); const [activeGroup, setActiveGroup] = useState<string | null | undefined>(undefined); const [view, setView] = useState<'entries' | 'keys'>('entries'); const [sortBy, setSortBy] = useState<'manual' | 'name' | 'updated'>('manual');
-  const [entryEditor, setEntryEditor] = useState<Target | 'new' | null>(null); const [keyEditor, setKeyEditor] = useState<string | 'new' | null>(null); const [groupEditor, setGroupEditor] = useState(false); const [recycleOpen, setRecycleOpen] = useState(false); const [importOpen, setImportOpen] = useState(false); const [shareOpen, setShareOpen] = useState(false); const [toast, setToast] = useState('');
-  useEffect(() => { void db.vaults.get('primary').then((record) => setHasVault(Boolean(record))); }, []);
-  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('linkmark-theme', theme); }, [theme]);
-  const refresh = () => { if (vaultRef.current) setWorkspace(getWorkspace(vaultRef.current)); };
-  const persist = async () => { const vault = vaultRef.current; if (!vault) throw new Error('密钥库已锁定'); purgeExpiredRecycledRecords(vault); const data = await saveVault(vault, passwordRef.current); await db.vaults.put({ id: 'primary', data, updatedAt: new Date().toISOString() }); refresh(); };
-  const lock = () => { vaultRef.current = null; passwordRef.current = ''; setWorkspace(emptyWorkspace); setExpiry(null); setLocked(true); setView('entries'); setEntryEditor(null); setKeyEditor(null); };
-  useEffect(() => { window.addEventListener('pagehide', lock); return () => window.removeEventListener('pagehide', lock); }, []);
-  useEffect(() => { if (!expiry) return; const timer = window.setTimeout(lock, Math.max(0, expiry - Date.now())); return () => window.clearTimeout(timer); }, [expiry]);
-  const open = async (create: boolean) => { try {
-    setError(''); if (create && password !== confirm) return setError('两次输入的主密码不一致。');
-    const source = create ? await createVault(password) : (await db.vaults.get('primary'))?.data;
-    if (!source) return setError('找不到密钥库。'); const vault = await unlockVault(source, password); initializeWorkspace(vault);
-    vaultRef.current = vault; passwordRef.current = password; if (create) await persist(); else refresh(); setExpiry(Date.now() + duration); setLocked(false); setPassword(''); setConfirm('');
-  } catch { setError('无法打开密钥库，请检查主密码。'); } };
-  const importBackup = async (encoded: string, packagePassword: string, localPassword: string, mode: 'replace' | 'merge' = 'replace') => {
-    const backup = await parseKeyStoreBackup(encoded, packagePassword); const vault = await unlockVault(backup.vault, packagePassword); initializeWorkspace(vault);
-    if (mode === 'merge' && vaultRef.current) {
-      const current = vaultRef.current; const snapshot = await saveVault(current, passwordRef.current);
-      try { mergeWorkspace(current, vault); await persist(); setImportOpen(false); } catch (cause) { vaultRef.current = await unlockVault(snapshot, passwordRef.current); refresh(); throw cause; }
+  const vaultRef = useRef<Kdbx | null>(null);
+  const passwordRef = useRef("");
+  const [hasVault, setHasVault] = useState(false);
+  const [workspace, setWorkspace] = useState(emptyWorkspace);
+  const [locked, setLocked] = useState(true);
+  const [theme, setTheme] = useState<"dark" | "light">(() =>
+    localStorage.getItem("linkmark-theme") === "light" ? "light" : "dark",
+  );
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [duration, setDuration] = useState(300_000);
+  const [expiry, setExpiry] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
+  const [activeGroup, setActiveGroup] = useState<string | null | undefined>(
+    undefined,
+  );
+  const [view, setView] = useState<"entries" | "keys">("entries");
+  const [sortBy, setSortBy] = useState<"manual" | "name" | "updated">("manual");
+  const [entryEditor, setEntryEditor] = useState<Target | "new" | null>(null);
+  const [keyEditor, setKeyEditor] = useState<string | "new" | null>(null);
+  const [groupEditor, setGroupEditor] = useState(false);
+  const [recycleOpen, setRecycleOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [toast, setToast] = useState("");
+  useEffect(() => {
+    void db.vaults
+      .get("primary")
+      .then((record) => setHasVault(Boolean(record)));
+  }, []);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("linkmark-theme", theme);
+  }, [theme]);
+  const refresh = () => {
+    if (vaultRef.current) setWorkspace(getWorkspace(vaultRef.current));
+  };
+  const persist = async () => {
+    const vault = vaultRef.current;
+    if (!vault) throw new Error("密钥库已锁定");
+    purgeExpiredRecycledRecords(vault);
+    const data = await saveVault(vault, passwordRef.current);
+    await db.vaults.put({
+      id: "primary",
+      data,
+      updatedAt: new Date().toISOString(),
+    });
+    refresh();
+  };
+  const lock = () => {
+    vaultRef.current = null;
+    passwordRef.current = "";
+    setWorkspace(emptyWorkspace);
+    setExpiry(null);
+    setLocked(true);
+    setView("entries");
+    setEntryEditor(null);
+    setKeyEditor(null);
+  };
+  useEffect(() => {
+    window.addEventListener("pagehide", lock);
+    return () => window.removeEventListener("pagehide", lock);
+  }, []);
+  useEffect(() => {
+    if (!expiry) return;
+    const timer = window.setTimeout(lock, Math.max(0, expiry - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [expiry]);
+  const open = async (create: boolean) => {
+    try {
+      setError("");
+      if (create && password !== confirm)
+        return setError("两次输入的主密码不一致。");
+      const source = create
+        ? await createVault(password)
+        : (await db.vaults.get("primary"))?.data;
+      if (!source) return setError("找不到密钥库。");
+      const vault = await unlockVault(source, password);
+      initializeWorkspace(vault);
+      vaultRef.current = vault;
+      passwordRef.current = password;
+      if (create) await persist();
+      else refresh();
+      setExpiry(Date.now() + duration);
+      setLocked(false);
+      setPassword("");
+      setConfirm("");
+    } catch {
+      setError("无法打开密钥库，请检查主密码。");
+    }
+  };
+  const importBackup = async (
+    encoded: string,
+    packagePassword: string,
+    localPassword: string,
+    mode: "replace" | "merge" = "replace",
+  ) => {
+    const backup = await parseKeyStoreBackup(encoded, packagePassword);
+    const vault = await unlockVault(backup.vault, packagePassword);
+    initializeWorkspace(vault);
+    if (mode === "merge" && vaultRef.current) {
+      const current = vaultRef.current;
+      const snapshot = await saveVault(current, passwordRef.current);
+      try {
+        mergeWorkspace(current, vault);
+        await persist();
+        setImportOpen(false);
+      } catch (cause) {
+        vaultRef.current = await unlockVault(snapshot, passwordRef.current);
+        refresh();
+        throw cause;
+      }
       return;
     }
-    vaultRef.current = vault; passwordRef.current = localPassword; await persist(); setWorkspace(getWorkspace(vault)); setExpiry(Date.now() + duration); setHasVault(true); setLocked(false); setImportOpen(false);
+    vaultRef.current = vault;
+    passwordRef.current = localPassword;
+    await persist();
+    setWorkspace(getWorkspace(vault));
+    setExpiry(Date.now() + duration);
+    setHasVault(true);
+    setLocked(false);
+    setImportOpen(false);
   };
-  const downloadBackup = async () => { const vault = vaultRef.current; if (!vault) return; const text = await serializeKeyStoreBackup(await saveVault(vault, passwordRef.current), passwordRef.current); download(text, 'linkmark-backup'); };
-  const copyValue = async (label: string, value: string) => { try { await navigator.clipboard.writeText(value); setToast(`${label}已复制到剪贴板`); window.setTimeout(() => setToast(''), 2200); } catch { setToast(`无法复制${label}，请检查浏览器剪贴板权限`); window.setTimeout(() => setToast(''), 3200); } };
-  const visible = useMemo(() => workspace.entries.filter((entry) => {
-    if (activeGroup !== undefined && entry.groupId !== activeGroup) return false;
-    const keys = entry.vaultItemIds.map((id) => workspace.keys.find((key) => key.id === id)).filter(Boolean).map((key) => `${key!.title} ${key!.username}`).join(' ');
-    const tags = entry.tagIds.map((id) => workspace.tags.find((tag) => tag.id === id)?.name ?? '').join(' ');
-    return `${entry.name} ${Object.values(entry.config).join(' ')} ${keys} ${tags}`.toLowerCase().includes(query.toLowerCase());
-  }).sort((a, b) => sortBy === 'name' ? a.name.localeCompare(b.name, 'zh-CN') : sortBy === 'updated' ? b.updatedAt.localeCompare(a.updatedAt) : Number(b.pinned) - Number(a.pinned) || a.sortOrder - b.sortOrder), [workspace, query, activeGroup, sortBy]);
-  if (locked) return <LockScreen hasVault={hasVault} password={password} confirm={confirm} duration={duration} error={error} onPassword={setPassword} onConfirm={setConfirm} onDuration={setDuration} onOpen={() => void open(!hasVault)} onImport={() => setImportOpen(true)} importOpen={importOpen} onCloseImport={() => setImportOpen(false)} onImportBackup={importBackup} />;
-  const addGroup = async (name: string) => { if (!vaultRef.current) return; setWorkspaceMetadata(vaultRef.current, { groups: [...workspace.groups, { id: crypto.randomUUID(), name, sortOrder: workspace.groups.length }], tags: workspace.tags }); await persist(); };
-  const addTag = async (name: string) => { if (!vaultRef.current) return; setWorkspaceMetadata(vaultRef.current, { groups: workspace.groups, tags: [...workspace.tags, { id: crypto.randomUUID(), name }] }); await persist(); };
-  const pageTitle = view === 'keys' ? '密钥' : activeGroup === null ? '默认分组' : activeGroup ? workspace.groups.find((group) => group.id === activeGroup)?.name : '所有入口';
-  return <main className="shell"><aside className="sidebar"><div className="brand"><span>LM</span><div>Linkmark<small>私人入口簿</small></div></div><button className="new-button" aria-label="新建入口 ↗" onClick={() => setEntryEditor('new')}><span className="button-plus">＋</span>新建入口 <kbd>N</kbd></button><nav aria-label="资料导航">
-    <p className="nav-label">浏览</p><button className={view === 'entries' && activeGroup === undefined ? 'active' : ''} onClick={() => { setView('entries'); setActiveGroup(undefined); }}><span>所有入口</span><small>{workspace.entries.length}</small></button>
-    <button className={view === 'entries' && activeGroup === null ? 'active' : ''} onClick={() => { setView('entries'); setActiveGroup(null); }}><span>默认分组</span><small>{workspace.entries.filter((entry) => entry.groupId === null).length}</small></button>
-    <div className="section-title"><span>分组</span><button aria-label="管理分组和标签" onClick={() => setGroupEditor(true)}>＋</button></div>
-    {workspace.groups.map((group) => <button className={view === 'entries' && activeGroup === group.id ? 'active' : ''} onClick={() => { setView('entries'); setActiveGroup(group.id); }} key={group.id}><span>{group.name}</span><small>{workspace.entries.filter((entry) => entry.groupId === group.id).length}</small></button>)}
-    <p className="nav-label vault-label">密钥库</p><button className={view === 'keys' ? 'active' : ''} onClick={() => setView('keys')}><span>全部密钥</span><small>{workspace.keys.length}</small></button>
-  </nav><div className="sidebar-footer"><span className="lock-dot unlocked" /><span>已解锁</span><button onClick={lock}>立即锁定</button></div></aside>
-  <section className="content"><header className="workspace-header"><div><p className="eyebrow">LINKMARK / 本机加密工作台</p><h1>{pageTitle}</h1><p className="page-subtitle">{view === 'keys' ? '集中保存、复用并安全地查看访问凭据。' : '你常用的服务与访问资料，始终保留在这台设备。'}</p></div><div className="actions"><button aria-label="切换颜色模式" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☼ 浅色' : '◐ 深色'}</button><button onClick={() => setShareOpen(true)}>分享</button><button onClick={() => void downloadBackup()}>导出备份</button><details className="more-actions"><summary>更多操作</summary><div><button onClick={() => setRecycleOpen(true)}>回收站</button><button onClick={() => setImportOpen(true)}>导入加密包</button><button className="danger" onClick={lock}>锁定密钥库</button></div></details></div></header><section className="workspace-strip" aria-label="密钥库概览"><div><span>入口</span><strong>{workspace.entries.length}</strong></div><div><span>密钥</span><strong>{workspace.keys.length}</strong></div><div><span>分组</span><strong>{workspace.groups.length + 1}</strong></div><p><span className="live-dot" />正在本机内存中安全查看</p></section>
-  {view === 'keys' ? <KeyList workspace={workspace} onNew={() => setKeyEditor('new')} onEdit={setKeyEditor} onDelete={async (key) => { if (window.confirm(`删除密钥“${key.title}”并解除所有入口关联？`)) { deleteKey(vaultRef.current!, key.id); await persist(); } }} /> : <EntryList visible={visible} query={query} sortBy={sortBy} onSort={setSortBy} onQuery={setQuery} tags={workspace.tags} vault={vaultRef.current!} onCopy={copyValue} onNew={() => setEntryEditor('new')} onEdit={setEntryEditor} onDelete={async (entry) => { if (window.confirm(`将“${entry.name}”移入回收站？`)) { deleteEntry(vaultRef.current!, entry.id); await persist(); } }} />}
-  {entryEditor && <EntryEditor entry={entryEditor === 'new' ? undefined : entryEditor} keys={workspace.keys} groups={workspace.groups} tags={workspace.tags} onClose={() => setEntryEditor(null)} onSave={async (entry, createdKeys) => { const vault = vaultRef.current!; const keyIds = createdKeys.map((key) => addKey(vault, key)); const next = { ...entry, vaultItemIds: [...entry.vaultItemIds, ...keyIds] }; if (entryEditor === 'new') addEntry(vault, next); else updateEntry(vault, next); await persist(); setEntryEditor(null); }} />}
-  {keyEditor && <KeyEditor keyId={keyEditor === 'new' ? undefined : keyEditor} vault={vaultRef.current!} linkedEntries={workspace.entries.filter((entry) => entry.vaultItemIds.includes(keyEditor === 'new' ? '' : keyEditor))} onClose={() => setKeyEditor(null)} onSave={async (id, input) => { if (id) updateKey(vaultRef.current!, id, input); else addKey(vaultRef.current!, input); await persist(); setKeyEditor(null); }} />}
-  {groupEditor && <GroupEditor groups={workspace.groups} tags={workspace.tags} onClose={() => setGroupEditor(false)} onSave={async (name) => { await addGroup(name); }} onAddTag={addTag} onDelete={async (id) => { deleteWorkspaceGroup(vaultRef.current!, id); if (activeGroup === id) setActiveGroup(undefined); await persist(); }} onDeleteTag={async (id) => { deleteWorkspaceTag(vaultRef.current!, id); await persist(); }} />}
-  {recycleOpen && <RecycleDialog vault={vaultRef.current!} onClose={() => setRecycleOpen(false)} onChanged={persist} />}
-  {importOpen && <ImportDialog hasVault onClose={() => setImportOpen(false)} onImport={importBackup} />}
-  {shareOpen && <ShareDialog onClose={() => setShareOpen(false)} onShare={async (sharePassword, reportProgress) => { reportProgress('正在以分享口令加密密钥库…'); const data = await saveVault(vaultRef.current!, sharePassword); reportProgress('正在封装分享字符串…'); return serializeKeyStoreBackup(data, sharePassword, 'share'); }} />}{toast && <div className="toast" role="status">✓ {toast}</div>}
-  </section></main>;
+  const downloadBackup = async () => {
+    const vault = vaultRef.current;
+    if (!vault) return;
+    const text = await serializeKeyStoreBackup(
+      await saveVault(vault, passwordRef.current),
+      passwordRef.current,
+    );
+    download(text, "linkmark-backup");
+  };
+  const copyValue = async (label: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setToast(`${label}已复制到剪贴板`);
+      window.setTimeout(() => setToast(""), 2200);
+    } catch {
+      setToast(`无法复制${label}，请检查浏览器剪贴板权限`);
+      window.setTimeout(() => setToast(""), 3200);
+    }
+  };
+  const visible = useMemo(
+    () =>
+      workspace.entries
+        .filter((entry) => {
+          if (activeGroup !== undefined && entry.groupId !== activeGroup)
+            return false;
+          const keys = entry.vaultItemIds
+            .map((id) => workspace.keys.find((key) => key.id === id))
+            .filter(Boolean)
+            .map((key) => `${key!.title} ${key!.username}`)
+            .join(" ");
+          return `${entry.name} ${Object.values(entry.config).join(" ")} ${keys}`
+            .toLowerCase()
+            .includes(query.toLowerCase());
+        })
+        .sort((a, b) =>
+          sortBy === "name"
+            ? a.name.localeCompare(b.name, "zh-CN")
+            : sortBy === "updated"
+              ? b.updatedAt.localeCompare(a.updatedAt)
+              : Number(b.pinned) - Number(a.pinned) ||
+                a.sortOrder - b.sortOrder,
+        ),
+    [workspace, query, activeGroup, sortBy],
+  );
+  if (locked)
+    return (
+      <LockScreen
+        hasVault={hasVault}
+        password={password}
+        confirm={confirm}
+        duration={duration}
+        error={error}
+        onPassword={setPassword}
+        onConfirm={setConfirm}
+        onDuration={setDuration}
+        onOpen={() => void open(!hasVault)}
+        onImport={() => setImportOpen(true)}
+        importOpen={importOpen}
+        onCloseImport={() => setImportOpen(false)}
+        onImportBackup={importBackup}
+      />
+    );
+  const addGroup = async (name: string) => {
+    if (!vaultRef.current) return;
+    setWorkspaceMetadata(vaultRef.current, {
+      groups: [
+        ...workspace.groups,
+        { id: crypto.randomUUID(), name, sortOrder: workspace.groups.length },
+      ],
+    });
+    await persist();
+  };
+  const pageTitle =
+    view === "keys"
+      ? "密钥"
+      : activeGroup === null
+        ? "默认分组"
+        : activeGroup
+          ? workspace.groups.find((group) => group.id === activeGroup)?.name
+          : "所有入口";
+  return (
+    <main className="shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <span>LM</span>
+          <div>
+            Linkmark<small>私人入口簿</small>
+          </div>
+        </div>
+        <button
+          className="new-button"
+          aria-label="新建入口 ↗"
+          onClick={() => setEntryEditor("new")}
+        >
+          <span className="button-plus">＋</span>新建入口 <kbd>N</kbd>
+        </button>
+        <nav aria-label="资料导航">
+          <p className="nav-label">浏览</p>
+          <button
+            className={
+              view === "entries" && activeGroup === undefined ? "active" : ""
+            }
+            onClick={() => {
+              setView("entries");
+              setActiveGroup(undefined);
+            }}
+          >
+            <span>所有入口</span>
+            <small>{workspace.entries.length}</small>
+          </button>
+          <button
+            className={
+              view === "entries" && activeGroup === null ? "active" : ""
+            }
+            onClick={() => {
+              setView("entries");
+              setActiveGroup(null);
+            }}
+          >
+            <span>默认分组</span>
+            <small>
+              {
+                workspace.entries.filter((entry) => entry.groupId === null)
+                  .length
+              }
+            </small>
+          </button>
+          <div className="section-title">
+            <span>分组</span>
+            <button aria-label="管理分组" onClick={() => setGroupEditor(true)}>
+              ＋
+            </button>
+          </div>
+          {workspace.groups.map((group) => (
+            <button
+              className={
+                view === "entries" && activeGroup === group.id ? "active" : ""
+              }
+              onClick={() => {
+                setView("entries");
+                setActiveGroup(group.id);
+              }}
+              key={group.id}
+            >
+              <span>{group.name}</span>
+              <small>
+                {
+                  workspace.entries.filter(
+                    (entry) => entry.groupId === group.id,
+                  ).length
+                }
+              </small>
+            </button>
+          ))}
+          <p className="nav-label vault-label">密钥库</p>
+          <button
+            className={view === "keys" ? "active" : ""}
+            onClick={() => setView("keys")}
+          >
+            <span>全部密钥</span>
+            <small>{workspace.keys.length}</small>
+          </button>
+        </nav>
+        <div className="sidebar-footer">
+          <span className="lock-dot unlocked" />
+          <span>已解锁</span>
+          <button onClick={lock}>立即锁定</button>
+        </div>
+      </aside>
+      <section className="content">
+        <header className="workspace-header">
+          <div>
+            <p className="eyebrow">LINKMARK / 本机加密工作台</p>
+            <h1>{pageTitle}</h1>
+            <p className="page-subtitle">
+              {view === "keys"
+                ? "集中保存、复用并安全地查看访问凭据。"
+                : "你常用的服务与访问资料，始终保留在这台设备。"}
+            </p>
+          </div>
+          <div className="actions">
+            <button
+              aria-label="切换颜色模式"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? "☼ 浅色" : "◐ 深色"}
+            </button>
+            <button onClick={() => setShareOpen(true)}>分享</button>
+            <button onClick={() => void downloadBackup()}>导出备份</button>
+            <details className="more-actions">
+              <summary>更多操作</summary>
+              <div>
+                <button onClick={() => setRecycleOpen(true)}>回收站</button>
+                <button onClick={() => setImportOpen(true)}>导入加密包</button>
+                <button className="danger" onClick={lock}>
+                  锁定密钥库
+                </button>
+              </div>
+            </details>
+          </div>
+        </header>
+        <section className="workspace-strip" aria-label="密钥库概览">
+          <div>
+            <span>入口</span>
+            <strong>{workspace.entries.length}</strong>
+          </div>
+          <div>
+            <span>密钥</span>
+            <strong>{workspace.keys.length}</strong>
+          </div>
+          <div>
+            <span>分组</span>
+            <strong>{workspace.groups.length + 1}</strong>
+          </div>
+          <p>
+            <span className="live-dot" />
+            正在本机内存中安全查看
+          </p>
+        </section>
+        {view === "keys" ? (
+          <KeyList
+            workspace={workspace}
+            onNew={() => setKeyEditor("new")}
+            onEdit={setKeyEditor}
+            onDelete={async (key) => {
+              if (
+                window.confirm(`删除密钥“${key.title}”并解除所有入口关联？`)
+              ) {
+                deleteKey(vaultRef.current!, key.id);
+                await persist();
+              }
+            }}
+          />
+        ) : (
+          <EntryList
+            visible={visible}
+            query={query}
+            sortBy={sortBy}
+            onSort={setSortBy}
+            onQuery={setQuery}
+            vault={vaultRef.current!}
+            onCopy={copyValue}
+            onNew={() => setEntryEditor("new")}
+            onEdit={setEntryEditor}
+            onDelete={async (entry) => {
+              if (window.confirm(`将“${entry.name}”移入回收站？`)) {
+                deleteEntry(vaultRef.current!, entry.id);
+                await persist();
+              }
+            }}
+          />
+        )}
+        {entryEditor && (
+          <EntryEditor
+            entry={entryEditor === "new" ? undefined : entryEditor}
+            keys={workspace.keys}
+            groups={workspace.groups}
+            onClose={() => setEntryEditor(null)}
+            onSave={async (entry, createdKeys) => {
+              const vault = vaultRef.current!;
+              const keyIds = createdKeys.map((key) => addKey(vault, key));
+              const next = {
+                ...entry,
+                vaultItemIds: [...entry.vaultItemIds, ...keyIds],
+              };
+              if (entryEditor === "new") addEntry(vault, next);
+              else updateEntry(vault, next);
+              await persist();
+              setEntryEditor(null);
+            }}
+          />
+        )}
+        {keyEditor && (
+          <KeyEditor
+            keyId={keyEditor === "new" ? undefined : keyEditor}
+            vault={vaultRef.current!}
+            linkedEntries={workspace.entries.filter((entry) =>
+              entry.vaultItemIds.includes(keyEditor === "new" ? "" : keyEditor),
+            )}
+            onClose={() => setKeyEditor(null)}
+            onSave={async (id, input) => {
+              if (id) updateKey(vaultRef.current!, id, input);
+              else addKey(vaultRef.current!, input);
+              await persist();
+              setKeyEditor(null);
+            }}
+          />
+        )}
+        {groupEditor && (
+          <GroupEditor
+            groups={workspace.groups}
+            onClose={() => setGroupEditor(false)}
+            onSave={async (name) => {
+              await addGroup(name);
+            }}
+            onDelete={async (id) => {
+              deleteWorkspaceGroup(vaultRef.current!, id);
+              if (activeGroup === id) setActiveGroup(undefined);
+              await persist();
+            }}
+          />
+        )}
+        {recycleOpen && (
+          <RecycleDialog
+            vault={vaultRef.current!}
+            onClose={() => setRecycleOpen(false)}
+            onChanged={persist}
+          />
+        )}
+        {importOpen && (
+          <ImportDialog
+            hasVault
+            onClose={() => setImportOpen(false)}
+            onImport={importBackup}
+          />
+        )}
+        {shareOpen && (
+          <ShareDialog
+            onClose={() => setShareOpen(false)}
+            onShare={async (sharePassword, reportProgress) => {
+              reportProgress("正在以分享口令加密密钥库…");
+              const data = await saveVault(vaultRef.current!, sharePassword);
+              reportProgress("正在封装分享字符串…");
+              return serializeKeyStoreBackup(data, sharePassword, "share");
+            }}
+          />
+        )}
+        {toast && (
+          <div className="toast" role="status">
+            ✓ {toast}
+          </div>
+        )}
+      </section>
+    </main>
+  );
 }
 
-function LockScreen(props: { hasVault: boolean; password: string; confirm: string; duration: number; error: string; onPassword: (value: string) => void; onConfirm: (value: string) => void; onDuration: (value: number) => void; onOpen: () => void; onImport: () => void; importOpen: boolean; onCloseImport: () => void; onImportBackup: (encoded: string, packagePassword: string, localPassword: string, mode?: 'replace' | 'merge') => Promise<void> }) {
-  return <main className="lock-screen"><section className="lock-copy"><div className="brand"><span>LM</span><div>Linkmark<small>LOCAL VAULT</small></div></div><p className="eyebrow">私人资料，不离开这台设备</p><h1>把常用入口<br />和访问凭据<br /><em>锁在一起。</em></h1><p>网站、服务地址、账号与密钥由同一个本机密钥库保护。服务器只提供页面，不接触你的资料。</p><div className="lock-facts"><span>ARGON2ID</span><span>AES-GCM</span><span>OFFLINE</span></div></section><section className="lock-card"><p className="eyebrow">{props.hasVault ? '欢迎回来' : '首次使用'}</p><h2>{props.hasVault ? '解锁密钥库' : '创建密钥库'}</h2><form onSubmit={(event) => { event.preventDefault(); if (props.password && (props.hasVault || props.confirm)) props.onOpen(); }}><p className="security-note">{props.hasVault ? '输入主密码，资料仅在当前页面内存中解密。' : '主密码无法找回。创建后请保留一份加密备份。'}</p><label>主密码<input type="password" value={props.password} onChange={(event) => props.onPassword(event.target.value)} autoFocus /></label>{!props.hasVault && <label>确认主密码<input type="password" value={props.confirm} onChange={(event) => props.onConfirm(event.target.value)} /></label>}<label>保持解锁<select value={props.duration} onChange={(event) => props.onDuration(Number(event.target.value))}>{durations.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>{props.error && <p className="error">{props.error}</p>}<button className="primary" type="submit" disabled={!props.password || (!props.hasVault && !props.confirm)}>{props.hasVault ? '解锁密钥库' : '创建密钥库'}</button><button className="text-button" type="button" onClick={props.onImport}>{props.hasVault ? '从备份恢复' : '导入加密包'}</button></form></section>{props.importOpen && <ImportDialog hasVault={props.hasVault} onClose={props.onCloseImport} onImport={props.onImportBackup} />}</main>;
+function LockScreen(props: {
+  hasVault: boolean;
+  password: string;
+  confirm: string;
+  duration: number;
+  error: string;
+  onPassword: (value: string) => void;
+  onConfirm: (value: string) => void;
+  onDuration: (value: number) => void;
+  onOpen: () => void;
+  onImport: () => void;
+  importOpen: boolean;
+  onCloseImport: () => void;
+  onImportBackup: (
+    encoded: string,
+    packagePassword: string,
+    localPassword: string,
+    mode?: "replace" | "merge",
+  ) => Promise<void>;
+}) {
+  return (
+    <main className="lock-screen">
+      <section className="lock-copy">
+        <div className="brand">
+          <span>LM</span>
+          <div>
+            Linkmark<small>LOCAL VAULT</small>
+          </div>
+        </div>
+        <p className="eyebrow">私人资料，不离开这台设备</p>
+        <h1>
+          把常用入口
+          <br />
+          和访问凭据
+          <br />
+          <em>锁在一起。</em>
+        </h1>
+        <p>
+          网站、服务地址、账号与密钥由同一个本机密钥库保护。服务器只提供页面，不接触你的资料。
+        </p>
+        <div className="lock-facts">
+          <span>ARGON2ID</span>
+          <span>AES-GCM</span>
+          <span>OFFLINE</span>
+        </div>
+      </section>
+      <section className="lock-card">
+        <p className="eyebrow">{props.hasVault ? "欢迎回来" : "首次使用"}</p>
+        <h2>{props.hasVault ? "解锁密钥库" : "创建密钥库"}</h2>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (props.password && (props.hasVault || props.confirm))
+              props.onOpen();
+          }}
+        >
+          <p className="security-note">
+            {props.hasVault
+              ? "输入主密码，资料仅在当前页面内存中解密。"
+              : "主密码无法找回。创建后请保留一份加密备份。"}
+          </p>
+          <label>
+            主密码
+            <input
+              type="password"
+              value={props.password}
+              onChange={(event) => props.onPassword(event.target.value)}
+              autoFocus
+            />
+          </label>
+          {!props.hasVault && (
+            <label>
+              确认主密码
+              <input
+                type="password"
+                value={props.confirm}
+                onChange={(event) => props.onConfirm(event.target.value)}
+              />
+            </label>
+          )}
+          <label>
+            保持解锁
+            <select
+              value={props.duration}
+              onChange={(event) => props.onDuration(Number(event.target.value))}
+            >
+              {durations.map(([value, label]) => (
+                <option value={value} key={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {props.error && <p className="error">{props.error}</p>}
+          <button
+            className="primary"
+            type="submit"
+            disabled={!props.password || (!props.hasVault && !props.confirm)}
+          >
+            {props.hasVault ? "解锁密钥库" : "创建密钥库"}
+          </button>
+          <button
+            className="text-button"
+            type="button"
+            onClick={props.onImport}
+          >
+            {props.hasVault ? "从备份恢复" : "导入加密包"}
+          </button>
+        </form>
+      </section>
+      {props.importOpen && (
+        <ImportDialog
+          hasVault={props.hasVault}
+          onClose={props.onCloseImport}
+          onImport={props.onImportBackup}
+        />
+      )}
+    </main>
+  );
 }
 
-function EntryList({ visible, query, sortBy, onSort, onQuery, tags, vault, onCopy, onNew, onEdit, onDelete }: { visible: Target[]; query: string; sortBy: 'manual' | 'name' | 'updated'; onSort: (sort: 'manual' | 'name' | 'updated') => void; onQuery: (value: string) => void; tags: Tag[]; vault: Kdbx; onCopy: (label: string, value: string) => Promise<void>; onNew: () => void; onEdit: (entry: Target) => void; onDelete: (entry: Target) => Promise<void> }) {
- const [selectedCredentialIds, setSelectedCredentialIds] = useState<Record<string, string>>({});
- const openWebsite = (entry: Target) => { if (entry.kind === 'web' && typeof entry.config.url === 'string') window.open(entry.config.url, '_blank', 'noopener,noreferrer'); };
- return <><label className="search"><span>⌕</span><input value={query} onChange={(event) => onQuery(event.target.value)} placeholder="搜索名称、地址、标签或关联密钥" /><kbd>⌘ K</kbd></label><div className="toolbar"><span><strong>{visible.length}</strong> 个入口</span><span className="sort-label">排序<select aria-label="入口排序" value={sortBy} onChange={(event) => onSort(event.target.value as 'manual' | 'name' | 'updated')}><option value="manual">置顶优先</option><option value="name">名称</option><option value="updated">最近更新</option></select></span><button onClick={onNew}>＋ 新建入口</button></div>{visible.length ? <div className="grid">{visible.map((entry) => { const credentials = entry.vaultItemIds.map((id) => getKey(vault, id)).filter((key): key is NonNullable<typeof key> => Boolean(key)); const selectedCredential = credentials.find((key) => key.id === selectedCredentialIds[entry.id]) ?? credentials[0]; const hasMultipleCredentials = credentials.length > 1; const clickable = entry.kind === 'web' && typeof entry.config.url === 'string'; return <article className={`card${clickable ? ' clickable' : ''}${hasMultipleCredentials ? ' multi-credential' : ''}`} key={entry.id} role={clickable ? 'link' : undefined} tabIndex={clickable ? 0 : undefined} onClick={() => openWebsite(entry)} onKeyDown={(event) => { if (clickable && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openWebsite(entry); } }}><div className="card-top"><div className={`kind kind-${entry.kind}`}>{entry.kind === 'web' ? '↗' : entry.kind === 'postgresql' ? 'PG' : entry.kind === 'redis' ? 'R' : '·'}</div><p className="kind-label">{kindNames[entry.kind]}</p><button className="edit-icon" aria-label={`编辑 ${entry.name}`} onClick={(event) => { event.stopPropagation(); onEdit(entry); }}>•••</button></div><div className="card-body"><h2>{entry.name}</h2><p>{Object.values(entry.config).join(' · ')}</p>{entry.notes && <p className="card-note" title={entry.notes}>{entry.notes}</p>}</div><div className="card-tags">{entry.tagIds.map((id) => tags.find((tag) => tag.id === id)?.name).filter(Boolean).map((tag) => <span key={tag}>#{tag}</span>)}</div><div className="card-actions">{selectedCredential ? <label className={`credential-picker${hasMultipleCredentials ? '' : ' is-static'}`} onClick={(event) => event.stopPropagation()}><select aria-label={`${entry.name} 的复制密钥`} disabled={!hasMultipleCredentials} value={selectedCredential.id} onChange={(event) => setSelectedCredentialIds((current) => ({ ...current, [entry.id]: event.target.value }))}>{credentials.map((key) => <option key={key.id} value={key.id}>{key.title}{key.username ? ` · ${key.username}` : ''}</option>)}</select></label> : <span className="link-secret">未关联密钥</span>}{selectedCredential && <span className="credential-actions">{selectedCredential.username && <button aria-label={`复制 ${entry.name} 的账号`} onClick={(event) => { event.stopPropagation(); void onCopy('账号', selectedCredential.username ?? ''); }}>复制账号</button>}{selectedCredential.password && <button aria-label={`复制 ${entry.name} 的密钥`} onClick={(event) => { event.stopPropagation(); void onCopy('密钥', selectedCredential.password ?? ''); }}>复制密钥</button>}</span>}<button className="delete-action" aria-label={`删除 ${entry.name}`} onClick={(event) => { event.stopPropagation(); void onDelete(entry); }}>删除</button></div></article>; })}</div> : <div className="empty"><span>✦</span><h2>{query ? '没有匹配的入口' : '从第一个入口开始'}</h2><p>{query ? '尝试更换关键词，或清除搜索条件。' : '保存网站、数据库和服务地址，并把访问密钥一起关联。'}</p><button onClick={onNew}>新建入口</button></div>}</>;
+function EntryList({
+  visible,
+  query,
+  sortBy,
+  onSort,
+  onQuery,
+  vault,
+  onCopy,
+  onNew,
+  onEdit,
+  onDelete,
+}: {
+  visible: Target[];
+  query: string;
+  sortBy: "manual" | "name" | "updated";
+  onSort: (sort: "manual" | "name" | "updated") => void;
+  onQuery: (value: string) => void;
+  vault: Kdbx;
+  onCopy: (label: string, value: string) => Promise<void>;
+  onNew: () => void;
+  onEdit: (entry: Target) => void;
+  onDelete: (entry: Target) => Promise<void>;
+}) {
+  const [selectedCredentialIds, setSelectedCredentialIds] = useState<
+    Record<string, string>
+  >({});
+  const openWebsite = (entry: Target) => {
+    if (entry.kind === "web" && typeof entry.config.url === "string")
+      window.open(entry.config.url, "_blank", "noopener,noreferrer");
+  };
+  return (
+    <>
+      <label className="search">
+        <span>⌕</span>
+        <input
+          value={query}
+          onChange={(event) => onQuery(event.target.value)}
+          placeholder="搜索名称、地址或关联密钥"
+        />
+        <kbd>⌘ K</kbd>
+      </label>
+      <div className="toolbar">
+        <span>
+          <strong>{visible.length}</strong> 个入口
+        </span>
+        <span className="sort-label">
+          排序
+          <select
+            aria-label="入口排序"
+            value={sortBy}
+            onChange={(event) =>
+              onSort(event.target.value as "manual" | "name" | "updated")
+            }
+          >
+            <option value="manual">置顶优先</option>
+            <option value="name">名称</option>
+            <option value="updated">最近更新</option>
+          </select>
+        </span>
+        <button onClick={onNew}>＋ 新建入口</button>
+      </div>
+      {visible.length ? (
+        <div className="grid">
+          {visible.map((entry) => {
+            const credentials = entry.vaultItemIds
+              .map((id) => getKey(vault, id))
+              .filter((key): key is NonNullable<typeof key> => Boolean(key));
+            const selectedCredential =
+              credentials.find(
+                (key) => key.id === selectedCredentialIds[entry.id],
+              ) ?? credentials[0];
+            const hasMultipleCredentials = credentials.length > 1;
+            const clickable =
+              entry.kind === "web" && typeof entry.config.url === "string";
+            return (
+              <article
+                className={`card${clickable ? " clickable" : ""}${hasMultipleCredentials ? " multi-credential" : ""}`}
+                key={entry.id}
+                role={clickable ? "link" : undefined}
+                tabIndex={clickable ? 0 : undefined}
+                onClick={() => openWebsite(entry)}
+                onKeyDown={(event) => {
+                  if (
+                    clickable &&
+                    (event.key === "Enter" || event.key === " ")
+                  ) {
+                    event.preventDefault();
+                    openWebsite(entry);
+                  }
+                }}
+              >
+                <div className="card-top">
+                  <div className={`kind kind-${entry.kind}`}>
+                    {entry.kind === "web"
+                      ? "↗"
+                      : entry.kind === "postgresql"
+                        ? "PG"
+                        : entry.kind === "redis"
+                          ? "R"
+                          : "·"}
+                  </div>
+                  <p className="kind-label">{kindNames[entry.kind]}</p>
+                  <button
+                    className="edit-icon"
+                    aria-label={`编辑 ${entry.name}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onEdit(entry);
+                    }}
+                  >
+                    •••
+                  </button>
+                </div>
+                <div className="card-body">
+                  <h2>{entry.name}</h2>
+                  <p>{Object.values(entry.config).join(" · ")}</p>
+                  {entry.notes && (
+                    <p className="card-note" title={entry.notes}>
+                      {entry.notes}
+                    </p>
+                  )}
+                </div>
+                <div className="card-actions">
+                  {selectedCredential ? (
+                    <label
+                      className={`credential-picker${hasMultipleCredentials ? "" : " is-static"}`}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <select
+                        aria-label={`${entry.name} 的复制密钥`}
+                        disabled={!hasMultipleCredentials}
+                        value={selectedCredential.id}
+                        onChange={(event) =>
+                          setSelectedCredentialIds((current) => ({
+                            ...current,
+                            [entry.id]: event.target.value,
+                          }))
+                        }
+                      >
+                        {credentials.map((key) => (
+                          <option key={key.id} value={key.id}>
+                            {key.title}
+                            {key.username ? ` · ${key.username}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <span className="link-secret">未关联密钥</span>
+                  )}
+                  {selectedCredential && (
+                    <span className="credential-actions">
+                      {selectedCredential.username && (
+                        <button
+                          aria-label={`复制 ${entry.name} 的账号`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void onCopy(
+                              "账号",
+                              selectedCredential.username ?? "",
+                            );
+                          }}
+                        >
+                          复制账号
+                        </button>
+                      )}
+                      {selectedCredential.password && (
+                        <button
+                          aria-label={`复制 ${entry.name} 的密钥`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void onCopy(
+                              "密钥",
+                              selectedCredential.password ?? "",
+                            );
+                          }}
+                        >
+                          复制密钥
+                        </button>
+                      )}
+                    </span>
+                  )}
+                  <button
+                    className="delete-action"
+                    aria-label={`删除 ${entry.name}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void onDelete(entry);
+                    }}
+                  >
+                    删除
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="empty">
+          <span>✦</span>
+          <h2>{query ? "没有匹配的入口" : "从第一个入口开始"}</h2>
+          <p>
+            {query
+              ? "尝试更换关键词，或清除搜索条件。"
+              : "保存网站、数据库和服务地址，并把访问密钥一起关联。"}
+          </p>
+          <button onClick={onNew}>新建入口</button>
+        </div>
+      )}
+    </>
+  );
 }
 
-function KeyList({ workspace, onNew, onEdit, onDelete }: { workspace: EncryptedWorkspace; onNew: () => void; onEdit: (id: string) => void; onDelete: (key: EncryptedWorkspace['keys'][number]) => Promise<void> }) {
- return <section className="vault-list"><header><div><p className="eyebrow">可复用的访问凭据</p><h2>密钥清单</h2></div><button className="primary" onClick={onNew}>＋ 新建密钥</button></header>{workspace.keys.length ? <div className="key-table"><div className="key-table-head"><span>密钥</span><span>关联入口</span><span>操作</span></div>{workspace.keys.map((key) => <div className="key-row" key={key.id}><button className="vault-item" onClick={() => onEdit(key.id)}><span className="key-avatar">⌘</span><span><strong>{key.title}</strong><small>{key.username || '未填写账号'}</small></span></button><span className="key-links">{workspace.entries.filter((entry) => entry.vaultItemIds.includes(key.id)).length} 个入口</span><button className="delete-key" onClick={() => void onDelete(key)}>删除</button></div>)}</div> : <div className="empty key-empty"><span>⌘</span><h2>还没有密钥</h2><p>密钥可以关联到一个或多个入口，账号、密码、Token 都保存在这里。</p><button onClick={onNew}>新建密钥</button></div>}</section>;
+function KeyList({
+  workspace,
+  onNew,
+  onEdit,
+  onDelete,
+}: {
+  workspace: EncryptedWorkspace;
+  onNew: () => void;
+  onEdit: (id: string) => void;
+  onDelete: (key: EncryptedWorkspace["keys"][number]) => Promise<void>;
+}) {
+  return (
+    <section className="vault-list">
+      <header>
+        <div>
+          <p className="eyebrow">可复用的访问凭据</p>
+          <h2>密钥清单</h2>
+        </div>
+        <button className="primary" onClick={onNew}>
+          ＋ 新建密钥
+        </button>
+      </header>
+      {workspace.keys.length ? (
+        <div className="key-table">
+          <div className="key-table-head">
+            <span>密钥</span>
+            <span>关联入口</span>
+            <span>操作</span>
+          </div>
+          {workspace.keys.map((key) => (
+            <div className="key-row" key={key.id}>
+              <button className="vault-item" onClick={() => onEdit(key.id)}>
+                <span className="key-avatar">⌘</span>
+                <span>
+                  <strong>{key.title}</strong>
+                  <small>{key.username || "未填写账号"}</small>
+                </span>
+              </button>
+              <span className="key-links">
+                {
+                  workspace.entries.filter((entry) =>
+                    entry.vaultItemIds.includes(key.id),
+                  ).length
+                }{" "}
+                个入口
+              </span>
+              <button className="delete-key" onClick={() => void onDelete(key)}>
+                删除
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty key-empty">
+          <span>⌘</span>
+          <h2>还没有密钥</h2>
+          <p>密钥可以关联到一个或多个入口，账号、密码、Token 都保存在这里。</p>
+          <button onClick={onNew}>新建密钥</button>
+        </div>
+      )}
+    </section>
+  );
 }
 
-type PendingKey = { id: string; title: string; username?: string; password?: string; notes?: string };
+type PendingKey = {
+  id: string;
+  title: string;
+  username?: string;
+  password?: string;
+  notes?: string;
+};
 
-function EntryEditor({ entry, keys, groups, tags, onClose, onSave }: { entry?: Target; keys: EncryptedWorkspace['keys']; groups: Group[]; tags: Tag[]; onClose: () => void; onSave: (entry: Target, createdKeys: Array<{ title: string; username?: string; password?: string; notes?: string }>) => Promise<void> }) {
-  const [screen, setScreen] = useState<'details' | 'keys' | 'new-key'>('details'); const [name, setName] = useState(entry?.name ?? ''); const [notes, setNotes] = useState(entry?.notes ?? ''); const [kind, setKind] = useState<TargetKind>(entry?.kind ?? 'web'); const [config, setConfig] = useState<Record<string, string | number | boolean>>(stringConfig(entry?.config)); const [groupId, setGroupId] = useState(entry?.groupId ?? ''); const [tagIds, setTagIds] = useState(entry?.tagIds ?? []); const [selected, setSelected] = useState(entry?.vaultItemIds ?? []); const [pendingKeys, setPendingKeys] = useState<PendingKey[]>([]); const [keySearch, setKeySearch] = useState(''); const [keyTitle, setKeyTitle] = useState(''); const [keyUser, setKeyUser] = useState(''); const [keyValue, setKeyValue] = useState(''); const [keyNotes, setKeyNotes] = useState(''); const [error, setError] = useState('');
-  const setField = (field: string, value: string | boolean) => setConfig((current) => ({ ...current, [field]: value }));
-  const toggleKey = (id: string) => setSelected((ids) => ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id]);
-  const linked = [...keys.filter((key) => selected.includes(key.id)).map((key) => ({ id: key.id, title: key.title, username: key.username })), ...pendingKeys.filter((key) => selected.includes(key.id))];
-  const existingIds = new Set(keys.map((key) => key.id)); const filteredKeys = keys.filter((key) => `${key.title} ${key.username ?? ''}`.toLocaleLowerCase().includes(keySearch.toLocaleLowerCase()));
-  const createPendingKey = () => { if (!keyTitle.trim()) return setError('请填写密钥名称。'); const draft = { id: `draft-${crypto.randomUUID()}`, title: keyTitle.trim(), username: keyUser, password: keyValue, notes: keyNotes }; setPendingKeys((items) => [...items, draft]); setSelected((ids) => [...ids, draft.id]); setKeyTitle(''); setKeyUser(''); setKeyValue(''); setKeyNotes(''); setError(''); setScreen('keys'); };
-  const submit = async () => { const cleaned = normalizeConfig(kind, config); if (!name.trim() || !validateTargetConfig(kind, cleaned)) return setError(kind === 'web' ? '请填写有效的 HTTP 或 HTTPS 网站地址。' : '请检查连接资料；账号、密码、DSN 和 Token 必须保存为密钥。'); const base = entry ? { ...entry, name: name.trim(), notes: notes.trim(), kind, config: cleaned, groupId: groupId || null, tagIds, vaultItemIds: selected.filter((id) => existingIds.has(id)), updatedAt: new Date().toISOString() } : createTarget({ name, notes: notes.trim(), kind, config: cleaned, groupId: groupId || null, tagIds, vaultItemIds: selected.filter((id) => existingIds.has(id)) }); await onSave(base, pendingKeys.filter((key) => selected.includes(key.id)).map(({ id: _id, ...key }) => key)); };
-  const heading = screen === 'details' ? entry ? '编辑入口' : '新建入口' : screen === 'keys' ? '关联密钥' : '新建密钥';
-  return <div className="modal-backdrop"><section className="modal entry-modal" role="dialog" aria-modal="true" aria-label={heading}><div className="modal-heading"><div>{screen !== 'details' && <button className="back-button" type="button" onClick={() => setScreen(screen === 'new-key' ? 'keys' : 'details')}>← 返回</button>}<p className="eyebrow">{screen === 'details' ? '入口资料' : screen === 'keys' ? '选择可复用的访问凭据' : '创建后会自动关联此入口'}</p><h2>{heading}</h2></div><button onClick={onClose}>×</button></div>{screen === 'details' ? <><label>名称<input autoFocus value={name} onChange={(event) => setName(event.target.value)} /></label><label>备注（可选）<textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="例如：仅限公司网络访问" /></label><label>类型<select value={kind} onChange={(event) => { const next = event.target.value as TargetKind; setKind(next); setConfig(defaultConfig(next)); }}><option value="web">网站</option><option value="postgresql">PostgreSQL</option><option value="redis">Redis</option><option value="generic">通用</option></select></label><ConfigFields kind={kind} config={config} setField={setField} /><label>分组<select value={groupId} onChange={(event) => setGroupId(event.target.value)}><option value="">默认分组</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label>{tags.length > 0 && <fieldset><legend>标签</legend>{tags.map((tag) => <label className="checkbox" key={tag.id}><input type="checkbox" checked={tagIds.includes(tag.id)} onChange={() => setTagIds((ids) => ids.includes(tag.id) ? ids.filter((id) => id !== tag.id) : [...ids, tag.id])} />{tag.name}</label>)}</fieldset>}<section className="linked-key-summary"><div><span>关联密钥</span><strong>{linked.length ? linked.map((key) => key.username ? `${key.title} · ${key.username}` : key.title).join('、') : '尚未关联'}</strong></div><button type="button" aria-label="管理关联密钥" onClick={() => { setError(''); setScreen('keys'); }}>管理</button></section>{error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" onClick={() => void submit()}>保存入口</button></div></> : screen === 'keys' ? <><label className="key-search">搜索已有密钥<input autoFocus value={keySearch} onChange={(event) => setKeySearch(event.target.value)} placeholder="按名称或账号筛选" /></label><div className="key-selection-list">{filteredKeys.map((key) => <label className="key-choice" key={key.id}><input type="checkbox" checked={selected.includes(key.id)} onChange={() => toggleKey(key.id)} /><span><strong>{key.title}</strong><small>{key.username || '未填写账号'}</small></span></label>)}{pendingKeys.map((key) => <label className="key-choice pending" key={key.id}><input type="checkbox" checked={selected.includes(key.id)} onChange={() => toggleKey(key.id)} /><span><strong>{key.title}</strong><small>{key.username || '新建密钥草稿'}</small></span><em>新建</em></label>)}{!filteredKeys.length && !pendingKeys.length && <p className="security-note">没有匹配的密钥。你可以直接新建并关联。</p>}</div><button className="create-key-button" type="button" onClick={() => { setError(''); setScreen('new-key'); }}>＋ 新建密钥</button><p className="selection-count">已选择 {linked.length} 把密钥</p><div className="modal-actions"><button onClick={() => setScreen('details')}>完成</button></div></> : <><label>密钥名称<input autoFocus value={keyTitle} onChange={(event) => setKeyTitle(event.target.value)} placeholder={name || '例如：生产账号'} /></label><label>账号（可选）<input value={keyUser} onChange={(event) => setKeyUser(event.target.value)} /></label><label>密钥值（可选）<input type="password" value={keyValue} onChange={(event) => setKeyValue(event.target.value)} /></label><label>备注（可选）<textarea value={keyNotes} onChange={(event) => setKeyNotes(event.target.value)} /></label>{error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={() => setScreen('keys')}>取消</button><button className="primary" onClick={createPendingKey}>创建并关联</button></div></>}</section></div>;
+function EntryEditor({
+  entry,
+  keys,
+  groups,
+  onClose,
+  onSave,
+}: {
+  entry?: Target;
+  keys: EncryptedWorkspace["keys"];
+  groups: Group[];
+  onClose: () => void;
+  onSave: (
+    entry: Target,
+    createdKeys: Array<{
+      title: string;
+      username?: string;
+      password?: string;
+      notes?: string;
+    }>,
+  ) => Promise<void>;
+}) {
+  const [screen, setScreen] = useState<"details" | "keys" | "new-key">(
+    "details",
+  );
+  const [name, setName] = useState(entry?.name ?? "");
+  const [notes, setNotes] = useState(entry?.notes ?? "");
+  const [kind, setKind] = useState<TargetKind>(entry?.kind ?? "web");
+  const [config, setConfig] = useState<
+    Record<string, string | number | boolean>
+  >(stringConfig(entry?.config));
+  const [groupId, setGroupId] = useState(entry?.groupId ?? "");
+  const [selected, setSelected] = useState(entry?.vaultItemIds ?? []);
+  const [pendingKeys, setPendingKeys] = useState<PendingKey[]>([]);
+  const [keySearch, setKeySearch] = useState("");
+  const [keyTitle, setKeyTitle] = useState("");
+  const [keyUser, setKeyUser] = useState("");
+  const [keyValue, setKeyValue] = useState("");
+  const [keyNotes, setKeyNotes] = useState("");
+  const [error, setError] = useState("");
+  const setField = (field: string, value: string | boolean) =>
+    setConfig((current) => ({ ...current, [field]: value }));
+  const toggleKey = (id: string) =>
+    setSelected((ids) =>
+      ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id],
+    );
+  const linked = [
+    ...keys
+      .filter((key) => selected.includes(key.id))
+      .map((key) => ({ id: key.id, title: key.title, username: key.username })),
+    ...pendingKeys.filter((key) => selected.includes(key.id)),
+  ];
+  const existingIds = new Set(keys.map((key) => key.id));
+  const filteredKeys = keys.filter((key) =>
+    `${key.title} ${key.username ?? ""}`
+      .toLocaleLowerCase()
+      .includes(keySearch.toLocaleLowerCase()),
+  );
+  const createPendingKey = () => {
+    if (!keyTitle.trim()) return setError("请填写密钥名称。");
+    const draft = {
+      id: `draft-${crypto.randomUUID()}`,
+      title: keyTitle.trim(),
+      username: keyUser,
+      password: keyValue,
+      notes: keyNotes,
+    };
+    setPendingKeys((items) => [...items, draft]);
+    setSelected((ids) => [...ids, draft.id]);
+    setKeyTitle("");
+    setKeyUser("");
+    setKeyValue("");
+    setKeyNotes("");
+    setError("");
+    setScreen("keys");
+  };
+  const submit = async () => {
+    const cleaned = normalizeConfig(kind, config);
+    if (!name.trim() || !validateTargetConfig(kind, cleaned))
+      return setError(
+        kind === "web"
+          ? "请填写有效的 HTTP 或 HTTPS 网站地址。"
+          : "请检查连接资料；账号、密码、DSN 和 Token 必须保存为密钥。",
+      );
+    const base = entry
+      ? {
+          ...entry,
+          name: name.trim(),
+          notes: notes.trim(),
+          kind,
+          config: cleaned,
+          groupId: groupId || null,
+          vaultItemIds: selected.filter((id) => existingIds.has(id)),
+          updatedAt: new Date().toISOString(),
+        }
+      : createTarget({
+          name,
+          notes: notes.trim(),
+          kind,
+          config: cleaned,
+          groupId: groupId || null,
+          vaultItemIds: selected.filter((id) => existingIds.has(id)),
+        });
+    await onSave(
+      base,
+      pendingKeys
+        .filter((key) => selected.includes(key.id))
+        .map(({ id: _id, ...key }) => key),
+    );
+  };
+  const heading =
+    screen === "details"
+      ? entry
+        ? "编辑入口"
+        : "新建入口"
+      : screen === "keys"
+        ? "关联密钥"
+        : "新建密钥";
+  return (
+    <div className="modal-backdrop">
+      <section
+        className="modal entry-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={heading}
+      >
+        <div className="modal-heading">
+          <div>
+            {screen !== "details" && (
+              <button
+                className="back-button"
+                type="button"
+                onClick={() =>
+                  setScreen(screen === "new-key" ? "keys" : "details")
+                }
+              >
+                ← 返回
+              </button>
+            )}
+            <p className="eyebrow">
+              {screen === "details"
+                ? "入口资料"
+                : screen === "keys"
+                  ? "选择可复用的访问凭据"
+                  : "创建后会自动关联此入口"}
+            </p>
+            <h2>{heading}</h2>
+          </div>
+          <button onClick={onClose}>×</button>
+        </div>
+        {screen === "details" ? (
+          <>
+            <label>
+              名称
+              <input
+                autoFocus
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
+            </label>
+            <label>
+              备注（可选）
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="例如：仅限公司网络访问"
+              />
+            </label>
+            <label>
+              类型
+              <select
+                value={kind}
+                onChange={(event) => {
+                  const next = event.target.value as TargetKind;
+                  setKind(next);
+                  setConfig(defaultConfig(next));
+                }}
+              >
+                <option value="web">网站</option>
+                <option value="postgresql">PostgreSQL</option>
+                <option value="redis">Redis</option>
+                <option value="generic">通用</option>
+              </select>
+            </label>
+            <ConfigFields kind={kind} config={config} setField={setField} />
+            <label>
+              分组
+              <select
+                value={groupId}
+                onChange={(event) => setGroupId(event.target.value)}
+              >
+                <option value="">默认分组</option>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <section className="linked-key-summary">
+              <div>
+                <span>关联密钥</span>
+                <strong>
+                  {linked.length
+                    ? linked
+                        .map((key) =>
+                          key.username
+                            ? `${key.title} · ${key.username}`
+                            : key.title,
+                        )
+                        .join("、")
+                    : "尚未关联"}
+                </strong>
+              </div>
+              <button
+                type="button"
+                aria-label="管理关联密钥"
+                onClick={() => {
+                  setError("");
+                  setScreen("keys");
+                }}
+              >
+                管理
+              </button>
+            </section>
+            {error && <p className="error">{error}</p>}
+            <div className="modal-actions">
+              <button onClick={onClose}>取消</button>
+              <button className="primary" onClick={() => void submit()}>
+                保存入口
+              </button>
+            </div>
+          </>
+        ) : screen === "keys" ? (
+          <>
+            <label className="key-search">
+              搜索已有密钥
+              <input
+                autoFocus
+                value={keySearch}
+                onChange={(event) => setKeySearch(event.target.value)}
+                placeholder="按名称或账号筛选"
+              />
+            </label>
+            <div className="key-selection-list">
+              {filteredKeys.map((key) => (
+                <label className="key-choice" key={key.id}>
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(key.id)}
+                    onChange={() => toggleKey(key.id)}
+                  />
+                  <span>
+                    <strong>{key.title}</strong>
+                    <small>{key.username || "未填写账号"}</small>
+                  </span>
+                </label>
+              ))}
+              {pendingKeys.map((key) => (
+                <label className="key-choice pending" key={key.id}>
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(key.id)}
+                    onChange={() => toggleKey(key.id)}
+                  />
+                  <span>
+                    <strong>{key.title}</strong>
+                    <small>{key.username || "新建密钥草稿"}</small>
+                  </span>
+                  <em>新建</em>
+                </label>
+              ))}
+              {!filteredKeys.length && !pendingKeys.length && (
+                <p className="security-note">
+                  没有匹配的密钥。你可以直接新建并关联。
+                </p>
+              )}
+            </div>
+            <button
+              className="create-key-button"
+              type="button"
+              onClick={() => {
+                setError("");
+                setScreen("new-key");
+              }}
+            >
+              ＋ 新建密钥
+            </button>
+            <p className="selection-count">已选择 {linked.length} 把密钥</p>
+            <div className="modal-actions">
+              <button onClick={() => setScreen("details")}>完成</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <label>
+              密钥名称
+              <input
+                autoFocus
+                value={keyTitle}
+                onChange={(event) => setKeyTitle(event.target.value)}
+                placeholder={name || "例如：生产账号"}
+              />
+            </label>
+            <label>
+              账号（可选）
+              <input
+                value={keyUser}
+                onChange={(event) => setKeyUser(event.target.value)}
+              />
+            </label>
+            <label>
+              密钥值（可选）
+              <input
+                type="password"
+                value={keyValue}
+                onChange={(event) => setKeyValue(event.target.value)}
+              />
+            </label>
+            <label>
+              备注（可选）
+              <textarea
+                value={keyNotes}
+                onChange={(event) => setKeyNotes(event.target.value)}
+              />
+            </label>
+            {error && <p className="error">{error}</p>}
+            <div className="modal-actions">
+              <button onClick={() => setScreen("keys")}>取消</button>
+              <button className="primary" onClick={createPendingKey}>
+                创建并关联
+              </button>
+            </div>
+          </>
+        )}
+      </section>
+    </div>
+  );
 }
 
-function ConfigFields({ kind, config, setField }: { kind: TargetKind; config: Record<string, string | number | boolean>; setField: (key: string, value: string | boolean) => void }) {
- if (kind === 'web') return <label>网站地址<input value={String(config.url ?? '')} onChange={(event) => setField('url', event.target.value)} placeholder="https://example.com" /></label>;
- if (kind === 'generic') return <label>非敏感资料（每行：名称: 内容）<textarea value={String(config.details ?? '')} onChange={(event) => setField('details', event.target.value)} placeholder="区域: cn-north-1\n项目: 示例项目" /></label>;
- return <><label>主机<input value={String(config.host ?? '')} onChange={(event) => setField('host', event.target.value)} placeholder="db.example.com" /></label><label>端口<input inputMode="numeric" value={String(config.port ?? '')} onChange={(event) => setField('port', event.target.value)} placeholder={kind === 'postgresql' ? '5432' : '6379'} /></label><label>{kind === 'postgresql' ? '数据库' : '数据库编号'}<input value={String(config.database ?? '')} onChange={(event) => setField('database', event.target.value)} /></label>{kind === 'postgresql' ? <label>SSL 模式<select value={String(config.sslMode ?? 'prefer')} onChange={(event) => setField('sslMode', event.target.value)}>{['disable', 'prefer', 'require', 'verify-ca', 'verify-full'].map((mode) => <option key={mode}>{mode}</option>)}</select></label> : <label className="checkbox"><input type="checkbox" checked={Boolean(config.tls)} onChange={(event) => setField('tls', event.target.checked)} />使用 TLS</label>}</>;
+function ConfigFields({
+  kind,
+  config,
+  setField,
+}: {
+  kind: TargetKind;
+  config: Record<string, string | number | boolean>;
+  setField: (key: string, value: string | boolean) => void;
+}) {
+  if (kind === "web")
+    return (
+      <label>
+        网站地址
+        <input
+          value={String(config.url ?? "")}
+          onChange={(event) => setField("url", event.target.value)}
+          placeholder="https://example.com"
+        />
+      </label>
+    );
+  if (kind === "generic")
+    return (
+      <label>
+        非敏感资料（每行：名称: 内容）
+        <textarea
+          value={String(config.details ?? "")}
+          onChange={(event) => setField("details", event.target.value)}
+          placeholder="区域: cn-north-1\n项目: 示例项目"
+        />
+      </label>
+    );
+  return (
+    <>
+      <label>
+        主机
+        <input
+          value={String(config.host ?? "")}
+          onChange={(event) => setField("host", event.target.value)}
+          placeholder="db.example.com"
+        />
+      </label>
+      <label>
+        端口
+        <input
+          inputMode="numeric"
+          value={String(config.port ?? "")}
+          onChange={(event) => setField("port", event.target.value)}
+          placeholder={kind === "postgresql" ? "5432" : "6379"}
+        />
+      </label>
+      <label>
+        {kind === "postgresql" ? "数据库" : "数据库编号"}
+        <input
+          value={String(config.database ?? "")}
+          onChange={(event) => setField("database", event.target.value)}
+        />
+      </label>
+      {kind === "postgresql" ? (
+        <label>
+          SSL 模式
+          <select
+            value={String(config.sslMode ?? "prefer")}
+            onChange={(event) => setField("sslMode", event.target.value)}
+          >
+            {["disable", "prefer", "require", "verify-ca", "verify-full"].map(
+              (mode) => (
+                <option key={mode}>{mode}</option>
+              ),
+            )}
+          </select>
+        </label>
+      ) : (
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={Boolean(config.tls)}
+            onChange={(event) => setField("tls", event.target.checked)}
+          />
+          使用 TLS
+        </label>
+      )}
+    </>
+  );
 }
 
-function KeyEditor({ keyId, vault, linkedEntries, onClose, onSave }: { keyId?: string; vault: Kdbx; linkedEntries: Target[]; onClose: () => void; onSave: (id: string | undefined, input: { title: string; username?: string; password?: string; notes?: string; fields?: Record<string, string> }) => Promise<void> }) {
- const existing = keyId ? getKey(vault, keyId) : null; const [title, setTitle] = useState(existing?.title ?? ''); const [username, setUsername] = useState(existing?.username ?? ''); const [value, setValue] = useState(existing?.password ?? ''); const [notes, setNotes] = useState(existing?.notes ?? ''); const [fields, setFields] = useState(Object.entries(existing?.fields ?? {}).map(([name, value]) => `${name}: ${value}`).join('\n')); const [show, setShow] = useState(false);
- return <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true" aria-label={keyId ? '编辑密钥' : '新建密钥'}><div className="modal-heading"><h2>{keyId ? '编辑密钥' : '新建密钥'}</h2><button onClick={onClose}>×</button></div><label>密钥名称<input autoFocus value={title} onChange={(event) => setTitle(event.target.value)} /></label><label>账号（可选）<input value={username} onChange={(event) => setUsername(event.target.value)} /></label><label>密钥值（密码、API Key 或 Token）<div className="copy-field"><input type={show ? 'text' : 'password'} value={value} onChange={(event) => setValue(event.target.value)} /><button type="button" onClick={() => setShow(!show)}>{show ? '隐藏' : '显示'}</button>{keyId && <button type="button" onClick={() => void navigator.clipboard?.writeText(value)}>复制</button>}</div></label><label>备注（可选）<textarea value={notes} onChange={(event) => setNotes(event.target.value)} /></label><label>自定义字段（每行：名称: 值）<textarea value={fields} onChange={(event) => setFields(event.target.value)} /></label>{keyId && <p className="security-note">关联入口：{linkedEntries.length ? linkedEntries.map((entry) => entry.name).join('、') : '尚未关联'}</p>}<div className="modal-actions"><button onClick={onClose}>取消</button><button className="primary" disabled={!title.trim()} onClick={() => void onSave(keyId, { title: title.trim(), username, password: value, notes, fields: parseLines(fields) })}>保存密钥</button></div></section></div>;
+function KeyEditor({
+  keyId,
+  vault,
+  linkedEntries,
+  onClose,
+  onSave,
+}: {
+  keyId?: string;
+  vault: Kdbx;
+  linkedEntries: Target[];
+  onClose: () => void;
+  onSave: (
+    id: string | undefined,
+    input: {
+      title: string;
+      username?: string;
+      password?: string;
+      notes?: string;
+      fields?: Record<string, string>;
+    },
+  ) => Promise<void>;
+}) {
+  const existing = keyId ? getKey(vault, keyId) : null;
+  const [title, setTitle] = useState(existing?.title ?? "");
+  const [username, setUsername] = useState(existing?.username ?? "");
+  const [value, setValue] = useState(existing?.password ?? "");
+  const [notes, setNotes] = useState(existing?.notes ?? "");
+  const [fields, setFields] = useState(
+    Object.entries(existing?.fields ?? {})
+      .map(([name, value]) => `${name}: ${value}`)
+      .join("\n"),
+  );
+  const [show, setShow] = useState(false);
+  return (
+    <div className="modal-backdrop">
+      <section
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={keyId ? "编辑密钥" : "新建密钥"}
+      >
+        <div className="modal-heading">
+          <h2>{keyId ? "编辑密钥" : "新建密钥"}</h2>
+          <button onClick={onClose}>×</button>
+        </div>
+        <label>
+          密钥名称
+          <input
+            autoFocus
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+        </label>
+        <label>
+          账号（可选）
+          <input
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+          />
+        </label>
+        <label>
+          密钥值（密码、API Key 或 Token）
+          <div className="copy-field">
+            <input
+              type={show ? "text" : "password"}
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+            />
+            <button type="button" onClick={() => setShow(!show)}>
+              {show ? "隐藏" : "显示"}
+            </button>
+            {keyId && (
+              <button
+                type="button"
+                onClick={() => void navigator.clipboard?.writeText(value)}
+              >
+                复制
+              </button>
+            )}
+          </div>
+        </label>
+        <label>
+          备注（可选）
+          <textarea
+            value={notes}
+            onChange={(event) => setNotes(event.target.value)}
+          />
+        </label>
+        <label>
+          自定义字段（每行：名称: 值）
+          <textarea
+            value={fields}
+            onChange={(event) => setFields(event.target.value)}
+          />
+        </label>
+        {keyId && (
+          <p className="security-note">
+            关联入口：
+            {linkedEntries.length
+              ? linkedEntries.map((entry) => entry.name).join("、")
+              : "尚未关联"}
+          </p>
+        )}
+        <div className="modal-actions">
+          <button onClick={onClose}>取消</button>
+          <button
+            className="primary"
+            disabled={!title.trim()}
+            onClick={() =>
+              void onSave(keyId, {
+                title: title.trim(),
+                username,
+                password: value,
+                notes,
+                fields: parseLines(fields),
+              })
+            }
+          >
+            保存密钥
+          </button>
+        </div>
+      </section>
+    </div>
+  );
 }
 
-function GroupEditor({ groups, tags, onClose, onSave, onAddTag, onDelete, onDeleteTag }: { groups: Group[]; tags: Tag[]; onClose: () => void; onSave: (name: string) => Promise<void>; onAddTag: (name: string) => Promise<void>; onDelete: (id: string) => Promise<void>; onDeleteTag: (id: string) => Promise<void> }) { const [name, setName] = useState(''); const [tag, setTag] = useState(''); return <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true" aria-label="管理分组和标签"><div className="modal-heading"><h2>管理分组和标签</h2><button onClick={onClose}>×</button></div><label>新分组名称<input autoFocus value={name} onChange={(event) => setName(event.target.value)} /></label><div className="modal-actions"><button className="primary" disabled={!name.trim()} onClick={() => { void onSave(name.trim()); setName(''); }}>新建分组</button></div>{groups.map((group) => <div className="recycle-row" key={group.id}><span>{group.name}</span><button onClick={() => { if (window.confirm(`删除分组“${group.name}”？其中入口会移入默认分组。`)) void onDelete(group.id); }}>删除</button></div>)}<hr /><label>新标签名称<input value={tag} onChange={(event) => setTag(event.target.value)} /></label><div className="modal-actions"><button className="primary" disabled={!tag.trim()} onClick={() => { void onAddTag(tag.trim()); setTag(''); }}>新建标签</button></div>{tags.map((item) => <div className="recycle-row" key={item.id}><span>{item.name}</span><button onClick={() => { if (window.confirm(`删除标签“${item.name}”？它将从所有入口移除。`)) void onDeleteTag(item.id); }}>删除</button></div>)}<div className="modal-actions"><button onClick={onClose}>完成</button></div></section></div>; }
+function GroupEditor({
+  groups,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  groups: Group[];
+  onClose: () => void;
+  onSave: (name: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  return (
+    <div className="modal-backdrop">
+      <section
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="管理分组"
+      >
+        <div className="modal-heading">
+          <h2>管理分组</h2>
+          <button onClick={onClose}>×</button>
+        </div>
+        <label>
+          新分组名称
+          <input
+            autoFocus
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </label>
+        <div className="modal-actions">
+          <button
+            className="primary"
+            disabled={!name.trim()}
+            onClick={() => {
+              void onSave(name.trim());
+              setName("");
+            }}
+          >
+            新建分组
+          </button>
+        </div>
+        {groups.map((group) => (
+          <div className="recycle-row" key={group.id}>
+            <span>{group.name}</span>
+            <button
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `删除分组“${group.name}”？其中入口会移入默认分组。`,
+                  )
+                )
+                  void onDelete(group.id);
+              }}
+            >
+              删除
+            </button>
+          </div>
+        ))}
+        <div className="modal-actions">
+          <button onClick={onClose}>完成</button>
+        </div>
+      </section>
+    </div>
+  );
+}
 
-function RecycleDialog({ vault, onClose, onChanged }: { vault: Kdbx; onClose: () => void; onChanged: () => Promise<void> }) { const [records, setRecords] = useState<RecycledRecord[]>(() => listRecycledRecords(vault)); const refresh = async () => { await onChanged(); setRecords(listRecycledRecords(vault)); }; return <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true" aria-label="回收站"><div className="modal-heading"><div><h2>回收站</h2><p className="security-note">删除的资料会在 30 天后自动永久清理。</p></div><button onClick={onClose}>×</button></div>{records.length ? <>{records.map((record) => <div className="recycle-row" key={record.id}><span><strong>{record.title}</strong><small>{record.kind === 'entry' ? '入口' : '密钥'}</small></span><button onClick={() => { restoreRecycledRecord(vault, record.id); void refresh(); }}>恢复</button><button onClick={() => { if (window.confirm('永久删除后无法恢复，是否继续？')) { permanentlyDeleteRecycledRecord(vault, record.id); void refresh(); } }}>永久删除</button></div>)}<div className="modal-actions"><button onClick={onClose}>关闭</button><button onClick={() => { if (window.confirm('清空回收站后无法恢复，是否继续？')) { emptyRecycledRecords(vault); void refresh(); } }}>清空回收站</button></div></> : <><p className="security-note">回收站为空。</p><div className="modal-actions"><button onClick={onClose}>关闭</button></div></>}</section></div>; }
+function RecycleDialog({
+  vault,
+  onClose,
+  onChanged,
+}: {
+  vault: Kdbx;
+  onClose: () => void;
+  onChanged: () => Promise<void>;
+}) {
+  const [records, setRecords] = useState<RecycledRecord[]>(() =>
+    listRecycledRecords(vault),
+  );
+  const refresh = async () => {
+    await onChanged();
+    setRecords(listRecycledRecords(vault));
+  };
+  return (
+    <div className="modal-backdrop">
+      <section
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="回收站"
+      >
+        <div className="modal-heading">
+          <div>
+            <h2>回收站</h2>
+            <p className="security-note">
+              删除的资料会在 30 天后自动永久清理。
+            </p>
+          </div>
+          <button onClick={onClose}>×</button>
+        </div>
+        {records.length ? (
+          <>
+            {records.map((record) => (
+              <div className="recycle-row" key={record.id}>
+                <span>
+                  <strong>{record.title}</strong>
+                  <small>{record.kind === "entry" ? "入口" : "密钥"}</small>
+                </span>
+                <button
+                  onClick={() => {
+                    restoreRecycledRecord(vault, record.id);
+                    void refresh();
+                  }}
+                >
+                  恢复
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm("永久删除后无法恢复，是否继续？")) {
+                      permanentlyDeleteRecycledRecord(vault, record.id);
+                      void refresh();
+                    }
+                  }}
+                >
+                  永久删除
+                </button>
+              </div>
+            ))}
+            <div className="modal-actions">
+              <button onClick={onClose}>关闭</button>
+              <button
+                onClick={() => {
+                  if (window.confirm("清空回收站后无法恢复，是否继续？")) {
+                    emptyRecycledRecords(vault);
+                    void refresh();
+                  }
+                }}
+              >
+                清空回收站
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="security-note">回收站为空。</p>
+            <div className="modal-actions">
+              <button onClick={onClose}>关闭</button>
+            </div>
+          </>
+        )}
+      </section>
+    </div>
+  );
+}
 
-function ImportDialog({ hasVault, onClose, onImport }: { hasVault: boolean; onClose: () => void; onImport: (encoded: string, packagePassword: string, localPassword: string, mode?: 'replace' | 'merge') => Promise<void> }) {
-  const [encoded, setEncoded] = useState(''); const [packagePassword, setPackagePassword] = useState(''); const [localPassword, setLocalPassword] = useState(''); const [confirm, setConfirm] = useState(''); const [mode, setMode] = useState<'replace' | 'merge'>('replace'); const [preview, setPreview] = useState<{ packageMode: 'backup' | 'share'; entries: number; keys: number; groups: number; tags: number } | null>(null); const [error, setError] = useState('');
-  const inspect = async () => { try { const backup = await parseKeyStoreBackup(encoded.trim(), packagePassword); const vault = await unlockVault(backup.vault, packagePassword); initializeWorkspace(vault); const state = getWorkspace(vault); setPreview({ packageMode: backup.mode, entries: state.entries.length, keys: state.keys.length, groups: state.groups.length, tags: state.tags.length }); setError(''); } catch (cause) { setPreview(null); setError(cause instanceof Error ? cause.message : '无法读取加密包。'); } };
-  const submit = async () => { if (!preview) return; if (mode === 'replace' && preview.packageMode === 'share' && (!localPassword || localPassword !== confirm)) return setError('请确认新的本地主密码。'); try { await onImport(encoded.trim(), packagePassword, preview.packageMode === 'share' ? localPassword : packagePassword, mode); } catch (cause) { setError(cause instanceof Error ? cause.message : '无法导入加密包。'); } };
+function ImportDialog({
+  hasVault,
+  onClose,
+  onImport,
+}: {
+  hasVault: boolean;
+  onClose: () => void;
+  onImport: (
+    encoded: string,
+    packagePassword: string,
+    localPassword: string,
+    mode?: "replace" | "merge",
+  ) => Promise<void>;
+}) {
+  const [encoded, setEncoded] = useState("");
+  const [packagePassword, setPackagePassword] = useState("");
+  const [localPassword, setLocalPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [mode, setMode] = useState<"replace" | "merge">("replace");
+  const [preview, setPreview] = useState<{
+    packageMode: "backup" | "share";
+    entries: number;
+    keys: number;
+    groups: number;
+  } | null>(null);
+  const [error, setError] = useState("");
+  const inspect = async () => {
+    try {
+      const backup = await parseKeyStoreBackup(encoded.trim(), packagePassword);
+      const vault = await unlockVault(backup.vault, packagePassword);
+      initializeWorkspace(vault);
+      const state = getWorkspace(vault);
+      setPreview({
+        packageMode: backup.mode,
+        entries: state.entries.length,
+        keys: state.keys.length,
+        groups: state.groups.length,
+      });
+      setError("");
+    } catch (cause) {
+      setPreview(null);
+      setError(cause instanceof Error ? cause.message : "无法读取加密包。");
+    }
+  };
+  const submit = async () => {
+    if (!preview) return;
+    if (
+      mode === "replace" &&
+      preview.packageMode === "share" &&
+      (!localPassword || localPassword !== confirm)
+    )
+      return setError("请确认新的本地主密码。");
+    try {
+      await onImport(
+        encoded.trim(),
+        packagePassword,
+        preview.packageMode === "share" ? localPassword : packagePassword,
+        mode,
+      );
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "无法导入加密包。");
+    }
+  };
   const resetPreview = () => setPreview(null);
-  return <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true" aria-label="导入加密包"><div className="modal-heading"><h2>导入加密包</h2><button onClick={onClose}>×</button></div>{hasVault && <label>导入方式<select value={mode} onChange={(event) => { setMode(event.target.value as 'replace' | 'merge'); resetPreview(); }}><option value="replace">恢复并替换当前密钥库</option><option value="merge">合并到当前密钥库</option></select></label>}<p className="security-note">{mode === 'merge' ? '合并会创建新副本，不会覆盖本地资料。' : hasVault ? '替换会清除当前全部资料；请先导出备份。' : '常规备份将继续使用备份主密码；分享包会要求设置新的本地主密码。'}</p><label>加密字符串<textarea value={encoded} onChange={(event) => { setEncoded(event.target.value); resetPreview(); }} /></label><label>备份或分享口令<input type="password" value={packagePassword} onChange={(event) => { setPackagePassword(event.target.value); resetPreview(); }} /></label>{preview?.packageMode === 'share' && mode === 'replace' && <><label>新的本地主密码<input type="password" value={localPassword} onChange={(event) => setLocalPassword(event.target.value)} /></label><label>确认新的本地主密码<input type="password" value={confirm} onChange={(event) => setConfirm(event.target.value)} /></label></>}{preview && <p className="security-note">导入预览：{preview.entries} 个入口、{preview.keys} 把密钥、{preview.groups} 个分组、{preview.tags} 个标签。资料尚未写入本机。</p>}{error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={onClose}>取消</button>{preview ? <button className="primary" disabled={preview.packageMode === 'share' && mode === 'replace' && !localPassword} onClick={() => void submit()}>{mode === 'merge' ? '确认合并导入' : '确认恢复'}</button> : <button className="primary" disabled={!encoded || !packagePassword} onClick={() => void inspect()}>解密并预览</button>}</div></section></div>;
+  return (
+    <div className="modal-backdrop">
+      <section
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="导入加密包"
+      >
+        <div className="modal-heading">
+          <h2>导入加密包</h2>
+          <button onClick={onClose}>×</button>
+        </div>
+        {hasVault && (
+          <label>
+            导入方式
+            <select
+              value={mode}
+              onChange={(event) => {
+                setMode(event.target.value as "replace" | "merge");
+                resetPreview();
+              }}
+            >
+              <option value="replace">恢复并替换当前密钥库</option>
+              <option value="merge">合并到当前密钥库</option>
+            </select>
+          </label>
+        )}
+        <p className="security-note">
+          {mode === "merge"
+            ? "合并会创建新副本，不会覆盖本地资料。"
+            : hasVault
+              ? "替换会清除当前全部资料；请先导出备份。"
+              : "常规备份将继续使用备份主密码；分享包会要求设置新的本地主密码。"}
+        </p>
+        <label>
+          加密字符串
+          <textarea
+            value={encoded}
+            onChange={(event) => {
+              setEncoded(event.target.value);
+              resetPreview();
+            }}
+          />
+        </label>
+        <label>
+          备份或分享口令
+          <input
+            type="password"
+            value={packagePassword}
+            onChange={(event) => {
+              setPackagePassword(event.target.value);
+              resetPreview();
+            }}
+          />
+        </label>
+        {preview?.packageMode === "share" && mode === "replace" && (
+          <>
+            <label>
+              新的本地主密码
+              <input
+                type="password"
+                value={localPassword}
+                onChange={(event) => setLocalPassword(event.target.value)}
+              />
+            </label>
+            <label>
+              确认新的本地主密码
+              <input
+                type="password"
+                value={confirm}
+                onChange={(event) => setConfirm(event.target.value)}
+              />
+            </label>
+          </>
+        )}
+        {preview && (
+          <p className="security-note">
+            导入预览：{preview.entries} 个入口、{preview.keys} 把密钥、
+            {preview.groups} 个分组。资料尚未写入本机。
+          </p>
+        )}
+        {error && <p className="error">{error}</p>}
+        <div className="modal-actions">
+          <button onClick={onClose}>取消</button>
+          {preview ? (
+            <button
+              className="primary"
+              disabled={
+                preview.packageMode === "share" &&
+                mode === "replace" &&
+                !localPassword
+              }
+              onClick={() => void submit()}
+            >
+              {mode === "merge" ? "确认合并导入" : "确认恢复"}
+            </button>
+          ) : (
+            <button
+              className="primary"
+              disabled={!encoded || !packagePassword}
+              onClick={() => void inspect()}
+            >
+              解密并预览
+            </button>
+          )}
+        </div>
+      </section>
+    </div>
+  );
 }
 
-function ShareDialog({ onClose, onShare }: { onClose: () => void; onShare: (password: string, reportProgress: (message: string) => void) => Promise<string> }) {
-  const [password, setPassword] = useState(''); const [confirm, setConfirm] = useState(''); const [result, setResult] = useState(''); const [error, setError] = useState(''); const [copyStatus, setCopyStatus] = useState(''); const [progress, setProgress] = useState(''); const [creating, setCreating] = useState(false);
-  const create = async () => { if (!password || password !== confirm) return setError('请确认分享口令。'); setCreating(true); setError(''); setProgress('正在准备分享包…'); try { const text = await onShare(password, setProgress); setResult(text); try { await navigator.clipboard?.writeText(text); setCopyStatus('已复制到剪贴板。'); } catch { setCopyStatus('分享包已生成，但浏览器拒绝复制；请手动复制下方字符串。'); } } catch { setError('无法生成分享包。请保持页面打开后重试。'); } finally { setCreating(false); setProgress(''); } };
-  return <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true" aria-label="分享加密包"><div className="modal-heading"><h2>分享加密包</h2><button onClick={onClose} disabled={creating}>×</button></div><p className="security-note">分享包使用独立口令加密，接收方导入时会设置自己的本地主密码。</p>{result ? <><label>已生成的加密字符串<textarea readOnly value={result} /></label><p className="security-note">{copyStatus}</p></> : <><label>分享口令<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={creating} /></label><label>确认分享口令<input type="password" value={confirm} onChange={(event) => setConfirm(event.target.value)} disabled={creating} /></label>{creating && <p className="security-note" role="status">{progress}</p>}{error && <p className="error">{error}</p>}<div className="modal-actions"><button onClick={onClose} disabled={creating}>取消</button><button className="primary" disabled={creating} onClick={() => void create()}>{creating ? '正在生成加密包…' : '生成并复制'}</button></div></>}<div className="modal-actions">{result && <button onClick={onClose}>完成</button>}</div></section></div>;
+function ShareDialog({
+  onClose,
+  onShare,
+}: {
+  onClose: () => void;
+  onShare: (
+    password: string,
+    reportProgress: (message: string) => void,
+  ) => Promise<string>;
+}) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [result, setResult] = useState("");
+  const [error, setError] = useState("");
+  const [copyStatus, setCopyStatus] = useState("");
+  const [progress, setProgress] = useState("");
+  const [creating, setCreating] = useState(false);
+  const create = async () => {
+    if (!password || password !== confirm) return setError("请确认分享口令。");
+    setCreating(true);
+    setError("");
+    setProgress("正在准备分享包…");
+    try {
+      const text = await onShare(password, setProgress);
+      setResult(text);
+      try {
+        await navigator.clipboard?.writeText(text);
+        setCopyStatus("已复制到剪贴板。");
+      } catch {
+        setCopyStatus("分享包已生成，但浏览器拒绝复制；请手动复制下方字符串。");
+      }
+    } catch {
+      setError("无法生成分享包。请保持页面打开后重试。");
+    } finally {
+      setCreating(false);
+      setProgress("");
+    }
+  };
+  return (
+    <div className="modal-backdrop">
+      <section
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="分享加密包"
+      >
+        <div className="modal-heading">
+          <h2>分享加密包</h2>
+          <button onClick={onClose} disabled={creating}>
+            ×
+          </button>
+        </div>
+        <p className="security-note">
+          分享包使用独立口令加密，接收方导入时会设置自己的本地主密码。
+        </p>
+        {result ? (
+          <>
+            <label>
+              已生成的加密字符串
+              <textarea readOnly value={result} />
+            </label>
+            <p className="security-note">{copyStatus}</p>
+          </>
+        ) : (
+          <>
+            <label>
+              分享口令
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                disabled={creating}
+              />
+            </label>
+            <label>
+              确认分享口令
+              <input
+                type="password"
+                value={confirm}
+                onChange={(event) => setConfirm(event.target.value)}
+                disabled={creating}
+              />
+            </label>
+            {creating && (
+              <p className="security-note" role="status">
+                {progress}
+              </p>
+            )}
+            {error && <p className="error">{error}</p>}
+            <div className="modal-actions">
+              <button onClick={onClose} disabled={creating}>
+                取消
+              </button>
+              <button
+                className="primary"
+                disabled={creating}
+                onClick={() => void create()}
+              >
+                {creating ? "正在生成加密包…" : "生成并复制"}
+              </button>
+            </div>
+          </>
+        )}
+        <div className="modal-actions">
+          {result && <button onClick={onClose}>完成</button>}
+        </div>
+      </section>
+    </div>
+  );
 }
 
-const defaultConfig = (kind: TargetKind): Record<string, string | number | boolean> => kind === 'web' ? { url: '' } : kind === 'postgresql' ? { host: '', port: '5432', database: '', sslMode: 'prefer' } : kind === 'redis' ? { host: '', port: '6379', database: '0', tls: false } : { details: '' };
-const stringConfig = (config: Target['config'] | undefined) => config ? Object.fromEntries(Object.entries(config).map(([key, value]) => [key, value])) : defaultConfig('web');
-const normalizeConfig = (kind: TargetKind, config: Record<string, string | number | boolean>) => Object.fromEntries(Object.entries(config).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])) as Target['config'];
-const parseLines = (value: string) => Object.fromEntries(value.split('\n').flatMap((line) => { const separator = line.indexOf(':'); if (separator < 1 || !line.slice(separator + 1).trim()) return []; return [[line.slice(0, separator).trim(), line.slice(separator + 1).trim()]]; }));
-function download(text: string, prefix: string) { const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' })); const link = document.createElement('a'); link.href = url; link.download = `${prefix}-${new Date().toISOString().slice(0, 10)}.txt`; link.click(); URL.revokeObjectURL(url); }
+const defaultConfig = (
+  kind: TargetKind,
+): Record<string, string | number | boolean> =>
+  kind === "web"
+    ? { url: "" }
+    : kind === "postgresql"
+      ? { host: "", port: "5432", database: "", sslMode: "prefer" }
+      : kind === "redis"
+        ? { host: "", port: "6379", database: "0", tls: false }
+        : { details: "" };
+const stringConfig = (config: Target["config"] | undefined) =>
+  config
+    ? Object.fromEntries(
+        Object.entries(config).map(([key, value]) => [key, value]),
+      )
+    : defaultConfig("web");
+const normalizeConfig = (
+  kind: TargetKind,
+  config: Record<string, string | number | boolean>,
+) =>
+  Object.fromEntries(
+    Object.entries(config).map(([key, value]) => [
+      key,
+      typeof value === "string" ? value.trim() : value,
+    ]),
+  ) as Target["config"];
+const parseLines = (value: string) =>
+  Object.fromEntries(
+    value.split("\n").flatMap((line) => {
+      const separator = line.indexOf(":");
+      if (separator < 1 || !line.slice(separator + 1).trim()) return [];
+      return [
+        [line.slice(0, separator).trim(), line.slice(separator + 1).trim()],
+      ];
+    }),
+  );
+function download(text: string, prefix: string) {
+  const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${prefix}-${new Date().toISOString().slice(0, 10)}.txt`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
