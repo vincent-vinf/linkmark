@@ -1,9 +1,10 @@
 import { argon2id } from 'hash-wasm';
 import { Consts, Credentials, CryptoEngine, Int64, Kdbx, ProtectedValue, VarDictionary } from 'kdbxweb';
 
+const copyBuffer = (value: Uint8Array): ArrayBuffer => { const copy = new Uint8Array(value.byteLength); copy.set(value); return copy.buffer; };
 CryptoEngine.setArgon2Impl(async (password, salt, memory, iterations, length, parallelism) => {
   const hash = await argon2id({ password: new Uint8Array(password), salt: new Uint8Array(salt), memorySize: memory, iterations, parallelism, hashLength: length, outputType: 'binary' });
-  return hash.buffer.slice(hash.byteOffset, hash.byteOffset + hash.byteLength);
+  return copyBuffer(hash);
 });
 
 self.onmessage = async ({ data }: MessageEvent<{ xml?: string; password: string }>) => {

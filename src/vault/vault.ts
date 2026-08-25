@@ -4,6 +4,7 @@ import { deriveArgon2id } from '../crypto/argon2';
 const text = new TextEncoder();
 let configured = false;
 export const linkmarkPartitions = ['入口', '密钥', '回收站', '应用元数据'] as const;
+const copyBuffer = (value: Uint8Array): ArrayBuffer => { const copy = new Uint8Array(value.byteLength); copy.set(value); return copy.buffer; };
 
 /** Ensures every user record stays in one encrypted KDBX structure. */
 export function ensureLinkmarkStructure(vault: Kdbx): void {
@@ -18,7 +19,7 @@ function configureArgon2(): void {
   if (configured) return;
   CryptoEngine.setArgon2Impl(async (password, salt, memory, iterations, length, parallelism) => {
     const result = await deriveArgon2id(new Uint8Array(password), new Uint8Array(salt), { memorySize: memory, iterations, parallelism, hashLength: length });
-    return result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength);
+    return copyBuffer(result);
   });
   configured = true;
 }
