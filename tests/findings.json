@@ -1,0 +1,50 @@
+[
+  {
+    "verdict": "confirmed",
+    "title": "Legacy plaintext IndexedDB records survive the encrypted-vault migration",
+    "description": "The current application continues to open the v1 linkmark IndexedDB schema containing targets, groups, and tags, but no longer migrates or clears these legacy stores. Older versions wrote Target.config.url directly to targets and accepted HTTP(S) URLs with userinfo. A browser-profile attacker can read retained rows without the KDBX master password.",
+    "root_cause": "LinkmarkDb in src/storage/db.ts does not migrate or delete obsolete plaintext stores, allowing legacy vault metadata to remain readable outside the encrypted KDBX record.",
+    "intended_behavior": "All user business data, including entry metadata, should reside only in the encrypted KDBX vault so a copied IndexedDB profile does not reveal it without the master password.",
+    "trace": [
+      {"kind":"entrypoint","file":"src/storage/db.ts","line":15,"scope":"constructor","description":"The current application reopens the existing linkmark IndexedDB database at version 1 with the legacy stores registered."},
+      {"kind":"propagation","file":"src/storage/db.ts","line":8,"scope":"LinkmarkDb","description":"The legacy targets table remains a live Dexie table handle whose existing browser rows are retained when no version upgrade occurs."},
+      {"kind":"sink","file":"src/storage/db.ts","line":24,"scope":"db","description":"The exported database instance exposes the retained same-origin object stores to local browser-profile storage readers; current code has no cleanup path in normal use."}
+    ],
+    "conditions": [
+      {"kind":"data_state","description":"The user previously used a version that stored records in targets/groups/tags and upgraded without clearing them."},
+      {"kind":"environmental_dependency","description":"The attacker can access the victim browser profile or its IndexedDB storage."}
+    ],
+    "execution": {
+      "attacker_perspective":"An attacker who has copied a browser profile but does not know the Linkmark master password.",
+      "payloads":["A historical target row with config.url = https://alice:old-password@db.example/"],
+      "instructions":["Obtain a profile from a user who upgraded from the legacy v1 plaintext-storage version.","Open the same-origin IndexedDB database named linkmark.","Read all rows from the targets object store."],
+      "expected_result":"The attacker obtains legacy entry names, hosts, tags/groups, and any URL userinfo without decrypting vaults.primary."
+    },
+    "remediation": {"strategy":"Bump the IndexedDB schema and atomically delete or clear obsolete plaintext stores, with an idempotent cleanup for users already on v1.","code_changes":[{"file_name":"src/storage/db.ts","fixed_code":"Introduce version(2) with an upgrade transaction that clears or deletes targets, groups, and tags after their encrypted-KDBX migration; add a tested one-time cleanup for existing v1 users."}]},
+    "severity":{"likelihood":{"score":"medium","reason":"Requires a legacy upgraded profile and local/profile storage access."},"impact":{"score":"medium","reason":"Can disclose connection metadata and historical URL-embedded credentials without the master password."},"overall_severity":"medium"},
+    "confidence":{"score":"high","reason":"Current schema and normal call paths were traced, and git history confirms the legacy plaintext write and URL-userinfo acceptance."}
+  },
+  {
+    "verdict": "confirmed",
+    "title": "Portable KDBX import permits unbounded decompression",
+    "description": "A v3 portable package limits only its encoded compressed KDBX bytes. After a user supplies the attacker-provided password, Kdbx.load synchronously gunzips authenticated KDBX content without an output cap. A small valid package can expand to hundreds of megabytes and freeze or exhaust the importing browser.",
+    "root_cause": "parseKeyStoreBackup in src/portability/backup.ts does not bound the decompressed KDBX payload, allowing kdbxweb to allocate attacker-controlled decompressed data.",
+    "intended_behavior": "Portable vault imports should accept legitimate encrypted KDBX data while bounding all attacker-controlled resource consumption before XML parsing and workspace initialization.",
+    "trace": [
+      {"kind":"entrypoint","file":"src/portability/backup.ts","line":52,"scope":"parseKeyStoreBackup","description":"A pasted v3 package is accepted when its encoded length is at most 25,000,000 characters and its vault string is at most 20,000,000 characters."},
+      {"kind":"propagation","file":"src/App.tsx","line":35,"scope":"importBackup","description":"The parsed vault bytes are immediately passed to unlockVault after the user provides the package password."},
+      {"kind":"propagation","file":"src/vault/vault.ts","line":58,"scope":"unlockVault","description":"The loader checks only KDBX version and Argon2 header parameters before calling Kdbx.load."},
+      {"kind":"sink","file":"node_modules/kdbxweb/dist/kdbxweb.js","line":2347,"scope":"load","description":"The KDBX loader calls gunzipSync without an output-size limit before parsing the resulting XML."}
+    ],
+    "conditions": [{"kind":"user_interaction","description":"The victim pastes an attacker-created package, supplies its known password, and starts preview/import."}],
+    "execution": {
+      "attacker_perspective":"An attacker who can send a Linkmark share/import string and its password to a victim.",
+      "payloads":["A valid KDBX4/Argon2id vault containing a highly compressible 120,000,000-character entry field, encrypted with attacker-selected password p and wrapped as formatVersion 3."],
+      "instructions":["Create and encrypt the highly compressible KDBX with password p.","Serialize it as a v3 Linkmark package; the compressed vault remains far below the textual cap.","Convince the victim to paste the package, enter p, and preview or import it."],
+      "expected_result":"Kdbx.load expands the compressed data synchronously, consuming substantial memory/CPU and freezing or crashing the tab for sufficiently large content."
+    },
+    "remediation":{"strategy":"Enforce a decompressed KDBX and XML/resource limit before parsing, using an implementation that can stop expansion at the cap.","code_changes":[{"file_name":"src/vault/vault.ts","fixed_code":"Load imported KDBX through a bounded decompression/parsing path and reject vaults exceeding explicit decompressed-byte, entry-count, and field-size limits before constructing a Kdbx object."}]},
+    "severity":{"likelihood":{"score":"medium","reason":"The attacker must persuade a victim to import a package and provide the package password, but can create a syntactically valid payload cheaply."},"impact":{"score":"low","reason":"The confirmed effect is local browser/device denial of service without data disclosure or modification."},"overall_severity":"low"},
+    "confidence":{"score":"high","reason":"Independent source validation confirmed the unbounded gunzipSync path; dynamic testing expanded 30 MB and 120 MB highly compressible valid KDBX fields from very small packages."}
+  }
+]
