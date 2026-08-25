@@ -36,22 +36,22 @@ export async function parseBackup(encoded: string, password: string): Promise<Fu
 
 export type KeyStoreBackup = { mode: 'backup' | 'share'; vault: ArrayBuffer };
 const keyStoreSchema = z.object({ formatVersion: z.literal(2), mode: z.enum(['backup', 'share']), vault: z.string().max(20_000_000) });
-const kdbxShareSchema = z.object({ formatVersion: z.literal(3), mode: z.literal('share'), algorithm: z.literal('KDBX4/Argon2id'), vault: z.string().max(20_000_000) });
+const kdbxPortableSchema = z.object({ formatVersion: z.literal(3), mode: z.enum(['backup', 'share']), algorithm: z.literal('KDBX4/Argon2id'), vault: z.string().max(20_000_000) });
 const toBase64UrlJson = (value: unknown) => btoa(JSON.stringify(value)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
 const fromBase64UrlJson = (encoded: string) => JSON.parse(atob(encoded.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - encoded.length % 4) % 4)));
 
 /** The portable form deliberately contains only encrypted KDBX bytes.
- * Share packages avoid a redundant second Argon2id envelope: their KDBX is freshly
- * encrypted with the independent sharing password before it reaches this function. */
+ * KDBX4 already authenticates and encrypts its contents with Argon2id-derived keys,
+ * so wrapping it in a second package KDF only harms availability without adding data.
+ * v2 readers remain available below for previously exported packages. */
 export async function serializeKeyStoreBackup(vault: ArrayBuffer, password: string, mode: KeyStoreBackup['mode'] = 'backup'): Promise<string> {
-  if (mode === 'share') return toBase64UrlJson({ formatVersion: 3, mode, algorithm: 'KDBX4/Argon2id', vault: binaryToBase64(vault) });
-  const envelope = await encryptPackage({ formatVersion: 2, mode, vault: binaryToBase64(vault) }, password);
-  return toBase64UrlJson(envelope);
+  void password;
+  return toBase64UrlJson({ formatVersion: 3, mode, algorithm: 'KDBX4/Argon2id', vault: binaryToBase64(vault) });
 }
 
 export async function parseKeyStoreBackup(encoded: string, password: string): Promise<KeyStoreBackup> {
   if (encoded.length > 25_000_000) throw new Error('导入包过大');
-  try { const share = kdbxShareSchema.parse(fromBase64UrlJson(encoded)); return { mode: 'share', vault: base64ToBinary(share.vault) }; } catch { /* v2 packages are outer-encrypted and decoded below */ }
+  try { const portable = kdbxPortableSchema.parse(fromBase64UrlJson(encoded)); return { mode: portable.mode, vault: base64ToBinary(portable.vault) }; } catch { /* v2 packages are outer-encrypted and decoded below */ }
   const padded = encoded.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - encoded.length % 4) % 4);
   let envelope: EncryptedPackage;
   try { envelope = envelopeSchema.parse(JSON.parse(atob(padded))); } catch { throw new Error('无效的导入包'); }

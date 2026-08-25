@@ -39,3 +39,14 @@ test('generates a share package even when clipboard access is unavailable', asyn
   await expect(page.getByText('正在以分享口令加密密钥库…')).toBeVisible({ timeout: 30_000 });
   await expect(page.getByLabel('已生成的加密字符串')).toBeVisible({ timeout: 20_000 });
 });
+
+test('exports the encrypted key store as a download', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('主密码', { exact: true }).fill('browser-test-password');
+  await page.getByLabel('确认主密码', { exact: true }).fill('browser-test-password');
+  await page.getByRole('button', { name: '创建密钥库' }).click();
+  const downloadPromise = page.waitForEvent('download', { timeout: 20_000 });
+  await page.getByRole('button', { name: '导出备份' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^linkmark-backup-\d{4}-\d{2}-\d{2}\.txt$/);
+});
