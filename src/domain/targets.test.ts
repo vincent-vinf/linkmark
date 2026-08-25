@@ -47,6 +47,6 @@ describe('Target management seam', () => {
 
   it('initializes Target home-view metadata without putting it in the Vault', () => {
     const target = createTarget({ name: 'first', kind: 'generic' });
-    expect(target).toMatchObject({ pinned: false, lastAccessAt: null });
+    expect(target).toMatchObject({ notes: '', pinned: false, lastAccessAt: null });
   });
 });

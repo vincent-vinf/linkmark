@@ -3,6 +3,7 @@ export type TargetKind = 'web' | 'postgresql' | 'redis' | 'generic';
 export type Target = {
   id: string;
   name: string;
+  notes: string;
   kind: TargetKind;
   groupId: string | null;
   tagIds: string[];
@@ -24,6 +25,7 @@ export function createTarget(input: NewTarget): Target {
   return {
     id: id(),
     name: input.name.trim(),
+    notes: input.notes?.trim() ?? '',
     kind: input.kind,
     groupId: input.groupId ?? null,
     tagIds: input.tagIds ?? [],
