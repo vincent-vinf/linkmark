@@ -53,7 +53,7 @@ _Avoid_: Vault Item, secret, password entry
 _Avoid_: Backup, share link
 
 **分享包**:
-以独立分享口令二次加密整个导入包、再压缩并 Base64URL 编码的可移植载体。它不泄露入口或密钥库的可读元数据。
+以独立分享口令重新加密的 KDBX4 密钥库、再经版本化 Base64URL 信封编码的可移植载体。它不泄露入口或密钥库的可读元数据；不再对已由 KDBX4/Argon2id 保护的数据重复执行一层 KDF。
 _Avoid_: Share link, encrypted bookmark list
 
 **Backup Restore**:

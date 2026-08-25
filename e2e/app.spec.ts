@@ -6,7 +6,7 @@ test('requires a key store before showing entries and saves a linked key with an
   await page.getByLabel('主密码', { exact: true }).fill('browser-test-password');
   await page.getByLabel('确认主密码', { exact: true }).fill('browser-test-password');
   await page.getByRole('button', { name: '创建密钥库' }).click();
-  await page.getByRole('button', { name: '＋ 新建入口' }).click();
+  await page.getByRole('button', { name: '新建入口 ↗' }).click();
   await page.getByLabel('名称', { exact: true }).fill('Linkmark 文档');
   await page.getByLabel('网站地址', { exact: true }).fill('https://example.com/docs');
   await page.getByLabel('密钥名称', { exact: true }).fill('文档令牌');
@@ -25,4 +25,17 @@ test('locks all entry metadata after refresh', async ({ page }) => {
   await page.reload();
   await expect(page.getByRole('heading', { name: '解锁密钥库' })).toBeVisible();
   await expect(page.getByText('所有入口')).not.toBeVisible();
+});
+
+test('generates a share package even when clipboard access is unavailable', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('主密码', { exact: true }).fill('browser-test-password');
+  await page.getByLabel('确认主密码', { exact: true }).fill('browser-test-password');
+  await page.getByRole('button', { name: '创建密钥库' }).click();
+  await page.getByRole('button', { name: '分享' }).click();
+  await page.getByLabel('分享口令', { exact: true }).fill('share-test-password');
+  await page.getByLabel('确认分享口令', { exact: true }).fill('share-test-password');
+  await page.getByRole('button', { name: '生成并复制' }).click();
+  await expect(page.getByText('正在以分享口令加密密钥库…')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByLabel('已生成的加密字符串')).toBeVisible({ timeout: 20_000 });
 });

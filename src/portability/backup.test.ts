@@ -15,4 +15,10 @@ describe('encrypted key store backup seam', () => {
     expect(portable).not.toContain('Linkmark 文档');
     await expect(parseKeyStoreBackup(portable, 'secret')).resolves.toMatchObject({ mode: 'backup', vault: expect.any(ArrayBuffer) });
   });
+
+  it('uses a KDBX-encrypted share envelope without a second slow package KDF', async () => {
+    const portable = await serializeKeyStoreBackup(new Uint8Array([1, 2, 3]).buffer, 'share-password', 'share');
+    expect(portable).not.toContain('Linkmark 文档');
+    await expect(parseKeyStoreBackup(portable, 'any-value')).resolves.toMatchObject({ mode: 'share', vault: expect.any(ArrayBuffer) });
+  });
 });
