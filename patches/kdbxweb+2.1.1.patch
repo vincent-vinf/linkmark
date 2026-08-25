@@ -1,0 +1,23 @@
+diff --git a/node_modules/kdbxweb/dist/kdbxweb.js b/node_modules/kdbxweb/dist/kdbxweb.js
+index 7d33074..33b6b8f 100644
+--- a/node_modules/kdbxweb/dist/kdbxweb.js
++++ b/node_modules/kdbxweb/dist/kdbxweb.js
+@@ -5342,16 +5342,8 @@ function createDOMParser() {
+         return new __webpack_require__.g.DOMParser();
+     }
+     const parserArg = {
+-        errorHandler: {
+-            warning: (e) => {
+-                throw e;
+-            },
+-            error: (e) => {
+-                throw e;
+-            },
+-            fatalError: (e) => {
+-                throw e;
+-            }
++        onError: (_level, message) => {
++            throw new Error(message);
+         }
+     };
+     /* eslint-disable @typescript-eslint/no-var-requires,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call */
