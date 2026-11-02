@@ -1,0 +1,20 @@
+---
+version: 1
+slug: connections
+primary_target: src/App.tsx
+related_targets: [src/domain/ssh.ts, src/domain/navigation.ts, src/domain/targets.ts, src/app.css, src/responsive.css]
+---
+# SSH 入口与网站跳转复制
+
+Mode: Operate. 局部功能扩展；用户已授权自主实现。保留当前四套浅深主题、目录结构、类型语义和加密边界。
+
+THESIS: 将 SSH 连接资料转成可复制命令；网站打开与登录资料复制通过同一次明确点击完成。
+OWN-WORLD: 沿用 DESIGN.md 的语义色、系统字体、卡片、编辑面板与反馈；SSH 使用现有 accent 及终端线性图标，不引入新色或远程素材。
+STORY: 新建入口选 SSH，填写主机端口，可填账号密码或关联已有密钥，按需填写私钥路径、跳板机和开关。预览并复制命令；保存后从卡片直接复制。网站卡片使用当前选中密钥，优先账号、其次密码，并明确写在打开按钮上；复制失败仍打开网站。
+FIRST VIEWPORT: 类型筛选新增 SSH；卡片底部为“复制 SSH 命令”。编辑面板沿用原结构，主机/端口同一行，跳板机选项折叠，认证资料与命令预览各自清楚分组；手机可滚动且无横向溢出。
+FORM: seed: none (local extension)。凭据仍保存在关联密钥，SSH 密码不进入命令；参数逐一进行 POSIX shell 引号处理，禁用无效主机端口和控制字符。命令用于用户本机终端，不在网页执行连接。
+FINISH: 单元检查参数边界与真实 shell 参数解析；浏览器验证创建、复制、锁定后解锁、网站标题/按钮跳转、选中凭据切换、剪贴板失败。桌面与窄屏浅深截图交独立审阅；普通系统扩展仅比较现有 DESIGN 和 sidecar，不改写主题系统。
+
+## 追加需求：PostgreSQL 点击复制
+
+用户追加：PostgreSQL 类型点击复制 `postgresql://账号:密码@主机:端口`。标题与卡片主按钮均复制，编辑图标继续编辑。使用当前选中关联密钥，用户名/密码/数据库逐段 URL 编码，包含已配置数据库和非默认 SSL 模式。不把含密码的完整 URI 显示在卡片或持久化到连接配置中。

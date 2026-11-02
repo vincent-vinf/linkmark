@@ -27,6 +27,24 @@ describe("full backup seam", () => {
             createdAt: "2026-01-01T00:00:00.000Z",
             updatedAt: "2026-01-01T00:00:00.000Z",
           },
+          {
+            id: "33333333-3333-4333-8333-333333333333",
+            name: "SSH 主机",
+            notes: "",
+            kind: "ssh",
+            groupId: null,
+            sortOrder: 1,
+            config: {
+              host: "server.example.com",
+              port: "22",
+              identityFile: "~/.ssh/id_ed25519",
+            },
+            vaultItemIds: [],
+            pinned: false,
+            lastAccessAt: null,
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          },
         ],
         groups: [{ id: group, name: "工作", sortOrder: 0 }],
         vault: new Uint8Array([1, 2, 3]).buffer,
@@ -35,7 +53,10 @@ describe("full backup seam", () => {
     );
     await expect(parseBackup(backup, "secret")).resolves.toMatchObject({
       mode: "backup",
-      targets: [{ id: target }],
+      targets: [
+        { id: target },
+        { kind: "ssh", config: { host: "server.example.com", port: "22" } },
+      ],
       groups: [{ id: group }],
     });
   });

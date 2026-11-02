@@ -33,7 +33,7 @@ const targetSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).max(256),
   notes: z.string().max(10_000).default(""),
-  kind: z.enum(["web", "postgresql", "redis", "generic"]),
+  kind: z.enum(["web", "ssh", "postgresql", "redis", "generic"]),
   groupId: z.string().uuid().nullable(),
   tagIds: z.array(z.string().uuid()).optional(),
   sortOrder: z.number().finite(),

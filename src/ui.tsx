@@ -1,6 +1,12 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 const paths = {
+  terminal: (
+    <>
+      <path d="m5 7 5 5-5 5M13 17h6" />
+      <rect x="2" y="3" width="20" height="18" rx="2" />
+    </>
+  ),
   palette: (
     <>
       <path d="M12 3a9 9 0 1 0 0 18h1.3a2.2 2.2 0 0 0 1.6-3.7 1.4 1.4 0 0 1 1-2.3H18a3 3 0 0 0 3-3 9 9 0 0 0-9-9Z" />

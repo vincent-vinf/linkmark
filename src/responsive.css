@@ -290,6 +290,10 @@
   }
 }
 @media (max-width: 480px) {
+  .ssh-field-row {
+    grid-template-columns: minmax(0, 1fr) 84px;
+    gap: 10px;
+  }
   .grid {
     grid-template-columns: minmax(0, 1fr);
   }

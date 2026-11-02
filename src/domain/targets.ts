@@ -1,4 +1,4 @@
-export type TargetKind = "web" | "postgresql" | "redis" | "generic";
+export type TargetKind = "web" | "ssh" | "postgresql" | "redis" | "generic";
 
 export type Target = {
   id: string;
@@ -105,6 +105,41 @@ export function validateTargetConfig(
   )
     return false;
   const port = config.port;
+  if (kind === "ssh") {
+    const allowed = new Set([
+      "host",
+      "port",
+      "identityFile",
+      "jumpHost",
+      "jumpPort",
+      "forwardAgent",
+      "compression",
+    ]);
+    const validPort = (value: unknown) =>
+      typeof value === "string" &&
+      /^\d{1,5}$/.test(value) &&
+      Number(value) >= 1 &&
+      Number(value) <= 65535;
+    const optionalText = (value: unknown) =>
+      value === undefined ||
+      (typeof value === "string" &&
+        value.length <= 4096 &&
+        !/[\x00-\x1f\x7f]/.test(value));
+    return (
+      Object.keys(config).every((key) => allowed.has(key)) &&
+      typeof config.host === "string" &&
+      validateConnectionHost(config.host) &&
+      validPort(port) &&
+      optionalText(config.identityFile) &&
+      optionalText(config.jumpHost) &&
+      (!config.jumpHost || validateConnectionHost(String(config.jumpHost))) &&
+      (config.jumpPort === undefined || validPort(config.jumpPort)) &&
+      (config.forwardAgent === undefined ||
+        typeof config.forwardAgent === "boolean") &&
+      (config.compression === undefined ||
+        typeof config.compression === "boolean")
+    );
+  }
   if (kind === "postgresql")
     return (
       validateConnectionHost(String(config.host ?? "")) &&

@@ -647,6 +647,77 @@ h3 {
   color: var(--gold);
   background: var(--gold-soft);
 }
+.kind-ssh {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.ssh-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px;
+  gap: 12px;
+}
+.ssh-field-row > label {
+  min-width: 0;
+}
+.ssh-options {
+  margin: 18px 0 22px;
+}
+.ssh-options > summary {
+  color: var(--subtle);
+  font-size: 13px;
+}
+.ssh-options[open] > summary {
+  margin-bottom: 14px;
+}
+.entry-modal .ssh-auth {
+  margin: 22px 0;
+  padding: 16px;
+}
+.ssh-auth label:last-of-type {
+  margin-bottom: 8px;
+}
+.ssh-command {
+  margin: 22px 0;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.ssh-command > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ssh-command h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ssh-command button {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.ssh-command code {
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: var(--ink);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  user-select: all;
+}
+.ssh-command .field-hint {
+  margin: 10px 0 0;
+}
+.ssh-auth .field-hint {
+  margin: 12px 0 0;
+}
+.entry-modal .field-hint {
+  font-size: 11px;
+  line-height: 1.75;
+}
 .card-type {
   color: var(--muted);
   font-size: 11px;

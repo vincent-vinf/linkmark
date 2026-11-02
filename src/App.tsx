@@ -37,6 +37,9 @@ import {
 import { Dialog, Icon, type IconName } from "./ui";
 import { useAppearance } from "./appearance";
 import { AppearanceSettings } from "./AppearanceSettings";
+import { buildSshCommand } from "./domain/ssh";
+import { webNavigationCopy } from "./domain/navigation";
+import { buildPostgresUri } from "./domain/postgresql";
 import "./themes.css";
 import "./app.css";
 import "./responsive.css";
@@ -44,6 +47,7 @@ import "./appearance.css";
 
 const kindIcons: Record<TargetKind, IconName> = {
   web: "globe",
+  ssh: "terminal",
   postgresql: "database",
   redis: "server",
   generic: "box",
@@ -63,6 +67,7 @@ const durations = [
 ] as const;
 const kindNames: Record<TargetKind, string> = {
   web: "网站",
+  ssh: "SSH",
   postgresql: "PostgreSQL",
   redis: "Redis",
   generic: "通用",
@@ -1090,23 +1095,23 @@ function EntryList({
       </div>
       <div className="directory-toolbar">
         <div className="type-filters" role="group" aria-label="入口类型筛选">
-          {(["all", "web", "postgresql", "redis", "generic"] as const).map(
-            (kind) => (
-              <button
-                key={kind}
-                aria-pressed={kindFilter === kind}
-                className={kindFilter === kind ? "selected" : ""}
-                onClick={() => onKindFilter(kind)}
-              >
-                {kind === "all" ? "全部" : kindNames[kind]}
-                <span>
-                  {kind === "all"
-                    ? allEntries.length
-                    : allEntries.filter((e) => e.kind === kind).length}
-                </span>
-              </button>
-            ),
-          )}
+          {(
+            ["all", "web", "ssh", "postgresql", "redis", "generic"] as const
+          ).map((kind) => (
+            <button
+              key={kind}
+              aria-pressed={kindFilter === kind}
+              className={kindFilter === kind ? "selected" : ""}
+              onClick={() => onKindFilter(kind)}
+            >
+              {kind === "all" ? "全部" : kindNames[kind]}
+              <span>
+                {kind === "all"
+                  ? allEntries.length
+                  : allEntries.filter((e) => e.kind === kind).length}
+              </span>
+            </button>
+          ))}
         </div>
         <label className="sort-label">
           <span>排序</span>
@@ -1146,6 +1151,21 @@ function EntryList({
                 ) ?? credentials[0];
               const isWeb =
                 entry.kind === "web" && typeof entry.config.url === "string";
+              const navigationCopy = isWeb
+                ? webNavigationCopy(selectedCredential)
+                : null;
+              const copyForNavigation = () => {
+                if (navigationCopy)
+                  void onCopy(navigationCopy.label, navigationCopy.value);
+              };
+              const sshCommand =
+                entry.kind === "ssh"
+                  ? buildSshCommand(entry.config, selectedCredential?.username)
+                  : null;
+              const postgresUri =
+                entry.kind === "postgresql"
+                  ? buildPostgresUri(entry.config, selectedCredential)
+                  : null;
               const address =
                 entry.kind === "web"
                   ? String(entry.config.url)
@@ -1208,10 +1228,30 @@ function EntryList({
                           href={String(entry.config.url)}
                           target="_blank"
                           rel="noopener noreferrer"
+                          title={
+                            navigationCopy
+                              ? `打开网站，同时复制${navigationCopy.label}`
+                              : "打开网站"
+                          }
+                          onClick={copyForNavigation}
+                          onAuxClick={(event) => {
+                            if (event.button === 1) copyForNavigation();
+                          }}
                         >
                           {entry.name}
                           <Icon name="external" size={15} />
                         </a>
+                      ) : entry.kind === "postgresql" ? (
+                        <button
+                          title="复制 PostgreSQL 连接地址"
+                          disabled={!postgresUri}
+                          onClick={() =>
+                            postgresUri &&
+                            void onCopy("PostgreSQL 连接地址", postgresUri)
+                          }
+                        >
+                          {entry.name}
+                        </button>
                       ) : (
                         <button onClick={() => onEdit(entry)}>
                           {entry.name}
@@ -1310,10 +1350,39 @@ function EntryList({
                         href={String(entry.config.url)}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={copyForNavigation}
+                        onAuxClick={(event) => {
+                          if (event.button === 1) copyForNavigation();
+                        }}
                       >
-                        打开网站
+                        {navigationCopy
+                          ? `打开并复制${navigationCopy.label}`
+                          : "打开网站"}
                         <Icon name="external" size={14} />
                       </a>
+                    ) : entry.kind === "postgresql" ? (
+                      <button
+                        disabled={!postgresUri}
+                        onClick={() =>
+                          postgresUri &&
+                          void onCopy("PostgreSQL 连接地址", postgresUri)
+                        }
+                        aria-label={`复制 ${entry.name} 的 PostgreSQL 连接地址`}
+                      >
+                        <Icon name="copy" size={14} />
+                        复制连接地址
+                      </button>
+                    ) : entry.kind === "ssh" ? (
+                      <button
+                        disabled={!sshCommand}
+                        onClick={() =>
+                          sshCommand && void onCopy("SSH 命令", sshCommand)
+                        }
+                        aria-label={`复制 ${entry.name} 的 SSH 命令`}
+                      >
+                        <Icon name="copy" size={14} />
+                        复制 SSH 命令
+                      </button>
                     ) : (
                       <button onClick={() => onEdit(entry)}>
                         查看资料
@@ -1572,6 +1641,9 @@ function EntryEditor({
   const [groupId, setGroupId] = useState(entry?.groupId ?? "");
   const [selected, setSelected] = useState(entry?.vaultItemIds ?? []);
   const [pendingKeys, setPendingKeys] = useState<PendingKey[]>([]);
+  const [sshUser, setSshUser] = useState("");
+  const [sshPassword, setSshPassword] = useState("");
+  const [sshCopyStatus, setSshCopyStatus] = useState("");
   const [keySearch, setKeySearch] = useState("");
   const [keyTitle, setKeyTitle] = useState("");
   const [keyUser, setKeyUser] = useState("");
@@ -1586,12 +1658,32 @@ function EntryEditor({
       ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id],
     );
   const linked = [
-    ...keys
-      .filter((key) => selected.includes(key.id))
+    ...selected
+      .map((id) => keys.find((key) => key.id === id))
+      .filter((key): key is NonNullable<typeof key> => Boolean(key))
       .map((key) => ({ id: key.id, title: key.title, username: key.username })),
     ...pendingKeys.filter((key) => selected.includes(key.id)),
   ];
   const existingIds = new Set(keys.map((key) => key.id));
+  const sshUsername = linked.length
+    ? (linked[0]?.username ?? "")
+    : sshUser.trim();
+  const sshPreview =
+    kind === "ssh"
+      ? buildSshCommand(normalizeConfig(kind, config), sshUsername)
+      : null;
+  useEffect(() => setSshCopyStatus(""), [sshPreview]);
+  const copySshPreview = async () => {
+    if (!sshPreview) return;
+    try {
+      await navigator.clipboard.writeText(sshPreview);
+      setSshCopyStatus("SSH 命令已复制");
+    } catch {
+      setSshCopyStatus(
+        "无法复制，请检查浏览器剪贴板权限，或手动选择命令复制。",
+      );
+    }
+  };
   const filteredKeys = keys.filter((key) =>
     `${key.title} ${key.username ?? ""}`
       .toLocaleLowerCase()
@@ -1619,11 +1711,17 @@ function EntryEditor({
     if (saving) return;
     setError("");
     const cleaned = normalizeConfig(kind, config);
-    if (!name.trim() || !validateTargetConfig(kind, cleaned))
+    if (
+      !name.trim() ||
+      !validateTargetConfig(kind, cleaned) ||
+      (kind === "ssh" && !buildSshCommand(cleaned, sshUsername))
+    )
       return setError(
         kind === "web"
           ? "请填写有效的 HTTP 或 HTTPS 网站地址。"
-          : "请检查连接资料；账号、密码、DSN 和 Token 必须保存为密钥。",
+          : kind === "ssh"
+            ? "请填写名称和有效主机，端口应为 1–65535；登录账号和文件路径不能包含换行或控制字符。"
+            : "请检查连接资料；账号、密码、DSN 和 Token 必须保存为密钥。",
       );
     const base = entry
       ? {
@@ -1646,12 +1744,20 @@ function EntryEditor({
         });
     setSaving(true);
     try {
-      await onSave(
-        base,
-        pendingKeys
+      await onSave(base, [
+        ...pendingKeys
           .filter((key) => selected.includes(key.id))
           .map(({ id: _id, ...key }) => key),
-      );
+        ...(kind === "ssh" && !linked.length && (sshUser.trim() || sshPassword)
+          ? [
+              {
+                title: `${name.trim()} · SSH 登录`,
+                username: sshUser.trim(),
+                password: sshPassword,
+              },
+            ]
+          : []),
+      ]);
     } catch {
       setError("未能保存入口，请保持页面打开并重试。");
     } finally {
@@ -1725,6 +1831,7 @@ function EntryEditor({
             <label>
               类型
               <select
+                aria-label="入口类型"
                 value={kind}
                 onChange={(event) => {
                   const next = event.target.value as TargetKind;
@@ -1733,12 +1840,72 @@ function EntryEditor({
                 }}
               >
                 <option value="web">网站</option>
+                <option value="ssh">SSH</option>
                 <option value="postgresql">PostgreSQL</option>
                 <option value="redis">Redis</option>
                 <option value="generic">通用</option>
               </select>
             </label>
             <ConfigFields kind={kind} config={config} setField={setField} />
+            {kind === "ssh" && (
+              <>
+                {!linked.length ? (
+                  <fieldset className="ssh-auth">
+                    <legend>登录资料（可选）</legend>
+                    <label>
+                      登录账号
+                      <input
+                        value={sshUser}
+                        onChange={(event) => setSshUser(event.target.value)}
+                        placeholder="例如：root、ubuntu、deploy"
+                        autoComplete="off"
+                      />
+                    </label>
+                    <label>
+                      登录密码
+                      <input
+                        type="password"
+                        value={sshPassword}
+                        onChange={(event) => setSshPassword(event.target.value)}
+                        autoComplete="new-password"
+                        placeholder="使用私钥时可留空"
+                      />
+                    </label>
+                    <p className="field-hint">
+                      填写后会创建并关联一把密钥；也可在下方选择已有密钥。密码不会写入命令。
+                    </p>
+                  </fieldset>
+                ) : (
+                  <p className="field-hint">
+                    登录账号使用关联密钥中的账号；关联多把密钥时，可在入口卡片中切换。
+                  </p>
+                )}
+                <section className="ssh-command" aria-label="SSH 命令预览">
+                  <div>
+                    <h3>SSH 命令</h3>
+                    <button
+                      type="button"
+                      disabled={!sshPreview}
+                      onClick={() => void copySshPreview()}
+                    >
+                      <Icon name="copy" size={14} />
+                      复制命令
+                    </button>
+                  </div>
+                  <code>
+                    {sshPreview ?? "填写有效的主机和端口后，将在这里生成命令。"}
+                  </code>
+                  <p className="field-hint">
+                    复制到 macOS、Linux 或 WSL 终端运行。
+                  </p>
+                  {sshCopyStatus && (
+                    <p className="field-hint" role="status">
+                      {sshCopyStatus}
+                    </p>
+                  )}
+                </section>
+              </>
+            )}
             <label>
               分组
               <select
@@ -1947,6 +2114,85 @@ function ConfigFields({
         />
       </label>
     );
+  if (kind === "ssh")
+    return (
+      <>
+        <div className="ssh-field-row">
+          <label>
+            主机
+            <input
+              value={String(config.host ?? "")}
+              onChange={(event) => setField("host", event.target.value)}
+              placeholder="server.example.com 或 [::1]"
+            />
+          </label>
+          <label>
+            端口
+            <input
+              inputMode="numeric"
+              value={String(config.port ?? "22")}
+              onChange={(event) => setField("port", event.target.value)}
+              placeholder="22"
+            />
+          </label>
+        </div>
+        <label>
+          私钥文件路径（可选）
+          <input
+            value={String(config.identityFile ?? "")}
+            onChange={(event) => setField("identityFile", event.target.value)}
+            placeholder="~/.ssh/id_ed25519"
+          />
+        </label>
+        <p className="field-hint">
+          填写运行 SSH 命令的设备上的文件路径，无需上传私钥。
+        </p>
+        <details className="ssh-options">
+          <summary>跳板机与其他选项</summary>
+          <div className="ssh-field-row">
+            <label>
+              跳板机主机（可选）
+              <input
+                value={String(config.jumpHost ?? "")}
+                onChange={(event) => setField("jumpHost", event.target.value)}
+                placeholder="bastion.example.com 或 SSH 别名"
+              />
+            </label>
+            <label>
+              跳板机端口
+              <input
+                inputMode="numeric"
+                value={String(config.jumpPort ?? "22")}
+                onChange={(event) => setField("jumpPort", event.target.value)}
+              />
+            </label>
+          </div>
+          <p className="field-hint">
+            跳板机的账号和认证方式使用本机 SSH 配置。
+          </p>
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={Boolean(config.forwardAgent)}
+              onChange={(event) =>
+                setField("forwardAgent", event.target.checked)
+              }
+            />
+            启用代理转发（-A）
+          </label>
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={Boolean(config.compression)}
+              onChange={(event) =>
+                setField("compression", event.target.checked)
+              }
+            />
+            启用压缩（-C）
+          </label>
+        </details>
+      </>
+    );
   return (
     <>
       <label>
@@ -1977,6 +2223,7 @@ function ConfigFields({
         <label>
           SSL 模式
           <select
+            aria-label="SSL 模式"
             value={String(config.sslMode ?? "prefer")}
             onChange={(event) => setField("sslMode", event.target.value)}
           >
@@ -2668,11 +2915,21 @@ const defaultConfig = (
 ): Record<string, string | number | boolean> =>
   kind === "web"
     ? { url: "" }
-    : kind === "postgresql"
-      ? { host: "", port: "5432", database: "", sslMode: "prefer" }
-      : kind === "redis"
-        ? { host: "", port: "6379", database: "0", tls: false }
-        : { details: "" };
+    : kind === "ssh"
+      ? {
+          host: "",
+          port: "22",
+          identityFile: "",
+          jumpHost: "",
+          jumpPort: "22",
+          forwardAgent: false,
+          compression: false,
+        }
+      : kind === "postgresql"
+        ? { host: "", port: "5432", database: "", sslMode: "prefer" }
+        : kind === "redis"
+          ? { host: "", port: "6379", database: "0", tls: false }
+          : { details: "" };
 const stringConfig = (config: Target["config"] | undefined) =>
   config
     ? Object.fromEntries(
