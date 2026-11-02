@@ -50,3 +50,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 ## 验证要求
 
 真实渲染桌面 1440、1280 和手机 390/320；空目录、带数据目录、筛选无结果、密钥、编辑、锁定和深色；验证键盘焦点、菜单与对话框退出、复制和入口点击互不干扰。测试数据只在独立浏览器会话创建，不预置到产品。
+
+## 配色决策更新
+
+本文件保留第一版方向与探索历史。其森林绿配色、固定深绿导航和手动浅深模式已由 [appearance.md](appearance.md) 的四套主题、浅深/跟随系统模式与浅色导航决策取代；当前规范值以根目录 DESIGN.md 和 src/themes.css 为准。

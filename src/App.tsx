@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Kdbx } from "kdbxweb";
 import {
   createTarget,
@@ -35,8 +35,12 @@ import {
   serializeKeyStoreBackup,
 } from "./portability/backup";
 import { Dialog, Icon, type IconName } from "./ui";
+import { useAppearance } from "./appearance";
+import { AppearanceSettings } from "./AppearanceSettings";
+import "./themes.css";
 import "./app.css";
 import "./responsive.css";
+import "./appearance.css";
 
 const kindIcons: Record<TargetKind, IconName> = {
   web: "globe",
@@ -70,9 +74,7 @@ export default function App() {
   const [hasVault, setHasVault] = useState(false);
   const [workspace, setWorkspace] = useState(emptyWorkspace);
   const [locked, setLocked] = useState(true);
-  const [theme, setTheme] = useState<"dark" | "light">(() =>
-    localStorage.getItem("linkmark-theme") === "dark" ? "dark" : "light",
-  );
+  const [appearance, setAppearance] = useAppearance();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -153,10 +155,6 @@ export default function App() {
       .get("primary")
       .then((record) => setHasVault(Boolean(record)));
   }, []);
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem("linkmark-theme", theme);
-  }, [theme]);
   const refresh = () => {
     if (vaultRef.current) setWorkspace(getWorkspace(vaultRef.current));
   };
@@ -317,6 +315,12 @@ export default function App() {
   if (locked)
     return (
       <LockScreen
+        appearance={
+          <AppearanceSettings
+            appearance={appearance}
+            onChange={setAppearance}
+          />
+        }
         hasVault={hasVault}
         opening={opening}
         password={password}
@@ -424,14 +428,10 @@ export default function App() {
             <span className="local-label">
               <Icon name="shield" size={15} /> 本地加密
             </span>
-            <button
-              className="icon-button"
-              aria-label="切换颜色模式"
-              title={theme === "dark" ? "切换浅色模式" : "切换深色模式"}
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              <Icon name={theme === "dark" ? "sun" : "moon"} />
-            </button>
+            <AppearanceSettings
+              appearance={appearance}
+              onChange={setAppearance}
+            />
             <button className="lock-button" onClick={lock}>
               <Icon name="lock" size={16} />
               <span>锁定</span>
@@ -835,6 +835,7 @@ function Sidebar({
 }
 
 function LockScreen(props: {
+  appearance: ReactNode;
   hasVault: boolean;
   opening: boolean;
   password: string;
@@ -895,8 +896,11 @@ function LockScreen(props: {
         </p>
       </section>
       <section className="lock-form-area">
-        <div className="lock-mobile-brand">
-          <Brand />
+        <div className="lock-topbar">
+          <div className="lock-mobile-brand">
+            <Brand />
+          </div>
+          {props.appearance}
         </div>
         <div className="lock-card">
           <span className="lock-form-icon">

@@ -1,651 +1,2247 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-02T08:22:46.461124+00:00",
+  "generatedAt": "2026-11-02T09:59:01.975987Z",
   "title": "Design System: Linkmark",
   "extensions": {
     "colorMeta": {
-      "canvas": {
+      "graphite-light-canvas": {
         "role": "neutral",
-        "displayName": "canvas",
+        "displayName": "岩墨 · 浅色 · canvas",
         "tonalRamp": [
-          "oklch(15% 0.0013 134.85)",
-          "oklch(26% 0.0027 134.85)",
-          "oklch(37% 0.0038 134.85)",
-          "oklch(48% 0.0045 134.85)",
-          "oklch(60% 0.0045 134.85)",
-          "oklch(72% 0.0038 134.85)",
-          "oklch(84% 0.0025 134.85)",
-          "oklch(95% 0.0009 134.85)"
+          "oklch(15% 0.0008 264.54)",
+          "oklch(26% 0.0017 264.54)",
+          "oklch(38% 0.0027 264.54)",
+          "oklch(49% 0.0029 264.54)",
+          "oklch(61% 0.0029 264.54)",
+          "oklch(72% 0.0027 264.54)",
+          "oklch(84% 0.0015 264.54)",
+          "oklch(95% 0.0005 264.54)"
         ]
       },
-      "rail": {
+      "graphite-light-rail": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · rail",
+        "tonalRamp": [
+          "oklch(15% 0.0018 255.48)",
+          "oklch(26% 0.0038 255.48)",
+          "oklch(38% 0.0059 255.48)",
+          "oklch(49% 0.0063 255.48)",
+          "oklch(61% 0.0063 255.48)",
+          "oklch(72% 0.0058 255.48)",
+          "oklch(84% 0.0033 255.48)",
+          "oklch(95% 0.0010 255.48)"
+        ]
+      },
+      "graphite-light-rail-ink": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · rail-ink",
+        "tonalRamp": [
+          "oklch(15% 0.0057 264.18)",
+          "oklch(26% 0.0119 264.18)",
+          "oklch(38% 0.0187 264.18)",
+          "oklch(49% 0.0198 264.18)",
+          "oklch(61% 0.0198 264.18)",
+          "oklch(72% 0.0185 264.18)",
+          "oklch(84% 0.0106 264.18)",
+          "oklch(95% 0.0033 264.18)"
+        ]
+      },
+      "graphite-light-rail-muted": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · rail-muted",
+        "tonalRamp": [
+          "oklch(15% 0.0097 257.79)",
+          "oklch(26% 0.0205 257.79)",
+          "oklch(38% 0.0322 257.79)",
+          "oklch(49% 0.0341 257.79)",
+          "oklch(61% 0.0341 257.79)",
+          "oklch(72% 0.0318 257.79)",
+          "oklch(84% 0.0182 257.79)",
+          "oklch(95% 0.0057 257.79)"
+        ]
+      },
+      "graphite-light-rail-active": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · rail-active",
+        "tonalRamp": [
+          "oklch(15% 0.0036 255.51)",
+          "oklch(26% 0.0076 255.51)",
+          "oklch(38% 0.0119 255.51)",
+          "oklch(49% 0.0127 255.51)",
+          "oklch(61% 0.0127 255.51)",
+          "oklch(72% 0.0118 255.51)",
+          "oklch(84% 0.0068 255.51)",
+          "oklch(95% 0.0021 255.51)"
+        ]
+      },
+      "graphite-light-rail-hover": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · rail-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0031 256.70)",
+          "oklch(26% 0.0065 256.70)",
+          "oklch(38% 0.0103 256.70)",
+          "oklch(49% 0.0109 256.70)",
+          "oklch(61% 0.0109 256.70)",
+          "oklch(72% 0.0102 256.70)",
+          "oklch(84% 0.0058 256.70)",
+          "oklch(95% 0.0018 256.70)"
+        ]
+      },
+      "graphite-light-rail-line": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · rail-line",
+        "tonalRamp": [
+          "oklch(15% 0.0046 253.91)",
+          "oklch(26% 0.0097 253.91)",
+          "oklch(38% 0.0153 253.91)",
+          "oklch(49% 0.0162 253.91)",
+          "oklch(61% 0.0162 253.91)",
+          "oklch(72% 0.0152 253.91)",
+          "oklch(84% 0.0087 253.91)",
+          "oklch(95% 0.0027 253.91)"
+        ]
+      },
+      "graphite-light-surface": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · surface",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "graphite-light-surface-2": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · surface-2",
+        "tonalRamp": [
+          "oklch(15% 0.0018 255.48)",
+          "oklch(26% 0.0038 255.48)",
+          "oklch(38% 0.0059 255.48)",
+          "oklch(49% 0.0063 255.48)",
+          "oklch(61% 0.0063 255.48)",
+          "oklch(72% 0.0058 255.48)",
+          "oklch(84% 0.0033 255.48)",
+          "oklch(95% 0.0010 255.48)"
+        ]
+      },
+      "graphite-light-line": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · line",
+        "tonalRamp": [
+          "oklch(15% 0.0031 256.70)",
+          "oklch(26% 0.0066 256.70)",
+          "oklch(38% 0.0103 256.70)",
+          "oklch(49% 0.0110 256.70)",
+          "oklch(61% 0.0110 256.70)",
+          "oklch(72% 0.0102 256.70)",
+          "oklch(84% 0.0058 256.70)",
+          "oklch(95% 0.0018 256.70)"
+        ]
+      },
+      "graphite-light-ink": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · ink",
+        "tonalRamp": [
+          "oklch(15% 0.0057 264.18)",
+          "oklch(26% 0.0119 264.18)",
+          "oklch(38% 0.0187 264.18)",
+          "oklch(49% 0.0198 264.18)",
+          "oklch(61% 0.0198 264.18)",
+          "oklch(72% 0.0185 264.18)",
+          "oklch(84% 0.0106 264.18)",
+          "oklch(95% 0.0033 264.18)"
+        ]
+      },
+      "graphite-light-muted": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · muted",
+        "tonalRamp": [
+          "oklch(15% 0.0097 257.79)",
+          "oklch(26% 0.0205 257.79)",
+          "oklch(38% 0.0322 257.79)",
+          "oklch(49% 0.0341 257.79)",
+          "oklch(61% 0.0341 257.79)",
+          "oklch(72% 0.0318 257.79)",
+          "oklch(84% 0.0182 257.79)",
+          "oklch(95% 0.0057 257.79)"
+        ]
+      },
+      "graphite-light-subtle": {
+        "role": "neutral",
+        "displayName": "岩墨 · 浅色 · subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0095 258.36)",
+          "oklch(26% 0.0199 258.36)",
+          "oklch(38% 0.0312 258.36)",
+          "oklch(49% 0.0331 258.36)",
+          "oklch(61% 0.0331 258.36)",
+          "oklch(72% 0.0309 258.36)",
+          "oklch(84% 0.0177 258.36)",
+          "oklch(95% 0.0055 258.36)"
+        ]
+      },
+      "graphite-light-accent": {
         "role": "primary",
-        "displayName": "rail",
+        "displayName": "岩墨 · 浅色 · accent",
         "tonalRamp": [
-          "oklch(15% 0.0146 174.30)",
-          "oklch(26% 0.0292 174.30)",
-          "oklch(37% 0.0413 174.30)",
-          "oklch(48% 0.0486 174.30)",
-          "oklch(60% 0.0486 174.30)",
-          "oklch(72% 0.0413 174.30)",
-          "oklch(84% 0.0267 174.30)",
-          "oklch(95% 0.0097 174.30)"
+          "oklch(15% 0.0159 259.34)",
+          "oklch(26% 0.0333 259.34)",
+          "oklch(38% 0.0524 259.34)",
+          "oklch(49% 0.0555 259.34)",
+          "oklch(61% 0.0555 259.34)",
+          "oklch(72% 0.0518 259.34)",
+          "oklch(84% 0.0296 259.34)",
+          "oklch(95% 0.0093 259.34)"
         ]
       },
-      "rail-ink": {
-        "role": "neutral",
-        "displayName": "rail-ink",
-        "tonalRamp": [
-          "oklch(15% 0.0033 149.86)",
-          "oklch(26% 0.0065 149.86)",
-          "oklch(37% 0.0092 149.86)",
-          "oklch(48% 0.0108 149.86)",
-          "oklch(60% 0.0108 149.86)",
-          "oklch(72% 0.0092 149.86)",
-          "oklch(84% 0.0060 149.86)",
-          "oklch(95% 0.0022 149.86)"
-        ]
-      },
-      "rail-muted": {
-        "role": "neutral",
-        "displayName": "rail-muted",
-        "tonalRamp": [
-          "oklch(15% 0.0090 163.06)",
-          "oklch(26% 0.0180 163.06)",
-          "oklch(37% 0.0255 163.06)",
-          "oklch(48% 0.0299 163.06)",
-          "oklch(60% 0.0299 163.06)",
-          "oklch(72% 0.0255 163.06)",
-          "oklch(84% 0.0165 163.06)",
-          "oklch(95% 0.0060 163.06)"
-        ]
-      },
-      "rail-active": {
+      "graphite-light-accent-hover": {
         "role": "primary",
-        "displayName": "rail-active",
+        "displayName": "岩墨 · 浅色 · accent-hover",
         "tonalRamp": [
-          "oklch(15% 0.0154 169.33)",
-          "oklch(26% 0.0309 169.33)",
-          "oklch(37% 0.0437 169.33)",
-          "oklch(48% 0.0515 169.33)",
-          "oklch(60% 0.0515 169.33)",
-          "oklch(72% 0.0437 169.33)",
-          "oklch(84% 0.0283 169.33)",
-          "oklch(95% 0.0103 169.33)"
+          "oklch(15% 0.0139 259.11)",
+          "oklch(26% 0.0292 259.11)",
+          "oklch(38% 0.0458 259.11)",
+          "oklch(49% 0.0486 259.11)",
+          "oklch(61% 0.0486 259.11)",
+          "oklch(72% 0.0454 259.11)",
+          "oklch(84% 0.0259 259.11)",
+          "oklch(95% 0.0081 259.11)"
         ]
       },
-      "surface": {
-        "role": "neutral",
-        "displayName": "surface",
-        "tonalRamp": [
-          "oklch(15% 0.0000 0.00)",
-          "oklch(26% 0.0000 0.00)",
-          "oklch(37% 0.0000 0.00)",
-          "oklch(48% 0.0000 0.00)",
-          "oklch(60% 0.0000 0.00)",
-          "oklch(72% 0.0000 0.00)",
-          "oklch(84% 0.0000 0.00)",
-          "oklch(95% 0.0000 0.00)"
-        ]
-      },
-      "surface-2": {
-        "role": "neutral",
-        "displayName": "surface-2",
-        "tonalRamp": [
-          "oklch(15% 0.0029 140.52)",
-          "oklch(26% 0.0057 140.52)",
-          "oklch(37% 0.0081 140.52)",
-          "oklch(48% 0.0095 140.52)",
-          "oklch(60% 0.0095 140.52)",
-          "oklch(72% 0.0081 140.52)",
-          "oklch(84% 0.0052 140.52)",
-          "oklch(95% 0.0019 140.52)"
-        ]
-      },
-      "line": {
-        "role": "neutral",
-        "displayName": "line",
-        "tonalRamp": [
-          "oklch(15% 0.0043 148.77)",
-          "oklch(26% 0.0086 148.77)",
-          "oklch(37% 0.0122 148.77)",
-          "oklch(48% 0.0144 148.77)",
-          "oklch(60% 0.0144 148.77)",
-          "oklch(72% 0.0122 148.77)",
-          "oklch(84% 0.0079 148.77)",
-          "oklch(95% 0.0029 148.77)"
-        ]
-      },
-      "ink": {
-        "role": "neutral",
-        "displayName": "ink",
-        "tonalRamp": [
-          "oklch(15% 0.0097 166.87)",
-          "oklch(26% 0.0194 166.87)",
-          "oklch(37% 0.0274 166.87)",
-          "oklch(48% 0.0323 166.87)",
-          "oklch(60% 0.0323 166.87)",
-          "oklch(72% 0.0274 166.87)",
-          "oklch(84% 0.0178 166.87)",
-          "oklch(95% 0.0065 166.87)"
-        ]
-      },
-      "muted": {
-        "role": "neutral",
-        "displayName": "muted",
-        "tonalRamp": [
-          "oklch(15% 0.0082 162.43)",
-          "oklch(26% 0.0164 162.43)",
-          "oklch(37% 0.0233 162.43)",
-          "oklch(48% 0.0274 162.43)",
-          "oklch(60% 0.0274 162.43)",
-          "oklch(72% 0.0233 162.43)",
-          "oklch(84% 0.0151 162.43)",
-          "oklch(95% 0.0055 162.43)"
-        ]
-      },
-      "subtle": {
-        "role": "neutral",
-        "displayName": "subtle",
-        "tonalRamp": [
-          "oklch(15% 0.0111 161.80)",
-          "oklch(26% 0.0221 161.80)",
-          "oklch(37% 0.0314 161.80)",
-          "oklch(48% 0.0369 161.80)",
-          "oklch(60% 0.0369 161.80)",
-          "oklch(72% 0.0314 161.80)",
-          "oklch(84% 0.0203 161.80)",
-          "oklch(95% 0.0074 161.80)"
-        ]
-      },
-      "accent": {
+      "graphite-light-on-accent": {
         "role": "primary",
-        "displayName": "accent",
+        "displayName": "岩墨 · 浅色 · on-accent",
         "tonalRamp": [
-          "oklch(15% 0.0237 162.74)",
-          "oklch(26% 0.0473 162.74)",
-          "oklch(37% 0.0671 162.74)",
-          "oklch(48% 0.0789 162.74)",
-          "oklch(60% 0.0789 162.74)",
-          "oklch(72% 0.0671 162.74)",
-          "oklch(84% 0.0434 162.74)",
-          "oklch(95% 0.0158 162.74)"
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
         ]
       },
-      "accent-hover": {
+      "graphite-light-accent-soft": {
         "role": "primary",
-        "displayName": "accent-hover",
+        "displayName": "岩墨 · 浅色 · accent-soft",
         "tonalRamp": [
-          "oklch(15% 0.0215 160.75)",
-          "oklch(26% 0.0429 160.75)",
-          "oklch(37% 0.0608 160.75)",
-          "oklch(48% 0.0716 160.75)",
-          "oklch(60% 0.0716 160.75)",
-          "oklch(72% 0.0608 160.75)",
-          "oklch(84% 0.0394 160.75)",
-          "oklch(95% 0.0143 160.75)"
+          "oklch(15% 0.0034 259.82)",
+          "oklch(26% 0.0072 259.82)",
+          "oklch(38% 0.0114 259.82)",
+          "oklch(49% 0.0120 259.82)",
+          "oklch(61% 0.0120 259.82)",
+          "oklch(72% 0.0112 259.82)",
+          "oklch(84% 0.0064 259.82)",
+          "oklch(95% 0.0020 259.82)"
         ]
       },
-      "on-accent": {
+      "graphite-light-focus": {
         "role": "primary",
-        "displayName": "on-accent",
+        "displayName": "岩墨 · 浅色 · focus",
         "tonalRamp": [
-          "oklch(15% 0.0000 0.00)",
-          "oklch(26% 0.0000 0.00)",
-          "oklch(37% 0.0000 0.00)",
-          "oklch(48% 0.0000 0.00)",
-          "oklch(60% 0.0000 0.00)",
-          "oklch(72% 0.0000 0.00)",
-          "oklch(84% 0.0000 0.00)",
-          "oklch(95% 0.0000 0.00)"
+          "oklch(15% 0.0258 258.28)",
+          "oklch(26% 0.0541 258.28)",
+          "oklch(38% 0.0850 258.28)",
+          "oklch(49% 0.0901 258.28)",
+          "oklch(61% 0.0901 258.28)",
+          "oklch(72% 0.0841 258.28)",
+          "oklch(84% 0.0481 258.28)",
+          "oklch(95% 0.0150 258.28)"
         ]
       },
-      "accent-soft": {
-        "role": "primary",
-        "displayName": "accent-soft",
+      "ocean-light-canvas": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · canvas",
         "tonalRamp": [
-          "oklch(15% 0.0048 148.40)",
-          "oklch(26% 0.0096 148.40)",
-          "oklch(37% 0.0136 148.40)",
-          "oklch(48% 0.0160 148.40)",
-          "oklch(60% 0.0160 148.40)",
-          "oklch(72% 0.0136 148.40)",
-          "oklch(84% 0.0088 148.40)",
-          "oklch(95% 0.0032 148.40)"
+          "oklch(15% 0.0017 239.82)",
+          "oklch(26% 0.0035 239.82)",
+          "oklch(38% 0.0055 239.82)",
+          "oklch(49% 0.0059 239.82)",
+          "oklch(61% 0.0059 239.82)",
+          "oklch(72% 0.0055 239.82)",
+          "oklch(84% 0.0031 239.82)",
+          "oklch(95% 0.0010 239.82)"
+        ]
+      },
+      "ocean-light-rail": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · rail",
+        "tonalRamp": [
+          "oklch(15% 0.0034 239.91)",
+          "oklch(26% 0.0071 239.91)",
+          "oklch(38% 0.0111 239.91)",
+          "oklch(49% 0.0118 239.91)",
+          "oklch(61% 0.0118 239.91)",
+          "oklch(72% 0.0110 239.91)",
+          "oklch(84% 0.0063 239.91)",
+          "oklch(95% 0.0020 239.91)"
+        ]
+      },
+      "ocean-light-rail-ink": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · rail-ink",
+        "tonalRamp": [
+          "oklch(15% 0.0108 240.48)",
+          "oklch(26% 0.0227 240.48)",
+          "oklch(38% 0.0357 240.48)",
+          "oklch(49% 0.0379 240.48)",
+          "oklch(61% 0.0379 240.48)",
+          "oklch(72% 0.0353 240.48)",
+          "oklch(84% 0.0202 240.48)",
+          "oklch(95% 0.0063 240.48)"
+        ]
+      },
+      "ocean-light-rail-muted": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · rail-muted",
+        "tonalRamp": [
+          "oklch(15% 0.0106 242.91)",
+          "oklch(26% 0.0222 242.91)",
+          "oklch(38% 0.0348 242.91)",
+          "oklch(49% 0.0369 242.91)",
+          "oklch(61% 0.0369 242.91)",
+          "oklch(72% 0.0345 242.91)",
+          "oklch(84% 0.0197 242.91)",
+          "oklch(95% 0.0062 242.91)"
+        ]
+      },
+      "ocean-light-rail-active": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · rail-active",
+        "tonalRamp": [
+          "oklch(15% 0.0067 235.99)",
+          "oklch(26% 0.0142 235.99)",
+          "oklch(38% 0.0222 235.99)",
+          "oklch(49% 0.0236 235.99)",
+          "oklch(61% 0.0236 235.99)",
+          "oklch(72% 0.0220 235.99)",
+          "oklch(84% 0.0126 235.99)",
+          "oklch(95% 0.0039 235.99)"
+        ]
+      },
+      "ocean-light-rail-hover": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · rail-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0055 235.73)",
+          "oklch(26% 0.0116 235.73)",
+          "oklch(38% 0.0182 235.73)",
+          "oklch(49% 0.0193 235.73)",
+          "oklch(61% 0.0193 235.73)",
+          "oklch(72% 0.0180 235.73)",
+          "oklch(84% 0.0103 235.73)",
+          "oklch(95% 0.0032 235.73)"
+        ]
+      },
+      "ocean-light-rail-line": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · rail-line",
+        "tonalRamp": [
+          "oklch(15% 0.0075 235.39)",
+          "oklch(26% 0.0158 235.39)",
+          "oklch(38% 0.0248 235.39)",
+          "oklch(49% 0.0263 235.39)",
+          "oklch(61% 0.0263 235.39)",
+          "oklch(72% 0.0246 235.39)",
+          "oklch(84% 0.0140 235.39)",
+          "oklch(95% 0.0044 235.39)"
+        ]
+      },
+      "ocean-light-surface": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · surface",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "ocean-light-surface-2": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · surface-2",
+        "tonalRamp": [
+          "oklch(15% 0.0029 238.51)",
+          "oklch(26% 0.0060 238.51)",
+          "oklch(38% 0.0095 238.51)",
+          "oklch(49% 0.0101 238.51)",
+          "oklch(61% 0.0101 238.51)",
+          "oklch(72% 0.0094 238.51)",
+          "oklch(84% 0.0054 238.51)",
+          "oklch(95% 0.0017 238.51)"
+        ]
+      },
+      "ocean-light-line": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · line",
+        "tonalRamp": [
+          "oklch(15% 0.0053 237.79)",
+          "oklch(26% 0.0112 237.79)",
+          "oklch(38% 0.0176 237.79)",
+          "oklch(49% 0.0186 237.79)",
+          "oklch(61% 0.0186 237.79)",
+          "oklch(72% 0.0174 237.79)",
+          "oklch(84% 0.0099 237.79)",
+          "oklch(95% 0.0031 237.79)"
+        ]
+      },
+      "ocean-light-ink": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · ink",
+        "tonalRamp": [
+          "oklch(15% 0.0108 240.48)",
+          "oklch(26% 0.0227 240.48)",
+          "oklch(38% 0.0357 240.48)",
+          "oklch(49% 0.0379 240.48)",
+          "oklch(61% 0.0379 240.48)",
+          "oklch(72% 0.0353 240.48)",
+          "oklch(84% 0.0202 240.48)",
+          "oklch(95% 0.0063 240.48)"
+        ]
+      },
+      "ocean-light-muted": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · muted",
+        "tonalRamp": [
+          "oklch(15% 0.0106 242.91)",
+          "oklch(26% 0.0222 242.91)",
+          "oklch(38% 0.0348 242.91)",
+          "oklch(49% 0.0369 242.91)",
+          "oklch(61% 0.0369 242.91)",
+          "oklch(72% 0.0345 242.91)",
+          "oklch(84% 0.0197 242.91)",
+          "oklch(95% 0.0062 242.91)"
+        ]
+      },
+      "ocean-light-subtle": {
+        "role": "neutral",
+        "displayName": "海盐 · 浅色 · subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0132 240.02)",
+          "oklch(26% 0.0278 240.02)",
+          "oklch(38% 0.0437 240.02)",
+          "oklch(49% 0.0464 240.02)",
+          "oklch(61% 0.0464 240.02)",
+          "oklch(72% 0.0433 240.02)",
+          "oklch(84% 0.0247 240.02)",
+          "oklch(95% 0.0077 240.02)"
+        ]
+      },
+      "ocean-light-accent": {
+        "role": "primary",
+        "displayName": "海盐 · 浅色 · accent",
+        "tonalRamp": [
+          "oklch(15% 0.0264 242.25)",
+          "oklch(26% 0.0554 242.25)",
+          "oklch(38% 0.0871 242.25)",
+          "oklch(49% 0.0924 242.25)",
+          "oklch(61% 0.0924 242.25)",
+          "oklch(72% 0.0862 242.25)",
+          "oklch(84% 0.0493 242.25)",
+          "oklch(95% 0.0154 242.25)"
+        ]
+      },
+      "ocean-light-accent-hover": {
+        "role": "primary",
+        "displayName": "海盐 · 浅色 · accent-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0237 243.31)",
+          "oklch(26% 0.0497 243.31)",
+          "oklch(38% 0.0782 243.31)",
+          "oklch(49% 0.0829 243.31)",
+          "oklch(61% 0.0829 243.31)",
+          "oklch(72% 0.0774 243.31)",
+          "oklch(84% 0.0442 243.31)",
+          "oklch(95% 0.0138 243.31)"
+        ]
+      },
+      "ocean-light-on-accent": {
+        "role": "primary",
+        "displayName": "海盐 · 浅色 · on-accent",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "ocean-light-accent-soft": {
+        "role": "primary",
+        "displayName": "海盐 · 浅色 · accent-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0055 235.73)",
+          "oklch(26% 0.0116 235.73)",
+          "oklch(38% 0.0182 235.73)",
+          "oklch(49% 0.0193 235.73)",
+          "oklch(61% 0.0193 235.73)",
+          "oklch(72% 0.0180 235.73)",
+          "oklch(84% 0.0103 235.73)",
+          "oklch(95% 0.0032 235.73)"
+        ]
+      },
+      "ocean-light-focus": {
+        "role": "primary",
+        "displayName": "海盐 · 浅色 · focus",
+        "tonalRamp": [
+          "oklch(15% 0.0264 242.25)",
+          "oklch(26% 0.0554 242.25)",
+          "oklch(38% 0.0871 242.25)",
+          "oklch(49% 0.0924 242.25)",
+          "oklch(61% 0.0924 242.25)",
+          "oklch(72% 0.0862 242.25)",
+          "oklch(84% 0.0493 242.25)",
+          "oklch(95% 0.0154 242.25)"
+        ]
+      },
+      "sage-light-canvas": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · canvas",
+        "tonalRamp": [
+          "oklch(15% 0.0012 157.18)",
+          "oklch(26% 0.0025 157.18)",
+          "oklch(38% 0.0039 157.18)",
+          "oklch(49% 0.0041 157.18)",
+          "oklch(61% 0.0041 157.18)",
+          "oklch(72% 0.0038 157.18)",
+          "oklch(84% 0.0022 157.18)",
+          "oklch(95% 0.0007 157.18)"
+        ]
+      },
+      "sage-light-rail": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · rail",
+        "tonalRamp": [
+          "oklch(15% 0.0021 164.93)",
+          "oklch(26% 0.0045 164.93)",
+          "oklch(38% 0.0071 164.93)",
+          "oklch(49% 0.0075 164.93)",
+          "oklch(61% 0.0075 164.93)",
+          "oklch(72% 0.0070 164.93)",
+          "oklch(84% 0.0040 164.93)",
+          "oklch(95% 0.0013 164.93)"
+        ]
+      },
+      "sage-light-rail-ink": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · rail-ink",
+        "tonalRamp": [
+          "oklch(15% 0.0081 166.78)",
+          "oklch(26% 0.0169 166.78)",
+          "oklch(38% 0.0266 166.78)",
+          "oklch(49% 0.0282 166.78)",
+          "oklch(61% 0.0282 166.78)",
+          "oklch(72% 0.0264 166.78)",
+          "oklch(84% 0.0151 166.78)",
+          "oklch(95% 0.0047 166.78)"
+        ]
+      },
+      "sage-light-rail-muted": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · rail-muted",
+        "tonalRamp": [
+          "oklch(15% 0.0079 162.34)",
+          "oklch(26% 0.0166 162.34)",
+          "oklch(38% 0.0261 162.34)",
+          "oklch(49% 0.0277 162.34)",
+          "oklch(61% 0.0277 162.34)",
+          "oklch(72% 0.0258 162.34)",
+          "oklch(84% 0.0148 162.34)",
+          "oklch(95% 0.0046 162.34)"
+        ]
+      },
+      "sage-light-rail-active": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · rail-active",
+        "tonalRamp": [
+          "oklch(15% 0.0053 155.79)",
+          "oklch(26% 0.0110 155.79)",
+          "oklch(38% 0.0174 155.79)",
+          "oklch(49% 0.0184 155.79)",
+          "oklch(61% 0.0184 155.79)",
+          "oklch(72% 0.0172 155.79)",
+          "oklch(84% 0.0098 155.79)",
+          "oklch(95% 0.0031 155.79)"
+        ]
+      },
+      "sage-light-rail-hover": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · rail-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0043 158.23)",
+          "oklch(26% 0.0090 158.23)",
+          "oklch(38% 0.0141 158.23)",
+          "oklch(49% 0.0150 158.23)",
+          "oklch(61% 0.0150 158.23)",
+          "oklch(72% 0.0140 158.23)",
+          "oklch(84% 0.0080 158.23)",
+          "oklch(95% 0.0025 158.23)"
+        ]
+      },
+      "sage-light-rail-line": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · rail-line",
+        "tonalRamp": [
+          "oklch(15% 0.0055 157.82)",
+          "oklch(26% 0.0116 157.82)",
+          "oklch(38% 0.0183 157.82)",
+          "oklch(49% 0.0194 157.82)",
+          "oklch(61% 0.0194 157.82)",
+          "oklch(72% 0.0181 157.82)",
+          "oklch(84% 0.0103 157.82)",
+          "oklch(95% 0.0032 157.82)"
+        ]
+      },
+      "sage-light-surface": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · surface",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "sage-light-surface-2": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · surface-2",
+        "tonalRamp": [
+          "oklch(15% 0.0024 157.09)",
+          "oklch(26% 0.0050 157.09)",
+          "oklch(38% 0.0078 157.09)",
+          "oklch(49% 0.0083 157.09)",
+          "oklch(61% 0.0083 157.09)",
+          "oklch(72% 0.0077 157.09)",
+          "oklch(84% 0.0044 157.09)",
+          "oklch(95% 0.0014 157.09)"
+        ]
+      },
+      "sage-light-line": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · line",
+        "tonalRamp": [
+          "oklch(15% 0.0043 158.22)",
+          "oklch(26% 0.0090 158.22)",
+          "oklch(38% 0.0142 158.22)",
+          "oklch(49% 0.0151 158.22)",
+          "oklch(61% 0.0151 158.22)",
+          "oklch(72% 0.0141 158.22)",
+          "oklch(84% 0.0080 158.22)",
+          "oklch(95% 0.0025 158.22)"
+        ]
+      },
+      "sage-light-ink": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · ink",
+        "tonalRamp": [
+          "oklch(15% 0.0081 166.78)",
+          "oklch(26% 0.0169 166.78)",
+          "oklch(38% 0.0266 166.78)",
+          "oklch(49% 0.0282 166.78)",
+          "oklch(61% 0.0282 166.78)",
+          "oklch(72% 0.0264 166.78)",
+          "oklch(84% 0.0151 166.78)",
+          "oklch(95% 0.0047 166.78)"
+        ]
+      },
+      "sage-light-muted": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · muted",
+        "tonalRamp": [
+          "oklch(15% 0.0079 162.34)",
+          "oklch(26% 0.0166 162.34)",
+          "oklch(38% 0.0261 162.34)",
+          "oklch(49% 0.0277 162.34)",
+          "oklch(61% 0.0277 162.34)",
+          "oklch(72% 0.0258 162.34)",
+          "oklch(84% 0.0148 162.34)",
+          "oklch(95% 0.0046 162.34)"
+        ]
+      },
+      "sage-light-subtle": {
+        "role": "neutral",
+        "displayName": "松雾 · 浅色 · subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0104 159.05)",
+          "oklch(26% 0.0219 159.05)",
+          "oklch(38% 0.0345 159.05)",
+          "oklch(49% 0.0365 159.05)",
+          "oklch(61% 0.0365 159.05)",
+          "oklch(72% 0.0341 159.05)",
+          "oklch(84% 0.0195 159.05)",
+          "oklch(95% 0.0061 159.05)"
+        ]
+      },
+      "sage-light-accent": {
+        "role": "primary",
+        "displayName": "松雾 · 浅色 · accent",
+        "tonalRamp": [
+          "oklch(15% 0.0194 158.72)",
+          "oklch(26% 0.0407 158.72)",
+          "oklch(38% 0.0640 158.72)",
+          "oklch(49% 0.0679 158.72)",
+          "oklch(61% 0.0679 158.72)",
+          "oklch(72% 0.0634 158.72)",
+          "oklch(84% 0.0362 158.72)",
+          "oklch(95% 0.0113 158.72)"
+        ]
+      },
+      "sage-light-accent-hover": {
+        "role": "primary",
+        "displayName": "松雾 · 浅色 · accent-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0169 158.16)",
+          "oklch(26% 0.0355 158.16)",
+          "oklch(38% 0.0558 158.16)",
+          "oklch(49% 0.0592 158.16)",
+          "oklch(61% 0.0592 158.16)",
+          "oklch(72% 0.0552 158.16)",
+          "oklch(84% 0.0316 158.16)",
+          "oklch(95% 0.0099 158.16)"
+        ]
+      },
+      "sage-light-on-accent": {
+        "role": "primary",
+        "displayName": "松雾 · 浅色 · on-accent",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "sage-light-accent-soft": {
+        "role": "primary",
+        "displayName": "松雾 · 浅色 · accent-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0043 158.24)",
+          "oklch(26% 0.0090 158.24)",
+          "oklch(38% 0.0141 158.24)",
+          "oklch(49% 0.0149 158.24)",
+          "oklch(61% 0.0149 158.24)",
+          "oklch(72% 0.0139 158.24)",
+          "oklch(84% 0.0080 158.24)",
+          "oklch(95% 0.0025 158.24)"
+        ]
+      },
+      "sage-light-focus": {
+        "role": "primary",
+        "displayName": "松雾 · 浅色 · focus",
+        "tonalRamp": [
+          "oklch(15% 0.0194 158.72)",
+          "oklch(26% 0.0407 158.72)",
+          "oklch(38% 0.0640 158.72)",
+          "oklch(49% 0.0679 158.72)",
+          "oklch(61% 0.0679 158.72)",
+          "oklch(72% 0.0634 158.72)",
+          "oklch(84% 0.0362 158.72)",
+          "oklch(95% 0.0113 158.72)"
+        ]
+      },
+      "sand-light-canvas": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · canvas",
+        "tonalRamp": [
+          "oklch(15% 0.0018 75.41)",
+          "oklch(26% 0.0037 75.41)",
+          "oklch(38% 0.0059 75.41)",
+          "oklch(49% 0.0062 75.41)",
+          "oklch(61% 0.0062 75.41)",
+          "oklch(72% 0.0058 75.41)",
+          "oklch(84% 0.0033 75.41)",
+          "oklch(95% 0.0010 75.41)"
+        ]
+      },
+      "sand-light-rail": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · rail",
+        "tonalRamp": [
+          "oklch(15% 0.0036 75.36)",
+          "oklch(26% 0.0075 75.36)",
+          "oklch(38% 0.0118 75.36)",
+          "oklch(49% 0.0125 75.36)",
+          "oklch(61% 0.0125 75.36)",
+          "oklch(72% 0.0117 75.36)",
+          "oklch(84% 0.0067 75.36)",
+          "oklch(95% 0.0021 75.36)"
+        ]
+      },
+      "sand-light-rail-ink": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · rail-ink",
+        "tonalRamp": [
+          "oklch(15% 0.0078 55.30)",
+          "oklch(26% 0.0164 55.30)",
+          "oklch(38% 0.0258 55.30)",
+          "oklch(49% 0.0274 55.30)",
+          "oklch(61% 0.0274 55.30)",
+          "oklch(72% 0.0256 55.30)",
+          "oklch(84% 0.0146 55.30)",
+          "oklch(95% 0.0046 55.30)"
+        ]
+      },
+      "sand-light-rail-muted": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · rail-muted",
+        "tonalRamp": [
+          "oklch(15% 0.0085 63.27)",
+          "oklch(26% 0.0179 63.27)",
+          "oklch(38% 0.0281 63.27)",
+          "oklch(49% 0.0298 63.27)",
+          "oklch(61% 0.0298 63.27)",
+          "oklch(72% 0.0278 63.27)",
+          "oklch(84% 0.0159 63.27)",
+          "oklch(95% 0.0050 63.27)"
+        ]
+      },
+      "sand-light-rail-active": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · rail-active",
+        "tonalRamp": [
+          "oklch(15% 0.0063 69.76)",
+          "oklch(26% 0.0132 69.76)",
+          "oklch(38% 0.0207 69.76)",
+          "oklch(49% 0.0220 69.76)",
+          "oklch(61% 0.0220 69.76)",
+          "oklch(72% 0.0205 69.76)",
+          "oklch(84% 0.0117 69.76)",
+          "oklch(95% 0.0037 69.76)"
+        ]
+      },
+      "sand-light-rail-hover": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · rail-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0053 70.23)",
+          "oklch(26% 0.0111 70.23)",
+          "oklch(38% 0.0174 70.23)",
+          "oklch(49% 0.0184 70.23)",
+          "oklch(61% 0.0184 70.23)",
+          "oklch(72% 0.0172 70.23)",
+          "oklch(84% 0.0098 70.23)",
+          "oklch(95% 0.0031 70.23)"
+        ]
+      },
+      "sand-light-rail-line": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · rail-line",
+        "tonalRamp": [
+          "oklch(15% 0.0068 69.57)",
+          "oklch(26% 0.0143 69.57)",
+          "oklch(38% 0.0225 69.57)",
+          "oklch(49% 0.0239 69.57)",
+          "oklch(61% 0.0239 69.57)",
+          "oklch(72% 0.0223 69.57)",
+          "oklch(84% 0.0127 69.57)",
+          "oklch(95% 0.0040 69.57)"
+        ]
+      },
+      "sand-light-surface": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · surface",
+        "tonalRamp": [
+          "oklch(15% 0.0008 84.56)",
+          "oklch(26% 0.0017 84.56)",
+          "oklch(38% 0.0027 84.56)",
+          "oklch(49% 0.0028 84.56)",
+          "oklch(61% 0.0028 84.56)",
+          "oklch(72% 0.0027 84.56)",
+          "oklch(84% 0.0015 84.56)",
+          "oklch(95% 0.0005 84.56)"
+        ]
+      },
+      "sand-light-surface-2": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · surface-2",
+        "tonalRamp": [
+          "oklch(15% 0.0036 75.37)",
+          "oklch(26% 0.0075 75.37)",
+          "oklch(38% 0.0118 75.37)",
+          "oklch(49% 0.0125 75.37)",
+          "oklch(61% 0.0125 75.37)",
+          "oklch(72% 0.0116 75.37)",
+          "oklch(84% 0.0067 75.37)",
+          "oklch(95% 0.0021 75.37)"
+        ]
+      },
+      "sand-light-line": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · line",
+        "tonalRamp": [
+          "oklch(15% 0.0058 69.98)",
+          "oklch(26% 0.0121 69.98)",
+          "oklch(38% 0.0191 69.98)",
+          "oklch(49% 0.0202 69.98)",
+          "oklch(61% 0.0202 69.98)",
+          "oklch(72% 0.0189 69.98)",
+          "oklch(84% 0.0108 69.98)",
+          "oklch(95% 0.0034 69.98)"
+        ]
+      },
+      "sand-light-ink": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · ink",
+        "tonalRamp": [
+          "oklch(15% 0.0078 55.30)",
+          "oklch(26% 0.0164 55.30)",
+          "oklch(38% 0.0258 55.30)",
+          "oklch(49% 0.0274 55.30)",
+          "oklch(61% 0.0274 55.30)",
+          "oklch(72% 0.0256 55.30)",
+          "oklch(84% 0.0146 55.30)",
+          "oklch(95% 0.0046 55.30)"
+        ]
+      },
+      "sand-light-muted": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · muted",
+        "tonalRamp": [
+          "oklch(15% 0.0085 63.27)",
+          "oklch(26% 0.0179 63.27)",
+          "oklch(38% 0.0281 63.27)",
+          "oklch(49% 0.0298 63.27)",
+          "oklch(61% 0.0298 63.27)",
+          "oklch(72% 0.0278 63.27)",
+          "oklch(84% 0.0159 63.27)",
+          "oklch(95% 0.0050 63.27)"
+        ]
+      },
+      "sand-light-subtle": {
+        "role": "neutral",
+        "displayName": "暖砂 · 浅色 · subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0102 58.59)",
+          "oklch(26% 0.0213 58.59)",
+          "oklch(38% 0.0335 58.59)",
+          "oklch(49% 0.0355 58.59)",
+          "oklch(61% 0.0355 58.59)",
+          "oklch(72% 0.0332 58.59)",
+          "oklch(84% 0.0190 58.59)",
+          "oklch(95% 0.0059 58.59)"
+        ]
+      },
+      "sand-light-accent": {
+        "role": "primary",
+        "displayName": "暖砂 · 浅色 · accent",
+        "tonalRamp": [
+          "oklch(15% 0.0245 44.84)",
+          "oklch(26% 0.0514 44.84)",
+          "oklch(38% 0.0807 44.84)",
+          "oklch(49% 0.0856 44.84)",
+          "oklch(61% 0.0856 44.84)",
+          "oklch(72% 0.0799 44.84)",
+          "oklch(84% 0.0457 44.84)",
+          "oklch(95% 0.0143 44.84)"
+        ]
+      },
+      "sand-light-accent-hover": {
+        "role": "primary",
+        "displayName": "暖砂 · 浅色 · accent-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0209 44.42)",
+          "oklch(26% 0.0440 44.42)",
+          "oklch(38% 0.0691 44.42)",
+          "oklch(49% 0.0733 44.42)",
+          "oklch(61% 0.0733 44.42)",
+          "oklch(72% 0.0684 44.42)",
+          "oklch(84% 0.0391 44.42)",
+          "oklch(95% 0.0122 44.42)"
+        ]
+      },
+      "sand-light-on-accent": {
+        "role": "primary",
+        "displayName": "暖砂 · 浅色 · on-accent",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "sand-light-accent-soft": {
+        "role": "primary",
+        "displayName": "暖砂 · 浅色 · accent-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0063 58.77)",
+          "oklch(26% 0.0133 58.77)",
+          "oklch(38% 0.0208 58.77)",
+          "oklch(49% 0.0221 58.77)",
+          "oklch(61% 0.0221 58.77)",
+          "oklch(72% 0.0206 58.77)",
+          "oklch(84% 0.0118 58.77)",
+          "oklch(95% 0.0037 58.77)"
+        ]
+      },
+      "sand-light-focus": {
+        "role": "primary",
+        "displayName": "暖砂 · 浅色 · focus",
+        "tonalRamp": [
+          "oklch(15% 0.0245 44.84)",
+          "oklch(26% 0.0514 44.84)",
+          "oklch(38% 0.0807 44.84)",
+          "oklch(49% 0.0856 44.84)",
+          "oklch(61% 0.0856 44.84)",
+          "oklch(72% 0.0799 44.84)",
+          "oklch(84% 0.0457 44.84)",
+          "oklch(95% 0.0143 44.84)"
+        ]
+      },
+      "graphite-dark-canvas": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · canvas",
+        "tonalRamp": [
+          "oklch(15% 0.0043 261.62)",
+          "oklch(26% 0.0090 261.62)",
+          "oklch(38% 0.0142 261.62)",
+          "oklch(49% 0.0150 261.62)",
+          "oklch(61% 0.0150 261.62)",
+          "oklch(72% 0.0140 261.62)",
+          "oklch(84% 0.0080 261.62)",
+          "oklch(95% 0.0025 261.62)"
+        ]
+      },
+      "graphite-dark-rail": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · rail",
+        "tonalRamp": [
+          "oklch(15% 0.0038 258.37)",
+          "oklch(26% 0.0081 258.37)",
+          "oklch(38% 0.0127 258.37)",
+          "oklch(49% 0.0135 258.37)",
+          "oklch(61% 0.0135 258.37)",
+          "oklch(72% 0.0126 258.37)",
+          "oklch(84% 0.0072 258.37)",
+          "oklch(95% 0.0022 258.37)"
+        ]
+      },
+      "graphite-dark-rail-ink": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · rail-ink",
+        "tonalRamp": [
+          "oklch(15% 0.0034 259.82)",
+          "oklch(26% 0.0072 259.82)",
+          "oklch(38% 0.0114 259.82)",
+          "oklch(49% 0.0121 259.82)",
+          "oklch(61% 0.0121 259.82)",
+          "oklch(72% 0.0113 259.82)",
+          "oklch(84% 0.0064 259.82)",
+          "oklch(95% 0.0020 259.82)"
+        ]
+      },
+      "graphite-dark-rail-muted": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · rail-muted",
+        "tonalRamp": [
+          "oklch(15% 0.0084 258.37)",
+          "oklch(26% 0.0176 258.37)",
+          "oklch(38% 0.0276 258.37)",
+          "oklch(49% 0.0293 258.37)",
+          "oklch(61% 0.0293 258.37)",
+          "oklch(72% 0.0273 258.37)",
+          "oklch(84% 0.0156 258.37)",
+          "oklch(95% 0.0049 258.37)"
+        ]
+      },
+      "graphite-dark-rail-active": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · rail-active",
+        "tonalRamp": [
+          "oklch(15% 0.0100 260.14)",
+          "oklch(26% 0.0209 260.14)",
+          "oklch(38% 0.0329 260.14)",
+          "oklch(49% 0.0349 260.14)",
+          "oklch(61% 0.0349 260.14)",
+          "oklch(72% 0.0325 260.14)",
+          "oklch(84% 0.0186 260.14)",
+          "oklch(95% 0.0058 260.14)"
+        ]
+      },
+      "graphite-dark-rail-hover": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · rail-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0081 259.11)",
+          "oklch(26% 0.0171 259.11)",
+          "oklch(38% 0.0268 259.11)",
+          "oklch(49% 0.0285 259.11)",
+          "oklch(61% 0.0285 259.11)",
+          "oklch(72% 0.0266 259.11)",
+          "oklch(84% 0.0152 259.11)",
+          "oklch(95% 0.0047 259.11)"
+        ]
+      },
+      "graphite-dark-rail-line": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · rail-line",
+        "tonalRamp": [
+          "oklch(15% 0.0088 259.72)",
+          "oklch(26% 0.0186 259.72)",
+          "oklch(38% 0.0292 259.72)",
+          "oklch(49% 0.0309 259.72)",
+          "oklch(61% 0.0309 259.72)",
+          "oklch(72% 0.0289 259.72)",
+          "oklch(84% 0.0165 259.72)",
+          "oklch(95% 0.0052 259.72)"
+        ]
+      },
+      "graphite-dark-surface": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · surface",
+        "tonalRamp": [
+          "oklch(15% 0.0059 260.59)",
+          "oklch(26% 0.0124 260.59)",
+          "oklch(38% 0.0195 260.59)",
+          "oklch(49% 0.0206 260.59)",
+          "oklch(61% 0.0206 260.59)",
+          "oklch(72% 0.0193 260.59)",
+          "oklch(84% 0.0110 260.59)",
+          "oklch(95% 0.0034 260.59)"
+        ]
+      },
+      "graphite-dark-surface-2": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · surface-2",
+        "tonalRamp": [
+          "oklch(15% 0.0068 261.16)",
+          "oklch(26% 0.0143 261.16)",
+          "oklch(38% 0.0225 261.16)",
+          "oklch(49% 0.0239 261.16)",
+          "oklch(61% 0.0239 261.16)",
+          "oklch(72% 0.0223 261.16)",
+          "oklch(84% 0.0127 261.16)",
+          "oklch(95% 0.0040 261.16)"
+        ]
+      },
+      "graphite-dark-line": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · line",
+        "tonalRamp": [
+          "oklch(15% 0.0092 259.00)",
+          "oklch(26% 0.0194 259.00)",
+          "oklch(38% 0.0305 259.00)",
+          "oklch(49% 0.0324 259.00)",
+          "oklch(61% 0.0324 259.00)",
+          "oklch(72% 0.0302 259.00)",
+          "oklch(84% 0.0173 259.00)",
+          "oklch(95% 0.0054 259.00)"
+        ]
+      },
+      "graphite-dark-ink": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · ink",
+        "tonalRamp": [
+          "oklch(15% 0.0034 259.82)",
+          "oklch(26% 0.0072 259.82)",
+          "oklch(38% 0.0114 259.82)",
+          "oklch(49% 0.0121 259.82)",
+          "oklch(61% 0.0121 259.82)",
+          "oklch(72% 0.0113 259.82)",
+          "oklch(84% 0.0064 259.82)",
+          "oklch(95% 0.0020 259.82)"
+        ]
+      },
+      "graphite-dark-muted": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · muted",
+        "tonalRamp": [
+          "oklch(15% 0.0084 258.37)",
+          "oklch(26% 0.0176 258.37)",
+          "oklch(38% 0.0276 258.37)",
+          "oklch(49% 0.0293 258.37)",
+          "oklch(61% 0.0293 258.37)",
+          "oklch(72% 0.0273 258.37)",
+          "oklch(84% 0.0156 258.37)",
+          "oklch(95% 0.0049 258.37)"
+        ]
+      },
+      "graphite-dark-subtle": {
+        "role": "neutral",
+        "displayName": "岩墨 · 深色 · subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0068 258.36)",
+          "oklch(26% 0.0142 258.36)",
+          "oklch(38% 0.0223 258.36)",
+          "oklch(49% 0.0236 258.36)",
+          "oklch(61% 0.0236 258.36)",
+          "oklch(72% 0.0221 258.36)",
+          "oklch(84% 0.0126 258.36)",
+          "oklch(95% 0.0039 258.36)"
+        ]
+      },
+      "graphite-dark-accent": {
+        "role": "primary",
+        "displayName": "岩墨 · 深色 · accent",
+        "tonalRamp": [
+          "oklch(15% 0.0152 260.03)",
+          "oklch(26% 0.0319 260.03)",
+          "oklch(38% 0.0502 260.03)",
+          "oklch(49% 0.0532 260.03)",
+          "oklch(61% 0.0532 260.03)",
+          "oklch(72% 0.0497 260.03)",
+          "oklch(84% 0.0284 260.03)",
+          "oklch(95% 0.0089 260.03)"
+        ]
+      },
+      "graphite-dark-accent-hover": {
+        "role": "primary",
+        "displayName": "岩墨 · 深色 · accent-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0114 260.14)",
+          "oklch(26% 0.0240 260.14)",
+          "oklch(38% 0.0378 260.14)",
+          "oklch(49% 0.0401 260.14)",
+          "oklch(61% 0.0401 260.14)",
+          "oklch(72% 0.0374 260.14)",
+          "oklch(84% 0.0214 260.14)",
+          "oklch(95% 0.0067 260.14)"
+        ]
+      },
+      "graphite-dark-on-accent": {
+        "role": "primary",
+        "displayName": "岩墨 · 深色 · on-accent",
+        "tonalRamp": [
+          "oklch(15% 0.0145 259.05)",
+          "oklch(26% 0.0304 259.05)",
+          "oklch(38% 0.0477 259.05)",
+          "oklch(49% 0.0506 259.05)",
+          "oklch(61% 0.0506 259.05)",
+          "oklch(72% 0.0473 259.05)",
+          "oklch(84% 0.0270 259.05)",
+          "oklch(95% 0.0084 259.05)"
+        ]
+      },
+      "graphite-dark-accent-soft": {
+        "role": "primary",
+        "displayName": "岩墨 · 深色 · accent-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0126 260.14)",
+          "oklch(26% 0.0265 260.14)",
+          "oklch(38% 0.0416 260.14)",
+          "oklch(49% 0.0441 260.14)",
+          "oklch(61% 0.0441 260.14)",
+          "oklch(72% 0.0412 260.14)",
+          "oklch(84% 0.0235 260.14)",
+          "oklch(95% 0.0074 260.14)"
+        ]
+      },
+      "graphite-dark-focus": {
+        "role": "primary",
+        "displayName": "岩墨 · 深色 · focus",
+        "tonalRamp": [
+          "oklch(15% 0.0152 260.03)",
+          "oklch(26% 0.0319 260.03)",
+          "oklch(38% 0.0502 260.03)",
+          "oklch(49% 0.0532 260.03)",
+          "oklch(61% 0.0532 260.03)",
+          "oklch(72% 0.0497 260.03)",
+          "oklch(84% 0.0284 260.03)",
+          "oklch(95% 0.0089 260.03)"
+        ]
+      },
+      "ocean-dark-canvas": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · canvas",
+        "tonalRamp": [
+          "oklch(15% 0.0068 243.78)",
+          "oklch(26% 0.0142 243.78)",
+          "oklch(38% 0.0223 243.78)",
+          "oklch(49% 0.0236 243.78)",
+          "oklch(61% 0.0236 243.78)",
+          "oklch(72% 0.0221 243.78)",
+          "oklch(84% 0.0126 243.78)",
+          "oklch(95% 0.0039 243.78)"
+        ]
+      },
+      "ocean-dark-rail": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · rail",
+        "tonalRamp": [
+          "oklch(15% 0.0066 246.30)",
+          "oklch(26% 0.0138 246.30)",
+          "oklch(38% 0.0218 246.30)",
+          "oklch(49% 0.0231 246.30)",
+          "oklch(61% 0.0231 246.30)",
+          "oklch(72% 0.0215 246.30)",
+          "oklch(84% 0.0123 246.30)",
+          "oklch(95% 0.0038 246.30)"
+        ]
+      },
+      "ocean-dark-rail-ink": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · rail-ink",
+        "tonalRamp": [
+          "oklch(15% 0.0050 234.51)",
+          "oklch(26% 0.0106 234.51)",
+          "oklch(38% 0.0166 234.51)",
+          "oklch(49% 0.0176 234.51)",
+          "oklch(61% 0.0176 234.51)",
+          "oklch(72% 0.0164 234.51)",
+          "oklch(84% 0.0094 234.51)",
+          "oklch(95% 0.0029 234.51)"
+        ]
+      },
+      "ocean-dark-rail-muted": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · rail-muted",
+        "tonalRamp": [
+          "oklch(15% 0.0103 238.83)",
+          "oklch(26% 0.0216 238.83)",
+          "oklch(38% 0.0339 238.83)",
+          "oklch(49% 0.0359 238.83)",
+          "oklch(61% 0.0359 238.83)",
+          "oklch(72% 0.0335 238.83)",
+          "oklch(84% 0.0192 238.83)",
+          "oklch(95% 0.0060 238.83)"
+        ]
+      },
+      "ocean-dark-rail-active": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · rail-active",
+        "tonalRamp": [
+          "oklch(15% 0.0128 240.00)",
+          "oklch(26% 0.0269 240.00)",
+          "oklch(38% 0.0423 240.00)",
+          "oklch(49% 0.0449 240.00)",
+          "oklch(61% 0.0449 240.00)",
+          "oklch(72% 0.0419 240.00)",
+          "oklch(84% 0.0239 240.00)",
+          "oklch(95% 0.0075 240.00)"
+        ]
+      },
+      "ocean-dark-rail-hover": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · rail-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0111 243.69)",
+          "oklch(26% 0.0234 243.69)",
+          "oklch(38% 0.0367 243.69)",
+          "oklch(49% 0.0389 243.69)",
+          "oklch(61% 0.0389 243.69)",
+          "oklch(72% 0.0363 243.69)",
+          "oklch(84% 0.0208 243.69)",
+          "oklch(95% 0.0065 243.69)"
+        ]
+      },
+      "ocean-dark-rail-line": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · rail-line",
+        "tonalRamp": [
+          "oklch(15% 0.0119 240.18)",
+          "oklch(26% 0.0251 240.18)",
+          "oklch(38% 0.0394 240.18)",
+          "oklch(49% 0.0418 240.18)",
+          "oklch(61% 0.0418 240.18)",
+          "oklch(72% 0.0390 240.18)",
+          "oklch(84% 0.0223 240.18)",
+          "oklch(95% 0.0070 240.18)"
+        ]
+      },
+      "ocean-dark-surface": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · surface",
+        "tonalRamp": [
+          "oklch(15% 0.0086 243.30)",
+          "oklch(26% 0.0181 243.30)",
+          "oklch(38% 0.0285 243.30)",
+          "oklch(49% 0.0302 243.30)",
+          "oklch(61% 0.0302 243.30)",
+          "oklch(72% 0.0282 243.30)",
+          "oklch(84% 0.0161 243.30)",
+          "oklch(95% 0.0050 243.30)"
+        ]
+      },
+      "ocean-dark-surface-2": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · surface-2",
+        "tonalRamp": [
+          "oklch(15% 0.0095 240.50)",
+          "oklch(26% 0.0199 240.50)",
+          "oklch(38% 0.0312 240.50)",
+          "oklch(49% 0.0331 240.50)",
+          "oklch(61% 0.0331 240.50)",
+          "oklch(72% 0.0309 240.50)",
+          "oklch(84% 0.0177 240.50)",
+          "oklch(95% 0.0055 240.50)"
+        ]
+      },
+      "ocean-dark-line": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · line",
+        "tonalRamp": [
+          "oklch(15% 0.0112 236.53)",
+          "oklch(26% 0.0234 236.53)",
+          "oklch(38% 0.0368 236.53)",
+          "oklch(49% 0.0390 236.53)",
+          "oklch(61% 0.0390 236.53)",
+          "oklch(72% 0.0364 236.53)",
+          "oklch(84% 0.0208 236.53)",
+          "oklch(95% 0.0065 236.53)"
+        ]
+      },
+      "ocean-dark-ink": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · ink",
+        "tonalRamp": [
+          "oklch(15% 0.0050 234.51)",
+          "oklch(26% 0.0106 234.51)",
+          "oklch(38% 0.0166 234.51)",
+          "oklch(49% 0.0176 234.51)",
+          "oklch(61% 0.0176 234.51)",
+          "oklch(72% 0.0164 234.51)",
+          "oklch(84% 0.0094 234.51)",
+          "oklch(95% 0.0029 234.51)"
+        ]
+      },
+      "ocean-dark-muted": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · muted",
+        "tonalRamp": [
+          "oklch(15% 0.0103 238.83)",
+          "oklch(26% 0.0216 238.83)",
+          "oklch(38% 0.0339 238.83)",
+          "oklch(49% 0.0359 238.83)",
+          "oklch(61% 0.0359 238.83)",
+          "oklch(72% 0.0335 238.83)",
+          "oklch(84% 0.0192 238.83)",
+          "oklch(95% 0.0060 238.83)"
+        ]
+      },
+      "ocean-dark-subtle": {
+        "role": "neutral",
+        "displayName": "海盐 · 深色 · subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0093 236.41)",
+          "oklch(26% 0.0195 236.41)",
+          "oklch(38% 0.0306 236.41)",
+          "oklch(49% 0.0325 236.41)",
+          "oklch(61% 0.0325 236.41)",
+          "oklch(72% 0.0303 236.41)",
+          "oklch(84% 0.0173 236.41)",
+          "oklch(95% 0.0054 236.41)"
+        ]
+      },
+      "ocean-dark-accent": {
+        "role": "primary",
+        "displayName": "海盐 · 深色 · accent",
+        "tonalRamp": [
+          "oklch(15% 0.0233 238.50)",
+          "oklch(26% 0.0489 238.50)",
+          "oklch(38% 0.0768 238.50)",
+          "oklch(49% 0.0815 238.50)",
+          "oklch(61% 0.0815 238.50)",
+          "oklch(72% 0.0760 238.50)",
+          "oklch(84% 0.0434 238.50)",
+          "oklch(95% 0.0136 238.50)"
+        ]
+      },
+      "ocean-dark-accent-hover": {
+        "role": "primary",
+        "displayName": "海盐 · 深色 · accent-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0168 237.55)",
+          "oklch(26% 0.0353 237.55)",
+          "oklch(38% 0.0555 237.55)",
+          "oklch(49% 0.0588 237.55)",
+          "oklch(61% 0.0588 237.55)",
+          "oklch(72% 0.0549 237.55)",
+          "oklch(84% 0.0314 237.55)",
+          "oklch(95% 0.0098 237.55)"
+        ]
+      },
+      "ocean-dark-on-accent": {
+        "role": "primary",
+        "displayName": "海盐 · 深色 · on-accent",
+        "tonalRamp": [
+          "oklch(15% 0.0154 242.18)",
+          "oklch(26% 0.0324 242.18)",
+          "oklch(38% 0.0509 242.18)",
+          "oklch(49% 0.0540 242.18)",
+          "oklch(61% 0.0540 242.18)",
+          "oklch(72% 0.0504 242.18)",
+          "oklch(84% 0.0288 242.18)",
+          "oklch(95% 0.0090 242.18)"
+        ]
+      },
+      "ocean-dark-accent-soft": {
+        "role": "primary",
+        "displayName": "海盐 · 深色 · accent-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0145 241.59)",
+          "oklch(26% 0.0304 241.59)",
+          "oklch(38% 0.0478 241.59)",
+          "oklch(49% 0.0507 241.59)",
+          "oklch(61% 0.0507 241.59)",
+          "oklch(72% 0.0473 241.59)",
+          "oklch(84% 0.0270 241.59)",
+          "oklch(95% 0.0085 241.59)"
+        ]
+      },
+      "ocean-dark-focus": {
+        "role": "primary",
+        "displayName": "海盐 · 深色 · focus",
+        "tonalRamp": [
+          "oklch(15% 0.0233 238.50)",
+          "oklch(26% 0.0489 238.50)",
+          "oklch(38% 0.0768 238.50)",
+          "oklch(49% 0.0815 238.50)",
+          "oklch(61% 0.0815 238.50)",
+          "oklch(72% 0.0760 238.50)",
+          "oklch(84% 0.0434 238.50)",
+          "oklch(95% 0.0136 238.50)"
+        ]
+      },
+      "sage-dark-canvas": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · canvas",
+        "tonalRamp": [
+          "oklch(15% 0.0043 166.18)",
+          "oklch(26% 0.0091 166.18)",
+          "oklch(38% 0.0142 166.18)",
+          "oklch(49% 0.0151 166.18)",
+          "oklch(61% 0.0151 166.18)",
+          "oklch(72% 0.0141 166.18)",
+          "oklch(84% 0.0080 166.18)",
+          "oklch(95% 0.0025 166.18)"
+        ]
+      },
+      "sage-dark-rail": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · rail",
+        "tonalRamp": [
+          "oklch(15% 0.0044 165.97)",
+          "oklch(26% 0.0092 165.97)",
+          "oklch(38% 0.0144 165.97)",
+          "oklch(49% 0.0153 165.97)",
+          "oklch(61% 0.0153 165.97)",
+          "oklch(72% 0.0143 165.97)",
+          "oklch(84% 0.0082 165.97)",
+          "oklch(95% 0.0026 165.97)"
+        ]
+      },
+      "sage-dark-rail-ink": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · rail-ink",
+        "tonalRamp": [
+          "oklch(15% 0.0040 155.58)",
+          "oklch(26% 0.0085 155.58)",
+          "oklch(38% 0.0133 155.58)",
+          "oklch(49% 0.0141 155.58)",
+          "oklch(61% 0.0141 155.58)",
+          "oklch(72% 0.0132 155.58)",
+          "oklch(84% 0.0075 155.58)",
+          "oklch(95% 0.0024 155.58)"
+        ]
+      },
+      "sage-dark-rail-muted": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · rail-muted",
+        "tonalRamp": [
+          "oklch(15% 0.0092 155.78)",
+          "oklch(26% 0.0192 155.78)",
+          "oklch(38% 0.0302 155.78)",
+          "oklch(49% 0.0320 155.78)",
+          "oklch(61% 0.0320 155.78)",
+          "oklch(72% 0.0299 155.78)",
+          "oklch(84% 0.0171 155.78)",
+          "oklch(95% 0.0053 155.78)"
+        ]
+      },
+      "sage-dark-rail-active": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · rail-active",
+        "tonalRamp": [
+          "oklch(15% 0.0108 157.13)",
+          "oklch(26% 0.0227 157.13)",
+          "oklch(38% 0.0356 157.13)",
+          "oklch(49% 0.0378 157.13)",
+          "oklch(61% 0.0378 157.13)",
+          "oklch(72% 0.0352 157.13)",
+          "oklch(84% 0.0201 157.13)",
+          "oklch(95% 0.0063 157.13)"
+        ]
+      },
+      "sage-dark-rail-hover": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · rail-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0090 158.58)",
+          "oklch(26% 0.0189 158.58)",
+          "oklch(38% 0.0298 158.58)",
+          "oklch(49% 0.0316 158.58)",
+          "oklch(61% 0.0316 158.58)",
+          "oklch(72% 0.0295 158.58)",
+          "oklch(84% 0.0168 158.58)",
+          "oklch(95% 0.0053 158.58)"
+        ]
+      },
+      "sage-dark-rail-line": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · rail-line",
+        "tonalRamp": [
+          "oklch(15% 0.0106 157.45)",
+          "oklch(26% 0.0223 157.45)",
+          "oklch(38% 0.0350 157.45)",
+          "oklch(49% 0.0371 157.45)",
+          "oklch(61% 0.0371 157.45)",
+          "oklch(72% 0.0346 157.45)",
+          "oklch(84% 0.0198 157.45)",
+          "oklch(95% 0.0062 157.45)"
+        ]
+      },
+      "sage-dark-surface": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · surface",
+        "tonalRamp": [
+          "oklch(15% 0.0066 157.55)",
+          "oklch(26% 0.0138 157.55)",
+          "oklch(38% 0.0217 157.55)",
+          "oklch(49% 0.0230 157.55)",
+          "oklch(61% 0.0230 157.55)",
+          "oklch(72% 0.0215 157.55)",
+          "oklch(84% 0.0123 157.55)",
+          "oklch(95% 0.0038 157.55)"
+        ]
+      },
+      "sage-dark-surface-2": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · surface-2",
+        "tonalRamp": [
+          "oklch(15% 0.0076 155.44)",
+          "oklch(26% 0.0160 155.44)",
+          "oklch(38% 0.0251 155.44)",
+          "oklch(49% 0.0266 155.44)",
+          "oklch(61% 0.0266 155.44)",
+          "oklch(72% 0.0248 155.44)",
+          "oklch(84% 0.0142 155.44)",
+          "oklch(95% 0.0044 155.44)"
+        ]
+      },
+      "sage-dark-line": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · line",
+        "tonalRamp": [
+          "oklch(15% 0.0106 154.68)",
+          "oklch(26% 0.0222 154.68)",
+          "oklch(38% 0.0349 154.68)",
+          "oklch(49% 0.0370 154.68)",
+          "oklch(61% 0.0370 154.68)",
+          "oklch(72% 0.0345 154.68)",
+          "oklch(84% 0.0197 154.68)",
+          "oklch(95% 0.0062 154.68)"
+        ]
+      },
+      "sage-dark-ink": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · ink",
+        "tonalRamp": [
+          "oklch(15% 0.0040 155.58)",
+          "oklch(26% 0.0085 155.58)",
+          "oklch(38% 0.0133 155.58)",
+          "oklch(49% 0.0141 155.58)",
+          "oklch(61% 0.0141 155.58)",
+          "oklch(72% 0.0132 155.58)",
+          "oklch(84% 0.0075 155.58)",
+          "oklch(95% 0.0024 155.58)"
+        ]
+      },
+      "sage-dark-muted": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · muted",
+        "tonalRamp": [
+          "oklch(15% 0.0092 155.78)",
+          "oklch(26% 0.0192 155.78)",
+          "oklch(38% 0.0302 155.78)",
+          "oklch(49% 0.0320 155.78)",
+          "oklch(61% 0.0320 155.78)",
+          "oklch(72% 0.0299 155.78)",
+          "oklch(84% 0.0171 155.78)",
+          "oklch(95% 0.0053 155.78)"
+        ]
+      },
+      "sage-dark-subtle": {
+        "role": "neutral",
+        "displayName": "松雾 · 深色 · subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0070 155.07)",
+          "oklch(26% 0.0148 155.07)",
+          "oklch(38% 0.0232 155.07)",
+          "oklch(49% 0.0247 155.07)",
+          "oklch(61% 0.0247 155.07)",
+          "oklch(72% 0.0230 155.07)",
+          "oklch(84% 0.0131 155.07)",
+          "oklch(95% 0.0041 155.07)"
+        ]
+      },
+      "sage-dark-accent": {
+        "role": "primary",
+        "displayName": "松雾 · 深色 · accent",
+        "tonalRamp": [
+          "oklch(15% 0.0190 154.92)",
+          "oklch(26% 0.0400 154.92)",
+          "oklch(38% 0.0628 154.92)",
+          "oklch(49% 0.0666 154.92)",
+          "oklch(61% 0.0666 154.92)",
+          "oklch(72% 0.0622 154.92)",
+          "oklch(84% 0.0355 154.92)",
+          "oklch(95% 0.0111 154.92)"
+        ]
+      },
+      "sage-dark-accent-hover": {
+        "role": "primary",
+        "displayName": "松雾 · 深色 · accent-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0158 154.90)",
+          "oklch(26% 0.0331 154.90)",
+          "oklch(38% 0.0520 154.90)",
+          "oklch(49% 0.0552 154.90)",
+          "oklch(61% 0.0552 154.90)",
+          "oklch(72% 0.0515 154.90)",
+          "oklch(84% 0.0294 154.90)",
+          "oklch(95% 0.0092 154.90)"
+        ]
+      },
+      "sage-dark-on-accent": {
+        "role": "primary",
+        "displayName": "松雾 · 深色 · on-accent",
+        "tonalRamp": [
+          "oklch(15% 0.0140 154.12)",
+          "oklch(26% 0.0293 154.12)",
+          "oklch(38% 0.0461 154.12)",
+          "oklch(49% 0.0489 154.12)",
+          "oklch(61% 0.0489 154.12)",
+          "oklch(72% 0.0456 154.12)",
+          "oklch(84% 0.0261 154.12)",
+          "oklch(95% 0.0081 154.12)"
+        ]
+      },
+      "sage-dark-accent-soft": {
+        "role": "primary",
+        "displayName": "松雾 · 深色 · accent-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0127 153.58)",
+          "oklch(26% 0.0267 153.58)",
+          "oklch(38% 0.0419 153.58)",
+          "oklch(49% 0.0445 153.58)",
+          "oklch(61% 0.0445 153.58)",
+          "oklch(72% 0.0415 153.58)",
+          "oklch(84% 0.0237 153.58)",
+          "oklch(95% 0.0074 153.58)"
+        ]
+      },
+      "sage-dark-focus": {
+        "role": "primary",
+        "displayName": "松雾 · 深色 · focus",
+        "tonalRamp": [
+          "oklch(15% 0.0190 154.92)",
+          "oklch(26% 0.0400 154.92)",
+          "oklch(38% 0.0628 154.92)",
+          "oklch(49% 0.0666 154.92)",
+          "oklch(61% 0.0666 154.92)",
+          "oklch(72% 0.0622 154.92)",
+          "oklch(84% 0.0355 154.92)",
+          "oklch(95% 0.0111 154.92)"
+        ]
+      },
+      "sand-dark-canvas": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · canvas",
+        "tonalRamp": [
+          "oklch(15% 0.0034 55.73)",
+          "oklch(26% 0.0072 55.73)",
+          "oklch(38% 0.0113 55.73)",
+          "oklch(49% 0.0120 55.73)",
+          "oklch(61% 0.0120 55.73)",
+          "oklch(72% 0.0112 55.73)",
+          "oklch(84% 0.0064 55.73)",
+          "oklch(95% 0.0020 55.73)"
+        ]
+      },
+      "sand-dark-rail": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · rail",
+        "tonalRamp": [
+          "oklch(15% 0.0028 52.93)",
+          "oklch(26% 0.0059 52.93)",
+          "oklch(38% 0.0093 52.93)",
+          "oklch(49% 0.0099 52.93)",
+          "oklch(61% 0.0099 52.93)",
+          "oklch(72% 0.0092 52.93)",
+          "oklch(84% 0.0053 52.93)",
+          "oklch(95% 0.0016 52.93)"
+        ]
+      },
+      "sand-dark-rail-ink": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · rail-ink",
+        "tonalRamp": [
+          "oklch(15% 0.0052 70.23)",
+          "oklch(26% 0.0110 70.23)",
+          "oklch(38% 0.0173 70.23)",
+          "oklch(49% 0.0183 70.23)",
+          "oklch(61% 0.0183 70.23)",
+          "oklch(72% 0.0171 70.23)",
+          "oklch(84% 0.0098 70.23)",
+          "oklch(95% 0.0031 70.23)"
+        ]
+      },
+      "sand-dark-rail-muted": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · rail-muted",
+        "tonalRamp": [
+          "oklch(15% 0.0092 64.16)",
+          "oklch(26% 0.0194 64.16)",
+          "oklch(38% 0.0305 64.16)",
+          "oklch(49% 0.0323 64.16)",
+          "oklch(61% 0.0323 64.16)",
+          "oklch(72% 0.0302 64.16)",
+          "oklch(84% 0.0172 64.16)",
+          "oklch(95% 0.0054 64.16)"
+        ]
+      },
+      "sand-dark-rail-active": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · rail-active",
+        "tonalRamp": [
+          "oklch(15% 0.0093 55.10)",
+          "oklch(26% 0.0196 55.10)",
+          "oklch(38% 0.0308 55.10)",
+          "oklch(49% 0.0326 55.10)",
+          "oklch(61% 0.0326 55.10)",
+          "oklch(72% 0.0304 55.10)",
+          "oklch(84% 0.0174 55.10)",
+          "oklch(95% 0.0054 55.10)"
+        ]
+      },
+      "sand-dark-rail-hover": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · rail-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0070 56.35)",
+          "oklch(26% 0.0148 56.35)",
+          "oklch(38% 0.0232 56.35)",
+          "oklch(49% 0.0246 56.35)",
+          "oklch(61% 0.0246 56.35)",
+          "oklch(72% 0.0230 56.35)",
+          "oklch(84% 0.0131 56.35)",
+          "oklch(95% 0.0041 56.35)"
+        ]
+      },
+      "sand-dark-rail-line": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · rail-line",
+        "tonalRamp": [
+          "oklch(15% 0.0091 62.87)",
+          "oklch(26% 0.0190 62.87)",
+          "oklch(38% 0.0299 62.87)",
+          "oklch(49% 0.0317 62.87)",
+          "oklch(61% 0.0317 62.87)",
+          "oklch(72% 0.0296 62.87)",
+          "oklch(84% 0.0169 62.87)",
+          "oklch(95% 0.0053 62.87)"
+        ]
+      },
+      "sand-dark-surface": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · surface",
+        "tonalRamp": [
+          "oklch(15% 0.0056 63.53)",
+          "oklch(26% 0.0117 63.53)",
+          "oklch(38% 0.0184 63.53)",
+          "oklch(49% 0.0196 63.53)",
+          "oklch(61% 0.0196 63.53)",
+          "oklch(72% 0.0182 63.53)",
+          "oklch(84% 0.0104 63.53)",
+          "oklch(95% 0.0033 63.53)"
+        ]
+      },
+      "sand-dark-surface-2": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · surface-2",
+        "tonalRamp": [
+          "oklch(15% 0.0067 64.11)",
+          "oklch(26% 0.0140 64.11)",
+          "oklch(38% 0.0221 64.11)",
+          "oklch(49% 0.0234 64.11)",
+          "oklch(61% 0.0234 64.11)",
+          "oklch(72% 0.0218 64.11)",
+          "oklch(84% 0.0125 64.11)",
+          "oklch(95% 0.0039 64.11)"
+        ]
+      },
+      "sand-dark-line": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · line",
+        "tonalRamp": [
+          "oklch(15% 0.0090 66.74)",
+          "oklch(26% 0.0189 66.74)",
+          "oklch(38% 0.0297 66.74)",
+          "oklch(49% 0.0315 66.74)",
+          "oklch(61% 0.0315 66.74)",
+          "oklch(72% 0.0294 66.74)",
+          "oklch(84% 0.0168 66.74)",
+          "oklch(95% 0.0053 66.74)"
+        ]
+      },
+      "sand-dark-ink": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · ink",
+        "tonalRamp": [
+          "oklch(15% 0.0052 70.23)",
+          "oklch(26% 0.0110 70.23)",
+          "oklch(38% 0.0173 70.23)",
+          "oklch(49% 0.0183 70.23)",
+          "oklch(61% 0.0183 70.23)",
+          "oklch(72% 0.0171 70.23)",
+          "oklch(84% 0.0098 70.23)",
+          "oklch(95% 0.0031 70.23)"
+        ]
+      },
+      "sand-dark-muted": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · muted",
+        "tonalRamp": [
+          "oklch(15% 0.0092 64.16)",
+          "oklch(26% 0.0194 64.16)",
+          "oklch(38% 0.0305 64.16)",
+          "oklch(49% 0.0323 64.16)",
+          "oklch(61% 0.0323 64.16)",
+          "oklch(72% 0.0302 64.16)",
+          "oklch(84% 0.0172 64.16)",
+          "oklch(95% 0.0054 64.16)"
+        ]
+      },
+      "sand-dark-subtle": {
+        "role": "neutral",
+        "displayName": "暖砂 · 深色 · subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0076 67.46)",
+          "oklch(26% 0.0159 67.46)",
+          "oklch(38% 0.0249 67.46)",
+          "oklch(49% 0.0265 67.46)",
+          "oklch(61% 0.0265 67.46)",
+          "oklch(72% 0.0247 67.46)",
+          "oklch(84% 0.0141 67.46)",
+          "oklch(95% 0.0044 67.46)"
+        ]
+      },
+      "sand-dark-accent": {
+        "role": "primary",
+        "displayName": "暖砂 · 深色 · accent",
+        "tonalRamp": [
+          "oklch(15% 0.0214 51.65)",
+          "oklch(26% 0.0450 51.65)",
+          "oklch(38% 0.0707 51.65)",
+          "oklch(49% 0.0750 51.65)",
+          "oklch(61% 0.0750 51.65)",
+          "oklch(72% 0.0700 51.65)",
+          "oklch(84% 0.0400 51.65)",
+          "oklch(95% 0.0125 51.65)"
+        ]
+      },
+      "sand-dark-accent-hover": {
+        "role": "primary",
+        "displayName": "暖砂 · 深色 · accent-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0163 52.03)",
+          "oklch(26% 0.0341 52.03)",
+          "oklch(38% 0.0536 52.03)",
+          "oklch(49% 0.0569 52.03)",
+          "oklch(61% 0.0569 52.03)",
+          "oklch(72% 0.0531 52.03)",
+          "oklch(84% 0.0303 52.03)",
+          "oklch(95% 0.0095 52.03)"
+        ]
+      },
+      "sand-dark-on-accent": {
+        "role": "primary",
+        "displayName": "暖砂 · 深色 · on-accent",
+        "tonalRamp": [
+          "oklch(15% 0.0132 46.30)",
+          "oklch(26% 0.0277 46.30)",
+          "oklch(38% 0.0435 46.30)",
+          "oklch(49% 0.0461 46.30)",
+          "oklch(61% 0.0461 46.30)",
+          "oklch(72% 0.0430 46.30)",
+          "oklch(84% 0.0246 46.30)",
+          "oklch(95% 0.0077 46.30)"
+        ]
+      },
+      "sand-dark-accent-soft": {
+        "role": "primary",
+        "displayName": "暖砂 · 深色 · accent-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0118 51.27)",
+          "oklch(26% 0.0248 51.27)",
+          "oklch(38% 0.0390 51.27)",
+          "oklch(49% 0.0414 51.27)",
+          "oklch(61% 0.0414 51.27)",
+          "oklch(72% 0.0386 51.27)",
+          "oklch(84% 0.0221 51.27)",
+          "oklch(95% 0.0069 51.27)"
+        ]
+      },
+      "sand-dark-focus": {
+        "role": "primary",
+        "displayName": "暖砂 · 深色 · focus",
+        "tonalRamp": [
+          "oklch(15% 0.0214 51.65)",
+          "oklch(26% 0.0450 51.65)",
+          "oklch(38% 0.0707 51.65)",
+          "oklch(49% 0.0750 51.65)",
+          "oklch(61% 0.0750 51.65)",
+          "oklch(72% 0.0700 51.65)",
+          "oklch(84% 0.0400 51.65)",
+          "oklch(95% 0.0125 51.65)"
         ]
       },
       "blue": {
         "role": "secondary",
-        "displayName": "blue",
+        "displayName": "共享浅色 · blue",
         "tonalRamp": [
-          "oklch(15% 0.0268 253.31)",
+          "oklch(15% 0.0255 253.31)",
           "oklch(26% 0.0536 253.31)",
-          "oklch(37% 0.0760 253.31)",
-          "oklch(48% 0.0894 253.31)",
-          "oklch(60% 0.0894 253.31)",
-          "oklch(72% 0.0760 253.31)",
-          "oklch(84% 0.0492 253.31)",
-          "oklch(95% 0.0179 253.31)"
+          "oklch(38% 0.0843 253.31)",
+          "oklch(49% 0.0894 253.31)",
+          "oklch(61% 0.0894 253.31)",
+          "oklch(72% 0.0834 253.31)",
+          "oklch(84% 0.0477 253.31)",
+          "oklch(95% 0.0149 253.31)"
         ]
       },
       "blue-soft": {
         "role": "secondary",
-        "displayName": "blue-soft",
+        "displayName": "共享浅色 · blue-soft",
         "tonalRamp": [
-          "oklch(15% 0.0038 255.51)",
+          "oklch(15% 0.0036 255.51)",
           "oklch(26% 0.0075 255.51)",
-          "oklch(37% 0.0107 255.51)",
-          "oklch(48% 0.0125 255.51)",
-          "oklch(60% 0.0125 255.51)",
-          "oklch(72% 0.0107 255.51)",
-          "oklch(84% 0.0069 255.51)",
-          "oklch(95% 0.0025 255.51)"
+          "oklch(38% 0.0118 255.51)",
+          "oklch(49% 0.0125 255.51)",
+          "oklch(61% 0.0125 255.51)",
+          "oklch(72% 0.0117 255.51)",
+          "oklch(84% 0.0067 255.51)",
+          "oklch(95% 0.0021 255.51)"
         ]
       },
       "violet": {
         "role": "secondary",
-        "displayName": "violet",
+        "displayName": "共享浅色 · violet",
         "tonalRamp": [
-          "oklch(15% 0.0310 307.21)",
+          "oklch(15% 0.0295 307.21)",
           "oklch(26% 0.0620 307.21)",
-          "oklch(37% 0.0878 307.21)",
-          "oklch(48% 0.1033 307.21)",
-          "oklch(60% 0.1033 307.21)",
-          "oklch(72% 0.0878 307.21)",
-          "oklch(84% 0.0568 307.21)",
-          "oklch(95% 0.0207 307.21)"
+          "oklch(38% 0.0974 307.21)",
+          "oklch(49% 0.1033 307.21)",
+          "oklch(61% 0.1033 307.21)",
+          "oklch(72% 0.0964 307.21)",
+          "oklch(84% 0.0551 307.21)",
+          "oklch(95% 0.0172 307.21)"
         ]
       },
       "violet-soft": {
         "role": "secondary",
-        "displayName": "violet-soft",
+        "displayName": "共享浅色 · violet-soft",
         "tonalRamp": [
-          "oklch(15% 0.0052 308.26)",
+          "oklch(15% 0.0049 308.26)",
           "oklch(26% 0.0103 308.26)",
-          "oklch(37% 0.0146 308.26)",
-          "oklch(48% 0.0172 308.26)",
-          "oklch(60% 0.0172 308.26)",
-          "oklch(72% 0.0146 308.26)",
-          "oklch(84% 0.0094 308.26)",
-          "oklch(95% 0.0034 308.26)"
+          "oklch(38% 0.0162 308.26)",
+          "oklch(49% 0.0172 308.26)",
+          "oklch(61% 0.0172 308.26)",
+          "oklch(72% 0.0160 308.26)",
+          "oklch(84% 0.0092 308.26)",
+          "oklch(95% 0.0029 308.26)"
         ]
       },
       "coral": {
         "role": "secondary",
-        "displayName": "coral",
+        "displayName": "共享浅色 · coral",
         "tonalRamp": [
-          "oklch(15% 0.0414 22.99)",
+          "oklch(15% 0.0395 22.99)",
           "oklch(26% 0.0828 22.99)",
-          "oklch(37% 0.1174 22.99)",
-          "oklch(48% 0.1381 22.99)",
-          "oklch(60% 0.1381 22.99)",
-          "oklch(72% 0.1174 22.99)",
-          "oklch(84% 0.0759 22.99)",
-          "oklch(95% 0.0276 22.99)"
+          "oklch(38% 0.1302 22.99)",
+          "oklch(49% 0.1381 22.99)",
+          "oklch(61% 0.1381 22.99)",
+          "oklch(72% 0.1289 22.99)",
+          "oklch(84% 0.0736 22.99)",
+          "oklch(95% 0.0230 22.99)"
         ]
       },
       "coral-soft": {
         "role": "secondary",
-        "displayName": "coral-soft",
+        "displayName": "共享浅色 · coral-soft",
         "tonalRamp": [
-          "oklch(15% 0.0046 27.28)",
+          "oklch(15% 0.0044 27.28)",
           "oklch(26% 0.0093 27.28)",
-          "oklch(37% 0.0131 27.28)",
-          "oklch(48% 0.0155 27.28)",
-          "oklch(60% 0.0155 27.28)",
-          "oklch(72% 0.0131 27.28)",
-          "oklch(84% 0.0085 27.28)",
-          "oklch(95% 0.0031 27.28)"
+          "oklch(38% 0.0146 27.28)",
+          "oklch(49% 0.0155 27.28)",
+          "oklch(61% 0.0155 27.28)",
+          "oklch(72% 0.0144 27.28)",
+          "oklch(84% 0.0082 27.28)",
+          "oklch(95% 0.0026 27.28)"
         ]
       },
       "gold": {
         "role": "secondary",
-        "displayName": "gold",
+        "displayName": "共享浅色 · gold",
         "tonalRamp": [
-          "oklch(15% 0.0273 77.10)",
+          "oklch(15% 0.0260 77.10)",
           "oklch(26% 0.0545 77.10)",
-          "oklch(37% 0.0772 77.10)",
-          "oklch(48% 0.0908 77.10)",
-          "oklch(60% 0.0908 77.10)",
-          "oklch(72% 0.0772 77.10)",
-          "oklch(84% 0.0500 77.10)",
-          "oklch(95% 0.0182 77.10)"
+          "oklch(38% 0.0856 77.10)",
+          "oklch(49% 0.0908 77.10)",
+          "oklch(61% 0.0908 77.10)",
+          "oklch(72% 0.0848 77.10)",
+          "oklch(84% 0.0484 77.10)",
+          "oklch(95% 0.0151 77.10)"
         ]
       },
       "gold-soft": {
         "role": "secondary",
-        "displayName": "gold-soft",
+        "displayName": "共享浅色 · gold-soft",
         "tonalRamp": [
-          "oklch(15% 0.0067 87.15)",
+          "oklch(15% 0.0064 87.15)",
           "oklch(26% 0.0135 87.15)",
-          "oklch(37% 0.0191 87.15)",
-          "oklch(48% 0.0224 87.15)",
-          "oklch(60% 0.0224 87.15)",
-          "oklch(72% 0.0191 87.15)",
-          "oklch(84% 0.0123 87.15)",
-          "oklch(95% 0.0045 87.15)"
-        ]
-      },
-      "focus": {
-        "role": "primary",
-        "displayName": "focus",
-        "tonalRamp": [
-          "oklch(15% 0.0257 161.64)",
-          "oklch(26% 0.0513 161.64)",
-          "oklch(37% 0.0727 161.64)",
-          "oklch(48% 0.0855 161.64)",
-          "oklch(60% 0.0855 161.64)",
-          "oklch(72% 0.0727 161.64)",
-          "oklch(84% 0.0470 161.64)",
-          "oklch(95% 0.0171 161.64)"
-        ]
-      },
-      "dark-canvas": {
-        "role": "neutral",
-        "displayName": "dark-canvas",
-        "tonalRamp": [
-          "oklch(15% 0.0077 164.93)",
-          "oklch(26% 0.0154 164.93)",
-          "oklch(37% 0.0219 164.93)",
-          "oklch(48% 0.0257 164.93)",
-          "oklch(60% 0.0257 164.93)",
-          "oklch(72% 0.0219 164.93)",
-          "oklch(84% 0.0142 164.93)",
-          "oklch(95% 0.0051 164.93)"
-        ]
-      },
-      "dark-rail": {
-        "role": "primary",
-        "displayName": "dark-rail",
-        "tonalRamp": [
-          "oklch(15% 0.0117 170.45)",
-          "oklch(26% 0.0235 170.45)",
-          "oklch(37% 0.0332 170.45)",
-          "oklch(48% 0.0391 170.45)",
-          "oklch(60% 0.0391 170.45)",
-          "oklch(72% 0.0332 170.45)",
-          "oklch(84% 0.0215 170.45)",
-          "oklch(95% 0.0078 170.45)"
-        ]
-      },
-      "dark-rail-active": {
-        "role": "primary",
-        "displayName": "dark-rail-active",
-        "tonalRamp": [
-          "oklch(15% 0.0161 163.98)",
-          "oklch(26% 0.0321 163.98)",
-          "oklch(37% 0.0455 163.98)",
-          "oklch(48% 0.0535 163.98)",
-          "oklch(60% 0.0535 163.98)",
-          "oklch(72% 0.0455 163.98)",
-          "oklch(84% 0.0294 163.98)",
-          "oklch(95% 0.0107 163.98)"
-        ]
-      },
-      "dark-surface": {
-        "role": "neutral",
-        "displayName": "dark-surface",
-        "tonalRamp": [
-          "oklch(15% 0.0102 160.40)",
-          "oklch(26% 0.0204 160.40)",
-          "oklch(37% 0.0288 160.40)",
-          "oklch(48% 0.0339 160.40)",
-          "oklch(60% 0.0339 160.40)",
-          "oklch(72% 0.0288 160.40)",
-          "oklch(84% 0.0187 160.40)",
-          "oklch(95% 0.0068 160.40)"
-        ]
-      },
-      "dark-surface-2": {
-        "role": "neutral",
-        "displayName": "dark-surface-2",
-        "tonalRamp": [
-          "oklch(15% 0.0109 160.68)",
-          "oklch(26% 0.0217 160.68)",
-          "oklch(37% 0.0308 160.68)",
-          "oklch(48% 0.0362 160.68)",
-          "oklch(60% 0.0362 160.68)",
-          "oklch(72% 0.0308 160.68)",
-          "oklch(84% 0.0199 160.68)",
-          "oklch(95% 0.0072 160.68)"
-        ]
-      },
-      "dark-line": {
-        "role": "neutral",
-        "displayName": "dark-line",
-        "tonalRamp": [
-          "oklch(15% 0.0121 158.72)",
-          "oklch(26% 0.0242 158.72)",
-          "oklch(37% 0.0343 158.72)",
-          "oklch(48% 0.0404 158.72)",
-          "oklch(60% 0.0404 158.72)",
-          "oklch(72% 0.0343 158.72)",
-          "oklch(84% 0.0222 158.72)",
-          "oklch(95% 0.0081 158.72)"
-        ]
-      },
-      "dark-ink": {
-        "role": "neutral",
-        "displayName": "dark-ink",
-        "tonalRamp": [
-          "oklch(15% 0.0040 152.60)",
-          "oklch(26% 0.0080 152.60)",
-          "oklch(37% 0.0113 152.60)",
-          "oklch(48% 0.0133 152.60)",
-          "oklch(60% 0.0133 152.60)",
-          "oklch(72% 0.0113 152.60)",
-          "oklch(84% 0.0073 152.60)",
-          "oklch(95% 0.0027 152.60)"
-        ]
-      },
-      "dark-muted": {
-        "role": "neutral",
-        "displayName": "dark-muted",
-        "tonalRamp": [
-          "oklch(15% 0.0086 153.74)",
-          "oklch(26% 0.0171 153.74)",
-          "oklch(37% 0.0243 153.74)",
-          "oklch(48% 0.0286 153.74)",
-          "oklch(60% 0.0286 153.74)",
-          "oklch(72% 0.0243 153.74)",
-          "oklch(84% 0.0157 153.74)",
-          "oklch(95% 0.0057 153.74)"
-        ]
-      },
-      "dark-subtle": {
-        "role": "neutral",
-        "displayName": "dark-subtle",
-        "tonalRamp": [
-          "oklch(15% 0.0072 153.39)",
-          "oklch(26% 0.0143 153.39)",
-          "oklch(37% 0.0203 153.39)",
-          "oklch(48% 0.0239 153.39)",
-          "oklch(60% 0.0239 153.39)",
-          "oklch(72% 0.0203 153.39)",
-          "oklch(84% 0.0131 153.39)",
-          "oklch(95% 0.0048 153.39)"
-        ]
-      },
-      "dark-accent": {
-        "role": "primary",
-        "displayName": "dark-accent",
-        "tonalRamp": [
-          "oklch(15% 0.0247 153.08)",
-          "oklch(26% 0.0493 153.08)",
-          "oklch(37% 0.0699 153.08)",
-          "oklch(48% 0.0822 153.08)",
-          "oklch(60% 0.0822 153.08)",
-          "oklch(72% 0.0699 153.08)",
-          "oklch(84% 0.0452 153.08)",
-          "oklch(95% 0.0164 153.08)"
-        ]
-      },
-      "dark-accent-hover": {
-        "role": "primary",
-        "displayName": "dark-accent-hover",
-        "tonalRamp": [
-          "oklch(15% 0.0207 153.19)",
-          "oklch(26% 0.0415 153.19)",
-          "oklch(37% 0.0588 153.19)",
-          "oklch(48% 0.0691 153.19)",
-          "oklch(60% 0.0691 153.19)",
-          "oklch(72% 0.0588 153.19)",
-          "oklch(84% 0.0380 153.19)",
-          "oklch(95% 0.0138 153.19)"
-        ]
-      },
-      "dark-on-accent": {
-        "role": "primary",
-        "displayName": "dark-on-accent",
-        "tonalRamp": [
-          "oklch(15% 0.0168 154.87)",
-          "oklch(26% 0.0335 154.87)",
-          "oklch(37% 0.0475 154.87)",
-          "oklch(48% 0.0559 154.87)",
-          "oklch(60% 0.0559 154.87)",
-          "oklch(72% 0.0475 154.87)",
-          "oklch(84% 0.0307 154.87)",
-          "oklch(95% 0.0112 154.87)"
-        ]
-      },
-      "dark-accent-soft": {
-        "role": "primary",
-        "displayName": "dark-accent-soft",
-        "tonalRamp": [
-          "oklch(15% 0.0157 154.39)",
-          "oklch(26% 0.0315 154.39)",
-          "oklch(37% 0.0446 154.39)",
-          "oklch(48% 0.0524 154.39)",
-          "oklch(60% 0.0524 154.39)",
-          "oklch(72% 0.0446 154.39)",
-          "oklch(84% 0.0288 154.39)",
-          "oklch(95% 0.0105 154.39)"
+          "oklch(38% 0.0212 87.15)",
+          "oklch(49% 0.0224 87.15)",
+          "oklch(61% 0.0224 87.15)",
+          "oklch(72% 0.0209 87.15)",
+          "oklch(84% 0.0120 87.15)",
+          "oklch(95% 0.0037 87.15)"
         ]
       },
       "dark-blue": {
         "role": "secondary",
-        "displayName": "dark-blue",
+        "displayName": "共享深色 · blue",
         "tonalRamp": [
-          "oklch(15% 0.0192 255.11)",
+          "oklch(15% 0.0183 255.11)",
           "oklch(26% 0.0384 255.11)",
-          "oklch(37% 0.0545 255.11)",
-          "oklch(48% 0.0641 255.11)",
-          "oklch(60% 0.0641 255.11)",
-          "oklch(72% 0.0545 255.11)",
-          "oklch(84% 0.0352 255.11)",
-          "oklch(95% 0.0128 255.11)"
+          "oklch(38% 0.0604 255.11)",
+          "oklch(49% 0.0641 255.11)",
+          "oklch(61% 0.0641 255.11)",
+          "oklch(72% 0.0598 255.11)",
+          "oklch(84% 0.0342 255.11)",
+          "oklch(95% 0.0107 255.11)"
         ]
       },
       "dark-blue-soft": {
         "role": "secondary",
-        "displayName": "dark-blue-soft",
+        "displayName": "共享深色 · blue-soft",
         "tonalRamp": [
-          "oklch(15% 0.0124 245.19)",
+          "oklch(15% 0.0118 245.19)",
           "oklch(26% 0.0247 245.19)",
-          "oklch(37% 0.0351 245.19)",
-          "oklch(48% 0.0412 245.19)",
-          "oklch(60% 0.0412 245.19)",
-          "oklch(72% 0.0351 245.19)",
-          "oklch(84% 0.0227 245.19)",
-          "oklch(95% 0.0082 245.19)"
+          "oklch(38% 0.0389 245.19)",
+          "oklch(49% 0.0412 245.19)",
+          "oklch(61% 0.0412 245.19)",
+          "oklch(72% 0.0385 245.19)",
+          "oklch(84% 0.0220 245.19)",
+          "oklch(95% 0.0069 245.19)"
         ]
       },
       "dark-violet": {
         "role": "secondary",
-        "displayName": "dark-violet",
+        "displayName": "共享深色 · violet",
         "tonalRamp": [
-          "oklch(15% 0.0229 305.74)",
+          "oklch(15% 0.0218 305.74)",
           "oklch(26% 0.0457 305.74)",
-          "oklch(37% 0.0648 305.74)",
-          "oklch(48% 0.0762 305.74)",
-          "oklch(60% 0.0762 305.74)",
-          "oklch(72% 0.0648 305.74)",
-          "oklch(84% 0.0419 305.74)",
-          "oklch(95% 0.0152 305.74)"
+          "oklch(38% 0.0719 305.74)",
+          "oklch(49% 0.0762 305.74)",
+          "oklch(61% 0.0762 305.74)",
+          "oklch(72% 0.0711 305.74)",
+          "oklch(84% 0.0407 305.74)",
+          "oklch(95% 0.0127 305.74)"
         ]
       },
       "dark-violet-soft": {
         "role": "secondary",
-        "displayName": "dark-violet-soft",
+        "displayName": "共享深色 · violet-soft",
         "tonalRamp": [
-          "oklch(15% 0.0150 309.32)",
+          "oklch(15% 0.0142 309.32)",
           "oklch(26% 0.0299 309.32)",
-          "oklch(37% 0.0424 309.32)",
-          "oklch(48% 0.0499 309.32)",
-          "oklch(60% 0.0499 309.32)",
-          "oklch(72% 0.0424 309.32)",
-          "oklch(84% 0.0274 309.32)",
-          "oklch(95% 0.0100 309.32)"
+          "oklch(38% 0.0470 309.32)",
+          "oklch(49% 0.0499 309.32)",
+          "oklch(61% 0.0499 309.32)",
+          "oklch(72% 0.0465 309.32)",
+          "oklch(84% 0.0266 309.32)",
+          "oklch(95% 0.0083 309.32)"
         ]
       },
       "dark-coral": {
         "role": "secondary",
-        "displayName": "dark-coral",
+        "displayName": "共享深色 · coral",
         "tonalRamp": [
-          "oklch(15% 0.0241 22.77)",
+          "oklch(15% 0.0230 22.77)",
           "oklch(26% 0.0483 22.77)",
-          "oklch(37% 0.0684 22.77)",
-          "oklch(48% 0.0805 22.77)",
-          "oklch(60% 0.0805 22.77)",
-          "oklch(72% 0.0684 22.77)",
-          "oklch(84% 0.0443 22.77)",
-          "oklch(95% 0.0161 22.77)"
+          "oklch(38% 0.0759 22.77)",
+          "oklch(49% 0.0805 22.77)",
+          "oklch(61% 0.0805 22.77)",
+          "oklch(72% 0.0751 22.77)",
+          "oklch(84% 0.0429 22.77)",
+          "oklch(95% 0.0134 22.77)"
         ]
       },
       "dark-coral-soft": {
         "role": "secondary",
-        "displayName": "dark-coral-soft",
+        "displayName": "共享深色 · coral-soft",
         "tonalRamp": [
-          "oklch(15% 0.0133 21.69)",
+          "oklch(15% 0.0126 21.69)",
           "oklch(26% 0.0265 21.69)",
-          "oklch(37% 0.0376 21.69)",
-          "oklch(48% 0.0442 21.69)",
-          "oklch(60% 0.0442 21.69)",
-          "oklch(72% 0.0376 21.69)",
-          "oklch(84% 0.0243 21.69)",
-          "oklch(95% 0.0088 21.69)"
+          "oklch(38% 0.0417 21.69)",
+          "oklch(49% 0.0442 21.69)",
+          "oklch(61% 0.0442 21.69)",
+          "oklch(72% 0.0413 21.69)",
+          "oklch(84% 0.0236 21.69)",
+          "oklch(95% 0.0074 21.69)"
         ]
       },
       "dark-gold": {
         "role": "secondary",
-        "displayName": "dark-gold",
+        "displayName": "共享深色 · gold",
         "tonalRamp": [
-          "oklch(15% 0.0249 83.83)",
+          "oklch(15% 0.0237 83.83)",
           "oklch(26% 0.0499 83.83)",
-          "oklch(37% 0.0707 83.83)",
-          "oklch(48% 0.0831 83.83)",
-          "oklch(60% 0.0831 83.83)",
-          "oklch(72% 0.0707 83.83)",
-          "oklch(84% 0.0457 83.83)",
-          "oklch(95% 0.0166 83.83)"
+          "oklch(38% 0.0784 83.83)",
+          "oklch(49% 0.0831 83.83)",
+          "oklch(61% 0.0831 83.83)",
+          "oklch(72% 0.0776 83.83)",
+          "oklch(84% 0.0443 83.83)",
+          "oklch(95% 0.0139 83.83)"
         ]
       },
       "dark-gold-soft": {
         "role": "secondary",
-        "displayName": "dark-gold-soft",
+        "displayName": "共享深色 · gold-soft",
         "tonalRamp": [
-          "oklch(15% 0.0107 87.37)",
+          "oklch(15% 0.0102 87.37)",
           "oklch(26% 0.0214 87.37)",
-          "oklch(37% 0.0303 87.37)",
-          "oklch(48% 0.0356 87.37)",
-          "oklch(60% 0.0356 87.37)",
-          "oklch(72% 0.0303 87.37)",
-          "oklch(84% 0.0196 87.37)",
-          "oklch(95% 0.0071 87.37)"
-        ]
-      },
-      "dark-focus": {
-        "role": "primary",
-        "displayName": "dark-focus",
-        "tonalRamp": [
-          "oklch(15% 0.0241 153.35)",
-          "oklch(26% 0.0482 153.35)",
-          "oklch(37% 0.0683 153.35)",
-          "oklch(48% 0.0803 153.35)",
-          "oklch(60% 0.0803 153.35)",
-          "oklch(72% 0.0683 153.35)",
-          "oklch(84% 0.0442 153.35)",
-          "oklch(95% 0.0161 153.35)"
+          "oklch(38% 0.0336 87.37)",
+          "oklch(49% 0.0356 87.37)",
+          "oklch(61% 0.0356 87.37)",
+          "oklch(72% 0.0332 87.37)",
+          "oklch(84% 0.0190 87.37)",
+          "oklch(95% 0.0059 87.37)"
         ]
       }
     },
@@ -698,22 +2294,22 @@
     "shadows": [
       {
         "name": "shadow-menu",
-        "value": "0 10px 30px rgb(21 47 34 / 0.13)",
+        "value": "0 10px 30px rgb(20 25 35 / 0.13)",
         "purpose": "浅色主题菜单与提示条。"
       },
       {
         "name": "shadow-dialog",
-        "value": "0 24px 80px rgb(10 30 20 / 0.24)",
+        "value": "0 24px 80px rgb(15 20 30 / 0.24)",
         "purpose": "浅色主题对话框与编辑面板。"
       },
       {
         "name": "dark-shadow-menu",
-        "value": "0 10px 30px rgb(0 12 5 / 0.3)",
+        "value": "0 10px 30px rgb(0 0 0 / 0.3)",
         "purpose": "深色主题菜单与提示条。"
       },
       {
         "name": "dark-shadow-dialog",
-        "value": "0 24px 80px rgb(0 10 5 / 0.5)",
+        "value": "0 24px 80px rgb(0 0 0 / 0.5)",
         "purpose": "深色主题对话框与编辑面板。"
       }
     ],
@@ -764,7 +2360,7 @@
       "refersTo": "button-primary",
       "description": "目录唯一主新建操作；表单主操作复用同一颜色。",
       "html": "<button class=\"ds-primary\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>新建入口</button>",
-      "css": ".ds-primary{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce5dd);border-radius:var(--radius-control, 8px);color:var(--subtle, #435c4f);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;min-height:40px;padding:9px 16px;border-color:transparent;color:var(--on-accent, #ffffff);background:var(--accent, #2c6b50);font-weight:600;}.ds-primary:hover{color:var(--on-accent, #ffffff);background:var(--accent-hover, #22583f);}.ds-primary:focus-visible{outline:2px solid var(--focus, #377b5c);outline-offset:3px;}.ds-primary:active{filter:brightness(.96);}.ds-primary:disabled{cursor:not-allowed;opacity:.55;}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none;animation:none;}}"
+      "css": ".ds-primary{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce1e8);border-radius:var(--radius-control, 8px);color:var(--subtle, #4c586a);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;min-height:40px;padding:9px 16px;border-color:transparent;color:var(--on-accent, #ffffff);background:var(--accent, #3d506e);font-weight:600;}.ds-primary:hover{color:var(--on-accent, #ffffff);background:var(--accent-hover, #2c3c55);}.ds-primary:focus-visible{outline:2px solid var(--focus, #496b9e);outline-offset:3px;}.ds-primary:active{filter:brightness(.96);}.ds-primary:disabled{cursor:not-allowed;opacity:.55;}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none;animation:none;}}"
     },
     {
       "name": "次按钮",
@@ -772,7 +2368,7 @@
       "refersTo": "button-secondary",
       "description": "取消等普通操作使用细边内容面。",
       "html": "<button class=\"ds-secondary\">取消</button>",
-      "css": ".ds-secondary{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce5dd);border-radius:var(--radius-control, 8px);color:var(--subtle, #435c4f);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;}.ds-secondary:hover{color:var(--ink, #243a31);background:var(--surface-2, #eef3ed);}.ds-secondary:focus-visible{outline:2px solid var(--focus, #377b5c);outline-offset:3px;}.ds-secondary:active{filter:brightness(.96);}.ds-secondary:disabled{cursor:not-allowed;opacity:.55;}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none;animation:none;}}"
+      "css": ".ds-secondary{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce1e8);border-radius:var(--radius-control, 8px);color:var(--subtle, #4c586a);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;}.ds-secondary:hover{color:var(--ink, #242933);background:var(--surface-2, #edf0f4);}.ds-secondary:focus-visible{outline:2px solid var(--focus, #496b9e);outline-offset:3px;}.ds-secondary:active{filter:brightness(.96);}.ds-secondary:disabled{cursor:not-allowed;opacity:.55;}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none;animation:none;}}"
     },
     {
       "name": "目录搜索",
@@ -780,15 +2376,15 @@
       "refersTo": "search",
       "description": "整行搜索；容器表达聚焦，手机隐藏快捷键提示。",
       "html": "<label class=\"ds-search\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 5 5\"/></svg><input aria-label=\"搜索入口\" placeholder=\"搜索入口名称、地址或关联密钥…\"><kbd>Ctrl / ⌘ K</kbd></label>",
-      "css": ".ds-search{display:flex;align-items:center;gap:11px;width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line, #dce5dd);border-radius:9px;color:var(--muted, #607369);background:var(--surface, #ffffff);}.ds-search:focus-within{border-color:var(--focus, #377b5c);outline:2px solid var(--accent-soft, #e7f1e8);}.ds-search input{width:100%;min-width:0;min-height:46px;padding:11px 0;border:0;outline:none;color:var(--ink, #243a31);background:transparent;font-family:inherit;font-size:13px;line-height:1.6;caret-color:var(--accent, #2c6b50);}.ds-search input::placeholder{color:var(--muted, #607369);opacity:1;}.ds-search kbd{flex:none;padding:2px 5px;border:1px solid var(--line, #dce5dd);border-radius:4px;color:var(--muted, #607369);background:var(--canvas, #f5f7f4);font-family:inherit;font-size:10px;}@media(max-width:760px){.ds-search input{font-size:14px;}.ds-search kbd{display:none;}}"
+      "css": ".ds-search{display:flex;align-items:center;gap:11px;width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line, #dce1e8);border-radius:9px;color:var(--muted, #5c697c);background:var(--surface, #ffffff);}.ds-search:focus-within{border-color:var(--focus, #496b9e);outline:2px solid var(--accent-soft, #e8edf5);}.ds-search input{width:100%;min-width:0;min-height:46px;padding:11px 0;border:0;outline:none;color:var(--ink, #242933);background:transparent;font-family:inherit;font-size:13px;line-height:1.6;caret-color:var(--accent, #3d506e);}.ds-search input::placeholder{color:var(--muted, #5c697c);opacity:1;}.ds-search kbd{flex:none;padding:2px 5px;border:1px solid var(--line, #dce1e8);border-radius:4px;color:var(--muted, #5c697c);background:var(--canvas, #f6f7f9);font-family:inherit;font-size:10px;}@media(max-width:760px){.ds-search input{font-size:14px;}.ds-search kbd{display:none;}}"
     },
     {
-      "name": "深绿导航",
+      "name": "主题导航",
       "kind": "nav",
       "refersTo": "nav-default",
-      "description": "当前导航、计数与普通项目；真实抽屉复用相同导航。",
+      "description": "浅色使用浅导航，深色使用暗导航；当前项、悬停与焦点来自各主题语义变量。",
       "html": "<nav class=\"ds-nav\" aria-label=\"我的资料\"><button class=\"ds-nav-active\" aria-current=\"page\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/></svg><span>全部入口</span><small>6</small></button><button><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"8\" cy=\"9\" r=\"4\"/><path d=\"m11 12 9 9m-4-4 3-3m-6 0 3-3\"/></svg><span>密钥</span><small>3</small></button></nav>",
-      "css": ".ds-nav{display:grid;gap:5px;padding:16px;color:var(--rail-ink, #eef5ef);background:var(--rail, #173f35);}.ds-nav button{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce5dd);border-radius:var(--radius-control, 8px);color:var(--subtle, #435c4f);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;justify-content:start;gap:11px;min-height:43px;width:100%;padding:10px 12px;border:0;color:var(--rail-muted, #b3cabe);background:transparent;text-align:left;font-weight:400;}.ds-nav button:hover{color:var(--rail-ink, #eef5ef);background:#244d3f;}.ds-nav .ds-nav-active{color:var(--rail-ink, #eef5ef);background:var(--rail-active, #31594b);font-weight:600;}.ds-nav small{margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums;}.ds-nav button:focus-visible{outline:2px solid #c1e9c8;outline-offset:3px;}.ds-nav button:active{filter:brightness(.96);}@media(max-width:760px){.ds-nav button{min-height:46px;}}@media(prefers-reduced-motion:reduce){.ds-nav button{transition:none;}}"
+      "css": ".ds-nav{display:grid;gap:5px;padding:16px;color:var(--rail-ink, #242933);background:var(--rail, #edf0f4);}.ds-nav button{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce1e8);border-radius:var(--radius-control, 8px);color:var(--subtle, #4c586a);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;justify-content:start;gap:11px;min-height:43px;width:100%;padding:10px 12px;border:0;color:var(--rail-muted, #5c697c);background:transparent;text-align:left;font-weight:400;}.ds-nav button:hover{color:var(--rail-ink, #242933);background:var(--rail-hover, #e3e8ef);}.ds-nav .ds-nav-active{color:var(--rail-ink, #242933);background:var(--rail-active, #dde3eb);font-weight:600;}.ds-nav small{margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums;}.ds-nav button:focus-visible{outline:2px solid var(--focus, #496b9e);outline-offset:3px;}.ds-nav button:active{filter:brightness(.96);}@media(max-width:760px){.ds-nav button{min-height:46px;}}@media(prefers-reduced-motion:reduce){.ds-nav button{transition:none;}}"
     },
     {
       "name": "资源分类标记",
@@ -796,7 +2392,7 @@
       "refersTo": "category-postgresql",
       "description": "彩色图标底板与类型文字组合；颜色不单独传达类型。",
       "html": "<span class=\"ds-category\"><span class=\"ds-category-icon\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><ellipse cx=\"12\" cy=\"5\" rx=\"8\" ry=\"3\"/><path d=\"M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0\"/></svg></span><span>PostgreSQL</span></span>",
-      "css": ".ds-category{display:inline-flex;align-items:center;gap:10px;color:var(--muted, #607369);font-family:inherit;font-size:11px;line-height:1.6;}.ds-category-icon{display:inline-flex;align-items:center;justify-content:center;width:39px;height:39px;flex:none;border-radius:10px;color:var(--violet, #755493);background:var(--violet-soft, #f1ebf7);}"
+      "css": ".ds-category{display:inline-flex;align-items:center;gap:10px;color:var(--muted, #5c697c);font-family:inherit;font-size:11px;line-height:1.6;}.ds-category-icon{display:inline-flex;align-items:center;justify-content:center;width:39px;height:39px;flex:none;border-radius:10px;color:var(--violet, #755493);background:var(--violet-soft, #f1ebf7);}"
     },
     {
       "name": "入口资料卡",
@@ -804,22 +2400,46 @@
       "refersTo": "entry-card",
       "description": "名称、地址、密钥与动作分区；示例为虚构入口。",
       "html": "<article class=\"ds-card\"><div class=\"ds-card-top\"><span class=\"ds-card-kind\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"/><path d=\"M3 12h18\"/></svg></span><span>网站</span></div><div class=\"ds-card-body\"><h2><a href=\"https://example.org\" target=\"_blank\" rel=\"noopener noreferrer\">文档入口 <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5\"/></svg></a></h2><p>docs.example.org</p></div><div class=\"ds-card-keys\"><div class=\"ds-card-heading\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"8\" cy=\"9\" r=\"4\"/><path d=\"m11 12 9 9m-4-4 3-3m-6 0 3-3\"/></svg><select aria-label=\"文档入口的复制密钥\" disabled><option>示例密钥 · example</option></select></div><button><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"8\" y=\"8\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3\"/></svg>复制密钥</button></div><footer><a href=\"https://example.org\" target=\"_blank\" rel=\"noopener noreferrer\">打开网站 <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5\"/></svg></a></footer></article>",
-      "css": ".ds-card{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line, #dce5dd);border-radius:var(--radius-card, 12px);background:var(--surface, #ffffff);font-family:inherit;line-height:1.6;transition:border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));}.ds-card:hover,.ds-card:focus-within{border-color:var(--accent, #2c6b50);}.ds-card-top{display:flex;align-items:center;gap:10px;padding:20px 19px 0;color:var(--muted, #607369);font-size:11px;}.ds-card-kind{display:inline-flex;align-items:center;justify-content:center;width:39px;height:39px;flex:none;border-radius:10px;color:var(--blue, #426b9b);background:var(--blue-soft, #eaf0f8);}.ds-card-body{flex:1;min-width:0;padding:15px 19px 17px;}.ds-card h2{margin:0 0 5px;font-size:16px;line-height:1.5;font-weight:600;letter-spacing:-.01em;}.ds-card h2 a{display:flex;align-items:center;gap:8px;color:var(--ink, #243a31);text-decoration:none;overflow-wrap:anywhere;}.ds-card h2 a:hover,.ds-card footer a:hover{color:var(--accent, #2c6b50);}.ds-card p{overflow:hidden;margin:0;color:var(--muted, #607369);font-family:ui-monospace,\"SFMono-Regular\",Consolas,monospace;font-size:11px;text-overflow:ellipsis;white-space:nowrap;}.ds-card-keys{display:flex;flex-direction:column;align-items:start;justify-content:center;gap:7px;min-height:82px;margin:0 19px;padding:12px 0;border-top:1px solid var(--line, #dce5dd);color:var(--subtle, #435c4f);font-size:11px;}.ds-card-keys button{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce5dd);border-radius:var(--radius-control, 8px);color:var(--subtle, #435c4f);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;min-height:30px;padding:4px 8px;border:0;color:var(--accent, #2c6b50);background:var(--accent-soft, #e7f1e8);font-size:10px;}.ds-card-keys button:hover{color:var(--on-accent, #ffffff);background:var(--accent, #2c6b50);}.ds-card footer{display:flex;align-items:center;justify-content:space-between;min-height:43px;padding:5px 13px 5px 19px;border-top:1px solid var(--line, #dce5dd);border-radius:0 0 12px 12px;background:var(--canvas, #f5f7f4);}.ds-card footer a{display:inline-flex;align-items:center;gap:6px;min-height:31px;padding:3px 0;color:var(--subtle, #435c4f);font-size:11px;text-decoration:none;}.ds-card a:focus-visible,.ds-card button:focus-visible{outline:2px solid var(--focus, #377b5c);outline-offset:3px;}.ds-card button:active{filter:brightness(.96);}@media(max-width:760px){.ds-card-keys button{min-height:38px;padding:7px 10px;font-size:11px;}.ds-card footer a{min-height:38px;font-size:12px;}}@media(max-width:480px){.ds-card-body{padding-top:13px;}}@media(prefers-reduced-motion:reduce){.ds-card,.ds-card button{transition:none;}} .ds-card-heading{display:flex;align-items:center;gap:5px;min-width:0;width:100%;color:var(--accent, #2c6b50);}.ds-card-heading select{flex:1;min-width:0;width:100%;min-height:25px;padding:2px 3px;border:0;border-radius:4px;color:var(--subtle, #435c4f);background:transparent;font-family:inherit;font-size:11px;text-overflow:ellipsis;opacity:1;appearance:none;-webkit-text-fill-color:var(--subtle, #435c4f);}@media(max-width:760px){.ds-card-heading select{min-height:34px;font-size:12px;}}"
+      "css": ".ds-card{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line, #dce1e8);border-radius:var(--radius-card, 12px);background:var(--surface, #ffffff);font-family:inherit;line-height:1.6;transition:border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));}.ds-card:hover,.ds-card:focus-within{border-color:var(--accent, #3d506e);}.ds-card-top{display:flex;align-items:center;gap:10px;padding:20px 19px 0;color:var(--muted, #5c697c);font-size:11px;}.ds-card-kind{display:inline-flex;align-items:center;justify-content:center;width:39px;height:39px;flex:none;border-radius:10px;color:var(--blue, #426b9b);background:var(--blue-soft, #eaf0f8);}.ds-card-body{flex:1;min-width:0;padding:15px 19px 17px;}.ds-card h2{margin:0 0 5px;font-size:16px;line-height:1.5;font-weight:600;letter-spacing:-.01em;}.ds-card h2 a{display:flex;align-items:center;gap:8px;color:var(--ink, #242933);text-decoration:none;overflow-wrap:anywhere;}.ds-card h2 a:hover,.ds-card footer a:hover{color:var(--accent, #3d506e);}.ds-card p{overflow:hidden;margin:0;color:var(--muted, #5c697c);font-family:ui-monospace,\"SFMono-Regular\",Consolas,monospace;font-size:11px;text-overflow:ellipsis;white-space:nowrap;}.ds-card-keys{display:flex;flex-direction:column;align-items:start;justify-content:center;gap:7px;min-height:82px;margin:0 19px;padding:12px 0;border-top:1px solid var(--line, #dce1e8);color:var(--subtle, #4c586a);font-size:11px;}.ds-card-keys button{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce1e8);border-radius:var(--radius-control, 8px);color:var(--subtle, #4c586a);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;min-height:30px;padding:4px 8px;border:0;color:var(--accent, #3d506e);background:var(--accent-soft, #e8edf5);font-size:10px;}.ds-card-keys button:hover{color:var(--on-accent, #ffffff);background:var(--accent, #3d506e);}.ds-card footer{display:flex;align-items:center;justify-content:space-between;min-height:43px;padding:5px 13px 5px 19px;border-top:1px solid var(--line, #dce1e8);border-radius:0 0 12px 12px;background:var(--canvas, #f6f7f9);}.ds-card footer a{display:inline-flex;align-items:center;gap:6px;min-height:31px;padding:3px 0;color:var(--subtle, #4c586a);font-size:11px;text-decoration:none;}.ds-card a:focus-visible,.ds-card button:focus-visible{outline:2px solid var(--focus, #496b9e);outline-offset:3px;}.ds-card button:active{filter:brightness(.96);}@media(max-width:760px){.ds-card-keys button{min-height:38px;padding:7px 10px;font-size:11px;}.ds-card footer a{min-height:38px;font-size:12px;}}@media(max-width:480px){.ds-card-body{padding-top:13px;}}@media(prefers-reduced-motion:reduce){.ds-card,.ds-card button{transition:none;}} .ds-card-heading{display:flex;align-items:center;gap:5px;min-width:0;width:100%;color:var(--accent, #3d506e);}.ds-card-heading select{flex:1;min-width:0;width:100%;min-height:25px;padding:2px 3px;border:0;border-radius:4px;color:var(--subtle, #4c586a);background:transparent;font-family:inherit;font-size:11px;text-overflow:ellipsis;opacity:1;appearance:none;-webkit-text-fill-color:var(--subtle, #4c586a);}@media(max-width:760px){.ds-card-heading select{min-height:34px;font-size:12px;}}"
+    },
+    {
+      "name": "显示模式单选组",
+      "kind": "custom",
+      "refersTo": "mode-selected",
+      "description": "原生单选的视觉状态；应用中的浅色、深色、跟随系统分别改变解析模式，此独立示例不执行应用逻辑。",
+      "html": "<fieldset class=\"ds-modes\"><legend>显示模式</legend><div class=\"ds-mode-options\"><label class=\"ds-mode\"><input type=\"radio\" name=\"ds-color-mode\" value=\"light\"><span>浅色</span></label><label class=\"ds-mode\"><input type=\"radio\" name=\"ds-color-mode\" value=\"dark\"><span>深色</span></label><label class=\"ds-mode\"><input type=\"radio\" name=\"ds-color-mode\" value=\"system\" checked><span>跟随系统</span></label></div><p>每套主题都提供浅色与深色配色。</p></fieldset>",
+      "css": ".ds-modes{min-width:0;margin:0;padding:0;border:0;color:var(--ink, #242933);font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",\"Noto Sans CJK SC\",sans-serif;line-height:1.6}.ds-modes legend{padding:0;margin-bottom:12px;font-size:13px;font-weight:600}.ds-mode-options{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:4px;padding:4px;border-radius:10px;background:var(--surface-2, #edf0f4)}.ds-mode{position:relative;cursor:pointer}.ds-mode input{position:absolute;width:1px;height:1px;opacity:0}.ds-mode span{display:flex;align-items:center;justify-content:center;min-height:40px;padding:8px 6px;border:1px solid transparent;border-radius:7px;color:var(--muted, #5c697c);font-size:13px;white-space:nowrap}.ds-mode:hover span{color:var(--ink, #242933)}.ds-mode input:checked+span{border-color:var(--line, #dce1e8);color:var(--ink, #242933);background:var(--surface, #ffffff);font-weight:600}.ds-mode input:focus-visible+span{outline:2px solid var(--focus, #496b9e);outline-offset:3px}.ds-modes p{margin:9px 0 0;color:var(--muted, #5c697c);font-size:12px}"
+    },
+    {
+      "name": "主题配色 · 浅色缩略图",
+      "kind": "custom",
+      "refersTo": "palette-choice",
+      "description": "四套主题的真实浅色语义色用于缩略图；原生单选呈现选中、悬停与键盘焦点。应用中缩略图随显示模式切换。",
+      "html": "<fieldset class=\"ds-palette-field\"><legend>主题配色 · 浅色预览</legend><div class=\"ds-palettes\"><label class=\"ds-palette\"><input type=\"radio\" name=\"ds-palette-light\" value=\"graphite\" checked><span class=\"ds-choice\"><span class=\"ds-mini ds-mini-graphite\" aria-hidden=\"true\"><span class=\"ds-mini-rail\"><i></i><i></i><i></i></span><span class=\"ds-mini-work\"><span class=\"ds-mini-bar\"><i></i><b></b></span><span class=\"ds-mini-cards\"><i></i><i></i></span></span></span><span class=\"ds-caption\"><strong>岩墨</strong><span class=\"ds-check\" aria-hidden=\"true\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg></span></span><span class=\"ds-description\">冷灰与墨蓝，清晰克制</span></span></label><label class=\"ds-palette\"><input type=\"radio\" name=\"ds-palette-light\" value=\"ocean\"><span class=\"ds-choice\"><span class=\"ds-mini ds-mini-ocean\" aria-hidden=\"true\"><span class=\"ds-mini-rail\"><i></i><i></i><i></i></span><span class=\"ds-mini-work\"><span class=\"ds-mini-bar\"><i></i><b></b></span><span class=\"ds-mini-cards\"><i></i><i></i></span></span></span><span class=\"ds-caption\"><strong>海盐</strong><span class=\"ds-check\" aria-hidden=\"true\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg></span></span><span class=\"ds-description\">雾蓝与海蓝，明净舒展</span></span></label><label class=\"ds-palette\"><input type=\"radio\" name=\"ds-palette-light\" value=\"sage\"><span class=\"ds-choice\"><span class=\"ds-mini ds-mini-sage\" aria-hidden=\"true\"><span class=\"ds-mini-rail\"><i></i><i></i><i></i></span><span class=\"ds-mini-work\"><span class=\"ds-mini-bar\"><i></i><b></b></span><span class=\"ds-mini-cards\"><i></i><i></i></span></span></span><span class=\"ds-caption\"><strong>松雾</strong><span class=\"ds-check\" aria-hidden=\"true\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg></span></span><span class=\"ds-description\">灰绿与青松，柔和安静</span></span></label><label class=\"ds-palette\"><input type=\"radio\" name=\"ds-palette-light\" value=\"sand\"><span class=\"ds-choice\"><span class=\"ds-mini ds-mini-sand\" aria-hidden=\"true\"><span class=\"ds-mini-rail\"><i></i><i></i><i></i></span><span class=\"ds-mini-work\"><span class=\"ds-mini-bar\"><i></i><b></b></span><span class=\"ds-mini-cards\"><i></i><i></i></span></span></span><span class=\"ds-caption\"><strong>暖砂</strong><span class=\"ds-check\" aria-hidden=\"true\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg></span></span><span class=\"ds-description\">暖灰与陶棕，温润自然</span></span></label></div></fieldset>",
+      "css": ".ds-palette-field{min-width:0;margin:0;padding:0;border:0;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",\"Noto Sans CJK SC\",sans-serif;line-height:1.6;color:var(--ink, #242933)}.ds-palette-field legend{padding:0;margin-bottom:12px;font-size:13px;font-weight:600}.ds-palettes{display:grid;grid-template-columns:1fr 1fr;gap:16px}.ds-palette{display:block;position:relative;min-width:0;cursor:pointer}.ds-palette>input{position:absolute;width:1px;height:1px;opacity:0}.ds-choice{display:block;padding:9px 9px 11px;border:1px solid var(--line, #dce1e8);border-radius:10px;transition:border-color 150ms,background-color 150ms}.ds-palette:hover .ds-choice{border-color:var(--muted, #5c697c)}.ds-palette>input:checked+.ds-choice{border-color:var(--accent, #3d506e);background:var(--accent-soft, #e8edf5)}.ds-palette>input:focus-visible+.ds-choice{outline:2px solid var(--focus, #496b9e);outline-offset:3px}.ds-mini{display:grid;grid-template-columns:26% 1fr;height:90px;overflow:hidden;border:1px solid var(--line);border-radius:5px;background:var(--canvas)}.ds-mini-rail{display:flex;flex-direction:column;gap:8px;padding:14px 8px;border-right:1px solid var(--rail-line);background:var(--rail)}.ds-mini-rail i{height:4px;background:var(--rail-muted);opacity:.5}.ds-mini-rail i:first-child{height:7px;margin-bottom:4px;background:var(--accent);opacity:1}.ds-mini-rail i:last-child{width:70%}.ds-mini-work{min-width:0;padding:11px}.ds-mini-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.ds-mini-bar i{width:42%;height:5px;background:var(--ink);opacity:.7}.ds-mini-bar b{width:22%;height:10px;border-radius:2px;background:var(--accent)}.ds-mini-cards{display:grid;grid-template-columns:1fr 1fr;gap:7px}.ds-mini-cards i{height:38px;border:1px solid var(--line);border-radius:3px;background:var(--surface)}.ds-caption{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 3px 2px;color:var(--ink, #242933)}.ds-caption strong{font-size:13px;font-weight:600}.ds-check{display:grid;place-items:center;width:18px;height:18px;border:1px solid var(--muted, #5c697c);border-radius:50%;color:transparent}.ds-palette>input:checked+.ds-choice .ds-check{color:var(--on-accent, #ffffff);background:var(--accent, #3d506e);border-color:var(--accent, #3d506e)}.ds-description{display:block;margin:0 3px;color:var(--muted, #5c697c);font-size:11px}@media(max-width:480px){.ds-palettes{gap:12px}.ds-mini{height:85px}}@media(prefers-reduced-motion:reduce){.ds-choice{transition:none}}.ds-mini-graphite{--canvas:#f6f7f9;--rail:#edf0f4;--rail-ink:#242933;--rail-muted:#5c697c;--rail-active:#dde3eb;--rail-hover:#e3e8ef;--rail-line:#d3dbe5;--surface:#ffffff;--surface-2:#edf0f4;--line:#dce1e8;--ink:#242933;--muted:#5c697c;--subtle:#4c586a;--accent:#3d506e;--accent-hover:#2c3c55;--on-accent:#ffffff;--accent-soft:#e8edf5;--focus:#496b9e;}.ds-mini-ocean{--canvas:#f3f7fa;--rail:#e8f0f6;--rail-ink:#223746;--rail-muted:#556a7b;--rail-active:#d4e5f0;--rail-hover:#dceaf3;--rail-line:#c8dbe7;--surface:#ffffff;--surface-2:#eaf1f6;--line:#d5e2eb;--ink:#223746;--muted:#556a7b;--subtle:#456175;--accent:#23618b;--accent-hover:#194e73;--on-accent:#ffffff;--accent-soft:#e0eef7;--focus:#23618b;}.ds-mini-sage{--canvas:#f4f7f5;--rail:#eaf0ed;--rail-ink:#293c34;--rail-muted:#596c62;--rail-active:#d8e5dc;--rail-hover:#dfeae3;--rail-line:#cedcd3;--surface:#ffffff;--surface-2:#ecf2ee;--line:#d7e2db;--ink:#293c34;--muted:#596c62;--subtle:#4b6355;--accent:#39694f;--accent-hover:#2a523c;--on-accent:#ffffff;--accent-soft:#e3eee7;--focus:#39694f;}.ds-mini-sand{--canvas:#faf7f3;--rail:#f1ebe3;--rail-ink:#44352b;--rail-muted:#726254;--rail-active:#e7dbce;--rail-hover:#eae0d5;--rail-line:#dfd2c4;--surface:#fffefc;--surface-2:#f4eee6;--line:#e6dbcf;--ink:#44352b;--muted:#726254;--subtle:#675344;--accent:#8c5339;--accent-hover:#70412c;--on-accent:#ffffff;--accent-soft:#f4e5da;--focus:#8c5339;}"
+    },
+    {
+      "name": "主题配色 · 深色缩略图",
+      "kind": "custom",
+      "refersTo": "palette-choice",
+      "description": "四套主题的真实深色语义色用于缩略图；原生单选呈现选中、悬停与键盘焦点。应用中缩略图随显示模式切换。",
+      "html": "<fieldset class=\"ds-palette-field\"><legend>主题配色 · 深色预览</legend><div class=\"ds-palettes\"><label class=\"ds-palette\"><input type=\"radio\" name=\"ds-palette-dark\" value=\"graphite\" checked><span class=\"ds-choice\"><span class=\"ds-mini ds-mini-graphite\" aria-hidden=\"true\"><span class=\"ds-mini-rail\"><i></i><i></i><i></i></span><span class=\"ds-mini-work\"><span class=\"ds-mini-bar\"><i></i><b></b></span><span class=\"ds-mini-cards\"><i></i><i></i></span></span></span><span class=\"ds-caption\"><strong>岩墨</strong><span class=\"ds-check\" aria-hidden=\"true\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg></span></span><span class=\"ds-description\">冷灰与墨蓝，清晰克制</span></span></label><label class=\"ds-palette\"><input type=\"radio\" name=\"ds-palette-dark\" value=\"ocean\"><span class=\"ds-choice\"><span class=\"ds-mini ds-mini-ocean\" aria-hidden=\"true\"><span class=\"ds-mini-rail\"><i></i><i></i><i></i></span><span class=\"ds-mini-work\"><span class=\"ds-mini-bar\"><i></i><b></b></span><span class=\"ds-mini-cards\"><i></i><i></i></span></span></span><span class=\"ds-caption\"><strong>海盐</strong><span class=\"ds-check\" aria-hidden=\"true\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg></span></span><span class=\"ds-description\">雾蓝与海蓝，明净舒展</span></span></label><label class=\"ds-palette\"><input type=\"radio\" name=\"ds-palette-dark\" value=\"sage\"><span class=\"ds-choice\"><span class=\"ds-mini ds-mini-sage\" aria-hidden=\"true\"><span class=\"ds-mini-rail\"><i></i><i></i><i></i></span><span class=\"ds-mini-work\"><span class=\"ds-mini-bar\"><i></i><b></b></span><span class=\"ds-mini-cards\"><i></i><i></i></span></span></span><span class=\"ds-caption\"><strong>松雾</strong><span class=\"ds-check\" aria-hidden=\"true\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg></span></span><span class=\"ds-description\">灰绿与青松，柔和安静</span></span></label><label class=\"ds-palette\"><input type=\"radio\" name=\"ds-palette-dark\" value=\"sand\"><span class=\"ds-choice\"><span class=\"ds-mini ds-mini-sand\" aria-hidden=\"true\"><span class=\"ds-mini-rail\"><i></i><i></i><i></i></span><span class=\"ds-mini-work\"><span class=\"ds-mini-bar\"><i></i><b></b></span><span class=\"ds-mini-cards\"><i></i><i></i></span></span></span><span class=\"ds-caption\"><strong>暖砂</strong><span class=\"ds-check\" aria-hidden=\"true\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg></span></span><span class=\"ds-description\">暖灰与陶棕，温润自然</span></span></label></div></fieldset>",
+      "css": ".ds-palette-field{min-width:0;margin:0;padding:0;border:0;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",\"PingFang SC\",\"Microsoft YaHei\",\"Noto Sans CJK SC\",sans-serif;line-height:1.6;color:var(--ink, #242933)}.ds-palette-field legend{padding:0;margin-bottom:12px;font-size:13px;font-weight:600}.ds-palettes{display:grid;grid-template-columns:1fr 1fr;gap:16px}.ds-palette{display:block;position:relative;min-width:0;cursor:pointer}.ds-palette>input{position:absolute;width:1px;height:1px;opacity:0}.ds-choice{display:block;padding:9px 9px 11px;border:1px solid var(--line, #dce1e8);border-radius:10px;transition:border-color 150ms,background-color 150ms}.ds-palette:hover .ds-choice{border-color:var(--muted, #5c697c)}.ds-palette>input:checked+.ds-choice{border-color:var(--accent, #3d506e);background:var(--accent-soft, #e8edf5)}.ds-palette>input:focus-visible+.ds-choice{outline:2px solid var(--focus, #496b9e);outline-offset:3px}.ds-mini{display:grid;grid-template-columns:26% 1fr;height:90px;overflow:hidden;border:1px solid var(--line);border-radius:5px;background:var(--canvas)}.ds-mini-rail{display:flex;flex-direction:column;gap:8px;padding:14px 8px;border-right:1px solid var(--rail-line);background:var(--rail)}.ds-mini-rail i{height:4px;background:var(--rail-muted);opacity:.5}.ds-mini-rail i:first-child{height:7px;margin-bottom:4px;background:var(--accent);opacity:1}.ds-mini-rail i:last-child{width:70%}.ds-mini-work{min-width:0;padding:11px}.ds-mini-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.ds-mini-bar i{width:42%;height:5px;background:var(--ink);opacity:.7}.ds-mini-bar b{width:22%;height:10px;border-radius:2px;background:var(--accent)}.ds-mini-cards{display:grid;grid-template-columns:1fr 1fr;gap:7px}.ds-mini-cards i{height:38px;border:1px solid var(--line);border-radius:3px;background:var(--surface)}.ds-caption{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 3px 2px;color:var(--ink, #242933)}.ds-caption strong{font-size:13px;font-weight:600}.ds-check{display:grid;place-items:center;width:18px;height:18px;border:1px solid var(--muted, #5c697c);border-radius:50%;color:transparent}.ds-palette>input:checked+.ds-choice .ds-check{color:var(--on-accent, #ffffff);background:var(--accent, #3d506e);border-color:var(--accent, #3d506e)}.ds-description{display:block;margin:0 3px;color:var(--muted, #5c697c);font-size:11px}@media(max-width:480px){.ds-palettes{gap:12px}.ds-mini{height:85px}}@media(prefers-reduced-motion:reduce){.ds-choice{transition:none}}.ds-mini-graphite{--canvas:#171b22;--rail:#14181e;--rail-ink:#e5eaf2;--rail-muted:#a1adbf;--rail-active:#303b4d;--rail-hover:#252e3c;--rail-line:#333d4d;--surface:#202630;--surface-2:#282f3b;--line:#3b4657;--ink:#e5eaf2;--muted:#a1adbf;--subtle:#c1cbda;--accent:#b1c6e8;--accent-hover:#c5d5ef;--on-accent:#1d2d46;--accent-soft:#303e55;--focus:#b1c6e8;}.ds-mini-ocean{--canvas:#121d26;--rail:#101a23;--rail-ink:#e0edf5;--rail-muted:#9fb7c8;--rail-active:#243e50;--rail-hover:#1d3141;--rail-line:#2b4354;--surface:#1a2935;--surface-2:#223441;--line:#314958;--ink:#e0edf5;--muted:#9fb7c8;--subtle:#bad1e0;--accent:#8fc9f0;--accent-hover:#afd9f5;--on-accent:#15344a;--accent-soft:#223f54;--focus:#8fc9f0;}.ds-mini-sage{--canvas:#17201c;--rail:#131c18;--rail-ink:#e3ede6;--rail-muted:#a6bcad;--rail-active:#2b4234;--rail-hover:#24372c;--rail-line:#344b3d;--surface:#202d25;--surface-2:#28372d;--line:#3a5041;--ink:#e3ede6;--muted:#a6bcad;--subtle:#c1d2c6;--accent:#a1d0b0;--accent-hover:#b9e0c5;--on-accent:#203d2a;--accent-soft:#2d4735;--focus:#a1d0b0;}.ds-mini-sand{--canvas:#231d19;--rail:#1d1815;--rail-ink:#f0e6db;--rail-muted:#c2af9e;--rail-active:#49372b;--rail-hover:#3b2e25;--rail-line:#514133;--surface:#30271f;--surface-2:#3b3026;--line:#554637;--ink:#f0e6db;--muted:#c2af9e;--subtle:#dbccbd;--accent:#e8b394;--accent-hover:#f2c9b1;--on-accent:#452a1d;--accent-soft:#50382a;--focus:#e8b394;}"
     }
   ],
   "narrative": {
     "northStar": "大学图书馆分类导视的私人资料目录",
-    "overview": "以森林绿导航、雾绿画布和白色工作区建立稳定的查找环境。入口名称是阅读主角，分类颜色帮助识别资源，关联密钥在卡片内形成独立的操作区。标准网页控件承担搜索、筛选和编辑；图书馆导视是颜色与秩序的来源。\n\n密度服务于反复查找：标题、地址、关联关系和动作按固定顺序排列。系统无衬线覆盖中文与拉丁文，等宽体只用于地址及只读配置。浅色是默认主题，手动深色主题沿用同一组语义变量。",
+    "overview": "以低饱和的配色、稳定导航与清晰内容层级建立反复查找资料的环境。入口名称是阅读主角，分类颜色帮助识别资源，关联密钥在卡片内形成独立的操作区。标准网页控件承担搜索、筛选和编辑；图书馆导视继续提供分类与秩序。\n\n密度服务于反复查找：标题、地址、关联关系和动作按固定顺序排列。系统无衬线覆盖中文与拉丁文，等宽体只用于地址及只读配置。外观由主题配色和显示模式独立组成；默认岩墨、跟随系统，每套配色均提供完整的浅色与深色表面。",
     "keyCharacteristics": [
-      "稳定的深绿导航与清晰内容层级。",
+      "四套低饱和配色与清晰内容层级。",
       "分类图标始终伴随类型文字。",
       "入口资料与关联密钥在卡片内分区。",
-      "浅深主题共享组件与可见键盘焦点。"
+      "所有主题共享组件、分类语义与可见键盘焦点。"
     ],
     "rules": [
       {
         "name": "The Semantic Theme Rule",
-        "body": "组件使用语义变量；深色模式替换变量值，导航亮字与状态文字继续保留可读性。",
+        "body": "组件使用语义变量；四套配色各自提供完整浅深值，导航与内容随模式一起变化，分类与错误语义不随配色改变。",
         "section": "colors"
       },
       {
@@ -834,7 +2454,7 @@
       }
     ],
     "dos": [
-      "Do 使用语义颜色变量，使同一组件自动适应浅色与深色主题。",
+      "Do 使用语义颜色变量，使同一组件自动适应四套配色与浅深模式。",
       "Do 将网站、PostgreSQL、Redis、通用服务的类型色与图标、文字一起呈现。",
       "Do 把查看资料、打开网站、复制账号和复制密钥做成各自明确的操作。",
       "Do 保留焦点轮廓、原生表单标签、筛选按下状态与减少动态效果支持。",

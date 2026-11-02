@@ -1,6 +1,18 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 const paths = {
+  palette: (
+    <>
+      <path d="M12 3a9 9 0 1 0 0 18h1.3a2.2 2.2 0 0 0 1.6-3.7 1.4 1.4 0 0 1 1-2.3H18a3 3 0 0 0 3-3 9 9 0 0 0-9-9Z" />
+      <path d="M7.5 9h.01M11 6.5h.01M15.5 8h.01M6.5 13h.01" strokeWidth="3" />
+    </>
+  ),
+  monitor: (
+    <>
+      <rect x="3" y="4" width="18" height="13" rx="2" />
+      <path d="M8 21h8m-4-4v4" />
+    </>
+  ),
   bookmark: (
     <>
       <path d="M6 4h12v17l-6-4-6 4z" />

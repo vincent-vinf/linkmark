@@ -19,7 +19,7 @@
     "kdbxweb": "^2.1.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
@@ -30,8 +30,8 @@
     "@vitejs/plugin-react": "^6.1.0",
     "patch-package": "^8.0.1",
     "typescript": "^7.0.2",
-    "vite": "^8.2.2",
-    "vitest": "^4.1.11"
+    "vite": "^8.3.5",
+    "vitest": "^4.1.12"
   },
   "overrides": {
     "@xmldom/xmldom": "0.9.12"
