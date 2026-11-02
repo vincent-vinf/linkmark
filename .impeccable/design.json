@@ -1,0 +1,850 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-02T08:22:46.461124+00:00",
+  "title": "Design System: Linkmark",
+  "extensions": {
+    "colorMeta": {
+      "canvas": {
+        "role": "neutral",
+        "displayName": "canvas",
+        "tonalRamp": [
+          "oklch(15% 0.0013 134.85)",
+          "oklch(26% 0.0027 134.85)",
+          "oklch(37% 0.0038 134.85)",
+          "oklch(48% 0.0045 134.85)",
+          "oklch(60% 0.0045 134.85)",
+          "oklch(72% 0.0038 134.85)",
+          "oklch(84% 0.0025 134.85)",
+          "oklch(95% 0.0009 134.85)"
+        ]
+      },
+      "rail": {
+        "role": "primary",
+        "displayName": "rail",
+        "tonalRamp": [
+          "oklch(15% 0.0146 174.30)",
+          "oklch(26% 0.0292 174.30)",
+          "oklch(37% 0.0413 174.30)",
+          "oklch(48% 0.0486 174.30)",
+          "oklch(60% 0.0486 174.30)",
+          "oklch(72% 0.0413 174.30)",
+          "oklch(84% 0.0267 174.30)",
+          "oklch(95% 0.0097 174.30)"
+        ]
+      },
+      "rail-ink": {
+        "role": "neutral",
+        "displayName": "rail-ink",
+        "tonalRamp": [
+          "oklch(15% 0.0033 149.86)",
+          "oklch(26% 0.0065 149.86)",
+          "oklch(37% 0.0092 149.86)",
+          "oklch(48% 0.0108 149.86)",
+          "oklch(60% 0.0108 149.86)",
+          "oklch(72% 0.0092 149.86)",
+          "oklch(84% 0.0060 149.86)",
+          "oklch(95% 0.0022 149.86)"
+        ]
+      },
+      "rail-muted": {
+        "role": "neutral",
+        "displayName": "rail-muted",
+        "tonalRamp": [
+          "oklch(15% 0.0090 163.06)",
+          "oklch(26% 0.0180 163.06)",
+          "oklch(37% 0.0255 163.06)",
+          "oklch(48% 0.0299 163.06)",
+          "oklch(60% 0.0299 163.06)",
+          "oklch(72% 0.0255 163.06)",
+          "oklch(84% 0.0165 163.06)",
+          "oklch(95% 0.0060 163.06)"
+        ]
+      },
+      "rail-active": {
+        "role": "primary",
+        "displayName": "rail-active",
+        "tonalRamp": [
+          "oklch(15% 0.0154 169.33)",
+          "oklch(26% 0.0309 169.33)",
+          "oklch(37% 0.0437 169.33)",
+          "oklch(48% 0.0515 169.33)",
+          "oklch(60% 0.0515 169.33)",
+          "oklch(72% 0.0437 169.33)",
+          "oklch(84% 0.0283 169.33)",
+          "oklch(95% 0.0103 169.33)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "surface",
+        "tonalRamp": [
+          "oklch(15% 0.0000 0.00)",
+          "oklch(26% 0.0000 0.00)",
+          "oklch(37% 0.0000 0.00)",
+          "oklch(48% 0.0000 0.00)",
+          "oklch(60% 0.0000 0.00)",
+          "oklch(72% 0.0000 0.00)",
+          "oklch(84% 0.0000 0.00)",
+          "oklch(95% 0.0000 0.00)"
+        ]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "surface-2",
+        "tonalRamp": [
+          "oklch(15% 0.0029 140.52)",
+          "oklch(26% 0.0057 140.52)",
+          "oklch(37% 0.0081 140.52)",
+          "oklch(48% 0.0095 140.52)",
+          "oklch(60% 0.0095 140.52)",
+          "oklch(72% 0.0081 140.52)",
+          "oklch(84% 0.0052 140.52)",
+          "oklch(95% 0.0019 140.52)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "line",
+        "tonalRamp": [
+          "oklch(15% 0.0043 148.77)",
+          "oklch(26% 0.0086 148.77)",
+          "oklch(37% 0.0122 148.77)",
+          "oklch(48% 0.0144 148.77)",
+          "oklch(60% 0.0144 148.77)",
+          "oklch(72% 0.0122 148.77)",
+          "oklch(84% 0.0079 148.77)",
+          "oklch(95% 0.0029 148.77)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "ink",
+        "tonalRamp": [
+          "oklch(15% 0.0097 166.87)",
+          "oklch(26% 0.0194 166.87)",
+          "oklch(37% 0.0274 166.87)",
+          "oklch(48% 0.0323 166.87)",
+          "oklch(60% 0.0323 166.87)",
+          "oklch(72% 0.0274 166.87)",
+          "oklch(84% 0.0178 166.87)",
+          "oklch(95% 0.0065 166.87)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "muted",
+        "tonalRamp": [
+          "oklch(15% 0.0082 162.43)",
+          "oklch(26% 0.0164 162.43)",
+          "oklch(37% 0.0233 162.43)",
+          "oklch(48% 0.0274 162.43)",
+          "oklch(60% 0.0274 162.43)",
+          "oklch(72% 0.0233 162.43)",
+          "oklch(84% 0.0151 162.43)",
+          "oklch(95% 0.0055 162.43)"
+        ]
+      },
+      "subtle": {
+        "role": "neutral",
+        "displayName": "subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0111 161.80)",
+          "oklch(26% 0.0221 161.80)",
+          "oklch(37% 0.0314 161.80)",
+          "oklch(48% 0.0369 161.80)",
+          "oklch(60% 0.0369 161.80)",
+          "oklch(72% 0.0314 161.80)",
+          "oklch(84% 0.0203 161.80)",
+          "oklch(95% 0.0074 161.80)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "accent",
+        "tonalRamp": [
+          "oklch(15% 0.0237 162.74)",
+          "oklch(26% 0.0473 162.74)",
+          "oklch(37% 0.0671 162.74)",
+          "oklch(48% 0.0789 162.74)",
+          "oklch(60% 0.0789 162.74)",
+          "oklch(72% 0.0671 162.74)",
+          "oklch(84% 0.0434 162.74)",
+          "oklch(95% 0.0158 162.74)"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "accent-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0215 160.75)",
+          "oklch(26% 0.0429 160.75)",
+          "oklch(37% 0.0608 160.75)",
+          "oklch(48% 0.0716 160.75)",
+          "oklch(60% 0.0716 160.75)",
+          "oklch(72% 0.0608 160.75)",
+          "oklch(84% 0.0394 160.75)",
+          "oklch(95% 0.0143 160.75)"
+        ]
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "on-accent",
+        "tonalRamp": [
+          "oklch(15% 0.0000 0.00)",
+          "oklch(26% 0.0000 0.00)",
+          "oklch(37% 0.0000 0.00)",
+          "oklch(48% 0.0000 0.00)",
+          "oklch(60% 0.0000 0.00)",
+          "oklch(72% 0.0000 0.00)",
+          "oklch(84% 0.0000 0.00)",
+          "oklch(95% 0.0000 0.00)"
+        ]
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "accent-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0048 148.40)",
+          "oklch(26% 0.0096 148.40)",
+          "oklch(37% 0.0136 148.40)",
+          "oklch(48% 0.0160 148.40)",
+          "oklch(60% 0.0160 148.40)",
+          "oklch(72% 0.0136 148.40)",
+          "oklch(84% 0.0088 148.40)",
+          "oklch(95% 0.0032 148.40)"
+        ]
+      },
+      "blue": {
+        "role": "secondary",
+        "displayName": "blue",
+        "tonalRamp": [
+          "oklch(15% 0.0268 253.31)",
+          "oklch(26% 0.0536 253.31)",
+          "oklch(37% 0.0760 253.31)",
+          "oklch(48% 0.0894 253.31)",
+          "oklch(60% 0.0894 253.31)",
+          "oklch(72% 0.0760 253.31)",
+          "oklch(84% 0.0492 253.31)",
+          "oklch(95% 0.0179 253.31)"
+        ]
+      },
+      "blue-soft": {
+        "role": "secondary",
+        "displayName": "blue-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0038 255.51)",
+          "oklch(26% 0.0075 255.51)",
+          "oklch(37% 0.0107 255.51)",
+          "oklch(48% 0.0125 255.51)",
+          "oklch(60% 0.0125 255.51)",
+          "oklch(72% 0.0107 255.51)",
+          "oklch(84% 0.0069 255.51)",
+          "oklch(95% 0.0025 255.51)"
+        ]
+      },
+      "violet": {
+        "role": "secondary",
+        "displayName": "violet",
+        "tonalRamp": [
+          "oklch(15% 0.0310 307.21)",
+          "oklch(26% 0.0620 307.21)",
+          "oklch(37% 0.0878 307.21)",
+          "oklch(48% 0.1033 307.21)",
+          "oklch(60% 0.1033 307.21)",
+          "oklch(72% 0.0878 307.21)",
+          "oklch(84% 0.0568 307.21)",
+          "oklch(95% 0.0207 307.21)"
+        ]
+      },
+      "violet-soft": {
+        "role": "secondary",
+        "displayName": "violet-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0052 308.26)",
+          "oklch(26% 0.0103 308.26)",
+          "oklch(37% 0.0146 308.26)",
+          "oklch(48% 0.0172 308.26)",
+          "oklch(60% 0.0172 308.26)",
+          "oklch(72% 0.0146 308.26)",
+          "oklch(84% 0.0094 308.26)",
+          "oklch(95% 0.0034 308.26)"
+        ]
+      },
+      "coral": {
+        "role": "secondary",
+        "displayName": "coral",
+        "tonalRamp": [
+          "oklch(15% 0.0414 22.99)",
+          "oklch(26% 0.0828 22.99)",
+          "oklch(37% 0.1174 22.99)",
+          "oklch(48% 0.1381 22.99)",
+          "oklch(60% 0.1381 22.99)",
+          "oklch(72% 0.1174 22.99)",
+          "oklch(84% 0.0759 22.99)",
+          "oklch(95% 0.0276 22.99)"
+        ]
+      },
+      "coral-soft": {
+        "role": "secondary",
+        "displayName": "coral-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0046 27.28)",
+          "oklch(26% 0.0093 27.28)",
+          "oklch(37% 0.0131 27.28)",
+          "oklch(48% 0.0155 27.28)",
+          "oklch(60% 0.0155 27.28)",
+          "oklch(72% 0.0131 27.28)",
+          "oklch(84% 0.0085 27.28)",
+          "oklch(95% 0.0031 27.28)"
+        ]
+      },
+      "gold": {
+        "role": "secondary",
+        "displayName": "gold",
+        "tonalRamp": [
+          "oklch(15% 0.0273 77.10)",
+          "oklch(26% 0.0545 77.10)",
+          "oklch(37% 0.0772 77.10)",
+          "oklch(48% 0.0908 77.10)",
+          "oklch(60% 0.0908 77.10)",
+          "oklch(72% 0.0772 77.10)",
+          "oklch(84% 0.0500 77.10)",
+          "oklch(95% 0.0182 77.10)"
+        ]
+      },
+      "gold-soft": {
+        "role": "secondary",
+        "displayName": "gold-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0067 87.15)",
+          "oklch(26% 0.0135 87.15)",
+          "oklch(37% 0.0191 87.15)",
+          "oklch(48% 0.0224 87.15)",
+          "oklch(60% 0.0224 87.15)",
+          "oklch(72% 0.0191 87.15)",
+          "oklch(84% 0.0123 87.15)",
+          "oklch(95% 0.0045 87.15)"
+        ]
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "focus",
+        "tonalRamp": [
+          "oklch(15% 0.0257 161.64)",
+          "oklch(26% 0.0513 161.64)",
+          "oklch(37% 0.0727 161.64)",
+          "oklch(48% 0.0855 161.64)",
+          "oklch(60% 0.0855 161.64)",
+          "oklch(72% 0.0727 161.64)",
+          "oklch(84% 0.0470 161.64)",
+          "oklch(95% 0.0171 161.64)"
+        ]
+      },
+      "dark-canvas": {
+        "role": "neutral",
+        "displayName": "dark-canvas",
+        "tonalRamp": [
+          "oklch(15% 0.0077 164.93)",
+          "oklch(26% 0.0154 164.93)",
+          "oklch(37% 0.0219 164.93)",
+          "oklch(48% 0.0257 164.93)",
+          "oklch(60% 0.0257 164.93)",
+          "oklch(72% 0.0219 164.93)",
+          "oklch(84% 0.0142 164.93)",
+          "oklch(95% 0.0051 164.93)"
+        ]
+      },
+      "dark-rail": {
+        "role": "primary",
+        "displayName": "dark-rail",
+        "tonalRamp": [
+          "oklch(15% 0.0117 170.45)",
+          "oklch(26% 0.0235 170.45)",
+          "oklch(37% 0.0332 170.45)",
+          "oklch(48% 0.0391 170.45)",
+          "oklch(60% 0.0391 170.45)",
+          "oklch(72% 0.0332 170.45)",
+          "oklch(84% 0.0215 170.45)",
+          "oklch(95% 0.0078 170.45)"
+        ]
+      },
+      "dark-rail-active": {
+        "role": "primary",
+        "displayName": "dark-rail-active",
+        "tonalRamp": [
+          "oklch(15% 0.0161 163.98)",
+          "oklch(26% 0.0321 163.98)",
+          "oklch(37% 0.0455 163.98)",
+          "oklch(48% 0.0535 163.98)",
+          "oklch(60% 0.0535 163.98)",
+          "oklch(72% 0.0455 163.98)",
+          "oklch(84% 0.0294 163.98)",
+          "oklch(95% 0.0107 163.98)"
+        ]
+      },
+      "dark-surface": {
+        "role": "neutral",
+        "displayName": "dark-surface",
+        "tonalRamp": [
+          "oklch(15% 0.0102 160.40)",
+          "oklch(26% 0.0204 160.40)",
+          "oklch(37% 0.0288 160.40)",
+          "oklch(48% 0.0339 160.40)",
+          "oklch(60% 0.0339 160.40)",
+          "oklch(72% 0.0288 160.40)",
+          "oklch(84% 0.0187 160.40)",
+          "oklch(95% 0.0068 160.40)"
+        ]
+      },
+      "dark-surface-2": {
+        "role": "neutral",
+        "displayName": "dark-surface-2",
+        "tonalRamp": [
+          "oklch(15% 0.0109 160.68)",
+          "oklch(26% 0.0217 160.68)",
+          "oklch(37% 0.0308 160.68)",
+          "oklch(48% 0.0362 160.68)",
+          "oklch(60% 0.0362 160.68)",
+          "oklch(72% 0.0308 160.68)",
+          "oklch(84% 0.0199 160.68)",
+          "oklch(95% 0.0072 160.68)"
+        ]
+      },
+      "dark-line": {
+        "role": "neutral",
+        "displayName": "dark-line",
+        "tonalRamp": [
+          "oklch(15% 0.0121 158.72)",
+          "oklch(26% 0.0242 158.72)",
+          "oklch(37% 0.0343 158.72)",
+          "oklch(48% 0.0404 158.72)",
+          "oklch(60% 0.0404 158.72)",
+          "oklch(72% 0.0343 158.72)",
+          "oklch(84% 0.0222 158.72)",
+          "oklch(95% 0.0081 158.72)"
+        ]
+      },
+      "dark-ink": {
+        "role": "neutral",
+        "displayName": "dark-ink",
+        "tonalRamp": [
+          "oklch(15% 0.0040 152.60)",
+          "oklch(26% 0.0080 152.60)",
+          "oklch(37% 0.0113 152.60)",
+          "oklch(48% 0.0133 152.60)",
+          "oklch(60% 0.0133 152.60)",
+          "oklch(72% 0.0113 152.60)",
+          "oklch(84% 0.0073 152.60)",
+          "oklch(95% 0.0027 152.60)"
+        ]
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "dark-muted",
+        "tonalRamp": [
+          "oklch(15% 0.0086 153.74)",
+          "oklch(26% 0.0171 153.74)",
+          "oklch(37% 0.0243 153.74)",
+          "oklch(48% 0.0286 153.74)",
+          "oklch(60% 0.0286 153.74)",
+          "oklch(72% 0.0243 153.74)",
+          "oklch(84% 0.0157 153.74)",
+          "oklch(95% 0.0057 153.74)"
+        ]
+      },
+      "dark-subtle": {
+        "role": "neutral",
+        "displayName": "dark-subtle",
+        "tonalRamp": [
+          "oklch(15% 0.0072 153.39)",
+          "oklch(26% 0.0143 153.39)",
+          "oklch(37% 0.0203 153.39)",
+          "oklch(48% 0.0239 153.39)",
+          "oklch(60% 0.0239 153.39)",
+          "oklch(72% 0.0203 153.39)",
+          "oklch(84% 0.0131 153.39)",
+          "oklch(95% 0.0048 153.39)"
+        ]
+      },
+      "dark-accent": {
+        "role": "primary",
+        "displayName": "dark-accent",
+        "tonalRamp": [
+          "oklch(15% 0.0247 153.08)",
+          "oklch(26% 0.0493 153.08)",
+          "oklch(37% 0.0699 153.08)",
+          "oklch(48% 0.0822 153.08)",
+          "oklch(60% 0.0822 153.08)",
+          "oklch(72% 0.0699 153.08)",
+          "oklch(84% 0.0452 153.08)",
+          "oklch(95% 0.0164 153.08)"
+        ]
+      },
+      "dark-accent-hover": {
+        "role": "primary",
+        "displayName": "dark-accent-hover",
+        "tonalRamp": [
+          "oklch(15% 0.0207 153.19)",
+          "oklch(26% 0.0415 153.19)",
+          "oklch(37% 0.0588 153.19)",
+          "oklch(48% 0.0691 153.19)",
+          "oklch(60% 0.0691 153.19)",
+          "oklch(72% 0.0588 153.19)",
+          "oklch(84% 0.0380 153.19)",
+          "oklch(95% 0.0138 153.19)"
+        ]
+      },
+      "dark-on-accent": {
+        "role": "primary",
+        "displayName": "dark-on-accent",
+        "tonalRamp": [
+          "oklch(15% 0.0168 154.87)",
+          "oklch(26% 0.0335 154.87)",
+          "oklch(37% 0.0475 154.87)",
+          "oklch(48% 0.0559 154.87)",
+          "oklch(60% 0.0559 154.87)",
+          "oklch(72% 0.0475 154.87)",
+          "oklch(84% 0.0307 154.87)",
+          "oklch(95% 0.0112 154.87)"
+        ]
+      },
+      "dark-accent-soft": {
+        "role": "primary",
+        "displayName": "dark-accent-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0157 154.39)",
+          "oklch(26% 0.0315 154.39)",
+          "oklch(37% 0.0446 154.39)",
+          "oklch(48% 0.0524 154.39)",
+          "oklch(60% 0.0524 154.39)",
+          "oklch(72% 0.0446 154.39)",
+          "oklch(84% 0.0288 154.39)",
+          "oklch(95% 0.0105 154.39)"
+        ]
+      },
+      "dark-blue": {
+        "role": "secondary",
+        "displayName": "dark-blue",
+        "tonalRamp": [
+          "oklch(15% 0.0192 255.11)",
+          "oklch(26% 0.0384 255.11)",
+          "oklch(37% 0.0545 255.11)",
+          "oklch(48% 0.0641 255.11)",
+          "oklch(60% 0.0641 255.11)",
+          "oklch(72% 0.0545 255.11)",
+          "oklch(84% 0.0352 255.11)",
+          "oklch(95% 0.0128 255.11)"
+        ]
+      },
+      "dark-blue-soft": {
+        "role": "secondary",
+        "displayName": "dark-blue-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0124 245.19)",
+          "oklch(26% 0.0247 245.19)",
+          "oklch(37% 0.0351 245.19)",
+          "oklch(48% 0.0412 245.19)",
+          "oklch(60% 0.0412 245.19)",
+          "oklch(72% 0.0351 245.19)",
+          "oklch(84% 0.0227 245.19)",
+          "oklch(95% 0.0082 245.19)"
+        ]
+      },
+      "dark-violet": {
+        "role": "secondary",
+        "displayName": "dark-violet",
+        "tonalRamp": [
+          "oklch(15% 0.0229 305.74)",
+          "oklch(26% 0.0457 305.74)",
+          "oklch(37% 0.0648 305.74)",
+          "oklch(48% 0.0762 305.74)",
+          "oklch(60% 0.0762 305.74)",
+          "oklch(72% 0.0648 305.74)",
+          "oklch(84% 0.0419 305.74)",
+          "oklch(95% 0.0152 305.74)"
+        ]
+      },
+      "dark-violet-soft": {
+        "role": "secondary",
+        "displayName": "dark-violet-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0150 309.32)",
+          "oklch(26% 0.0299 309.32)",
+          "oklch(37% 0.0424 309.32)",
+          "oklch(48% 0.0499 309.32)",
+          "oklch(60% 0.0499 309.32)",
+          "oklch(72% 0.0424 309.32)",
+          "oklch(84% 0.0274 309.32)",
+          "oklch(95% 0.0100 309.32)"
+        ]
+      },
+      "dark-coral": {
+        "role": "secondary",
+        "displayName": "dark-coral",
+        "tonalRamp": [
+          "oklch(15% 0.0241 22.77)",
+          "oklch(26% 0.0483 22.77)",
+          "oklch(37% 0.0684 22.77)",
+          "oklch(48% 0.0805 22.77)",
+          "oklch(60% 0.0805 22.77)",
+          "oklch(72% 0.0684 22.77)",
+          "oklch(84% 0.0443 22.77)",
+          "oklch(95% 0.0161 22.77)"
+        ]
+      },
+      "dark-coral-soft": {
+        "role": "secondary",
+        "displayName": "dark-coral-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0133 21.69)",
+          "oklch(26% 0.0265 21.69)",
+          "oklch(37% 0.0376 21.69)",
+          "oklch(48% 0.0442 21.69)",
+          "oklch(60% 0.0442 21.69)",
+          "oklch(72% 0.0376 21.69)",
+          "oklch(84% 0.0243 21.69)",
+          "oklch(95% 0.0088 21.69)"
+        ]
+      },
+      "dark-gold": {
+        "role": "secondary",
+        "displayName": "dark-gold",
+        "tonalRamp": [
+          "oklch(15% 0.0249 83.83)",
+          "oklch(26% 0.0499 83.83)",
+          "oklch(37% 0.0707 83.83)",
+          "oklch(48% 0.0831 83.83)",
+          "oklch(60% 0.0831 83.83)",
+          "oklch(72% 0.0707 83.83)",
+          "oklch(84% 0.0457 83.83)",
+          "oklch(95% 0.0166 83.83)"
+        ]
+      },
+      "dark-gold-soft": {
+        "role": "secondary",
+        "displayName": "dark-gold-soft",
+        "tonalRamp": [
+          "oklch(15% 0.0107 87.37)",
+          "oklch(26% 0.0214 87.37)",
+          "oklch(37% 0.0303 87.37)",
+          "oklch(48% 0.0356 87.37)",
+          "oklch(60% 0.0356 87.37)",
+          "oklch(72% 0.0303 87.37)",
+          "oklch(84% 0.0196 87.37)",
+          "oklch(95% 0.0071 87.37)"
+        ]
+      },
+      "dark-focus": {
+        "role": "primary",
+        "displayName": "dark-focus",
+        "tonalRamp": [
+          "oklch(15% 0.0241 153.35)",
+          "oklch(26% 0.0482 153.35)",
+          "oklch(37% 0.0683 153.35)",
+          "oklch(48% 0.0803 153.35)",
+          "oklch(60% 0.0803 153.35)",
+          "oklch(72% 0.0683 153.35)",
+          "oklch(84% 0.0442 153.35)",
+          "oklch(95% 0.0161 153.35)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "display",
+        "purpose": "创建/解锁说明主标题。"
+      },
+      "headline": {
+        "displayName": "headline",
+        "purpose": "目录主标题。"
+      },
+      "dialog": {
+        "displayName": "dialog",
+        "purpose": "对话框标题。"
+      },
+      "title": {
+        "displayName": "title",
+        "purpose": "资料卡名称。"
+      },
+      "body": {
+        "displayName": "body",
+        "purpose": "全局正文基线。"
+      },
+      "control": {
+        "displayName": "control",
+        "purpose": "普通按钮。"
+      },
+      "primary-control": {
+        "displayName": "primary-control",
+        "purpose": "主按钮。"
+      },
+      "nav": {
+        "displayName": "nav",
+        "purpose": "导航项目。"
+      },
+      "label": {
+        "displayName": "label",
+        "purpose": "表单标签。"
+      },
+      "metadata": {
+        "displayName": "metadata",
+        "purpose": "类型与辅助信息。"
+      },
+      "address": {
+        "displayName": "address",
+        "purpose": "单行截断地址。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-menu",
+        "value": "0 10px 30px rgb(21 47 34 / 0.13)",
+        "purpose": "浅色主题菜单与提示条。"
+      },
+      {
+        "name": "shadow-dialog",
+        "value": "0 24px 80px rgb(10 30 20 / 0.24)",
+        "purpose": "浅色主题对话框与编辑面板。"
+      },
+      {
+        "name": "dark-shadow-menu",
+        "value": "0 10px 30px rgb(0 12 5 / 0.3)",
+        "purpose": "深色主题菜单与提示条。"
+      },
+      {
+        "name": "dark-shadow-dialog",
+        "value": "0 24px 80px rgb(0 10 5 / 0.5)",
+        "purpose": "深色主题对话框与编辑面板。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "颜色状态与编辑面板进入的共享缓动。"
+      },
+      {
+        "name": "control-transition",
+        "value": "150ms",
+        "purpose": "按钮背景、文字、边框和卡片边框过渡。"
+      },
+      {
+        "name": "panel-in",
+        "value": "200ms",
+        "purpose": "编辑面板从 translateX(24px) 到 0；减少动态效果偏好下关闭。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide-min",
+        "value": "1700px"
+      },
+      {
+        "name": "compact-max",
+        "value": "1200px"
+      },
+      {
+        "name": "narrow-desktop-max",
+        "value": "900px"
+      },
+      {
+        "name": "mobile-max",
+        "value": "760px"
+      },
+      {
+        "name": "small-mobile-max",
+        "value": "480px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "主按钮",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "目录唯一主新建操作；表单主操作复用同一颜色。",
+      "html": "<button class=\"ds-primary\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>新建入口</button>",
+      "css": ".ds-primary{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce5dd);border-radius:var(--radius-control, 8px);color:var(--subtle, #435c4f);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;min-height:40px;padding:9px 16px;border-color:transparent;color:var(--on-accent, #ffffff);background:var(--accent, #2c6b50);font-weight:600;}.ds-primary:hover{color:var(--on-accent, #ffffff);background:var(--accent-hover, #22583f);}.ds-primary:focus-visible{outline:2px solid var(--focus, #377b5c);outline-offset:3px;}.ds-primary:active{filter:brightness(.96);}.ds-primary:disabled{cursor:not-allowed;opacity:.55;}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none;animation:none;}}"
+    },
+    {
+      "name": "次按钮",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "取消等普通操作使用细边内容面。",
+      "html": "<button class=\"ds-secondary\">取消</button>",
+      "css": ".ds-secondary{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce5dd);border-radius:var(--radius-control, 8px);color:var(--subtle, #435c4f);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;}.ds-secondary:hover{color:var(--ink, #243a31);background:var(--surface-2, #eef3ed);}.ds-secondary:focus-visible{outline:2px solid var(--focus, #377b5c);outline-offset:3px;}.ds-secondary:active{filter:brightness(.96);}.ds-secondary:disabled{cursor:not-allowed;opacity:.55;}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none;animation:none;}}"
+    },
+    {
+      "name": "目录搜索",
+      "kind": "input",
+      "refersTo": "search",
+      "description": "整行搜索；容器表达聚焦，手机隐藏快捷键提示。",
+      "html": "<label class=\"ds-search\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 5 5\"/></svg><input aria-label=\"搜索入口\" placeholder=\"搜索入口名称、地址或关联密钥…\"><kbd>Ctrl / ⌘ K</kbd></label>",
+      "css": ".ds-search{display:flex;align-items:center;gap:11px;width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line, #dce5dd);border-radius:9px;color:var(--muted, #607369);background:var(--surface, #ffffff);}.ds-search:focus-within{border-color:var(--focus, #377b5c);outline:2px solid var(--accent-soft, #e7f1e8);}.ds-search input{width:100%;min-width:0;min-height:46px;padding:11px 0;border:0;outline:none;color:var(--ink, #243a31);background:transparent;font-family:inherit;font-size:13px;line-height:1.6;caret-color:var(--accent, #2c6b50);}.ds-search input::placeholder{color:var(--muted, #607369);opacity:1;}.ds-search kbd{flex:none;padding:2px 5px;border:1px solid var(--line, #dce5dd);border-radius:4px;color:var(--muted, #607369);background:var(--canvas, #f5f7f4);font-family:inherit;font-size:10px;}@media(max-width:760px){.ds-search input{font-size:14px;}.ds-search kbd{display:none;}}"
+    },
+    {
+      "name": "深绿导航",
+      "kind": "nav",
+      "refersTo": "nav-default",
+      "description": "当前导航、计数与普通项目；真实抽屉复用相同导航。",
+      "html": "<nav class=\"ds-nav\" aria-label=\"我的资料\"><button class=\"ds-nav-active\" aria-current=\"page\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/></svg><span>全部入口</span><small>6</small></button><button><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"8\" cy=\"9\" r=\"4\"/><path d=\"m11 12 9 9m-4-4 3-3m-6 0 3-3\"/></svg><span>密钥</span><small>3</small></button></nav>",
+      "css": ".ds-nav{display:grid;gap:5px;padding:16px;color:var(--rail-ink, #eef5ef);background:var(--rail, #173f35);}.ds-nav button{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce5dd);border-radius:var(--radius-control, 8px);color:var(--subtle, #435c4f);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;justify-content:start;gap:11px;min-height:43px;width:100%;padding:10px 12px;border:0;color:var(--rail-muted, #b3cabe);background:transparent;text-align:left;font-weight:400;}.ds-nav button:hover{color:var(--rail-ink, #eef5ef);background:#244d3f;}.ds-nav .ds-nav-active{color:var(--rail-ink, #eef5ef);background:var(--rail-active, #31594b);font-weight:600;}.ds-nav small{margin-left:auto;font-size:11px;font-variant-numeric:tabular-nums;}.ds-nav button:focus-visible{outline:2px solid #c1e9c8;outline-offset:3px;}.ds-nav button:active{filter:brightness(.96);}@media(max-width:760px){.ds-nav button{min-height:46px;}}@media(prefers-reduced-motion:reduce){.ds-nav button{transition:none;}}"
+    },
+    {
+      "name": "资源分类标记",
+      "kind": "chip",
+      "refersTo": "category-postgresql",
+      "description": "彩色图标底板与类型文字组合；颜色不单独传达类型。",
+      "html": "<span class=\"ds-category\"><span class=\"ds-category-icon\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><ellipse cx=\"12\" cy=\"5\" rx=\"8\" ry=\"3\"/><path d=\"M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0\"/></svg></span><span>PostgreSQL</span></span>",
+      "css": ".ds-category{display:inline-flex;align-items:center;gap:10px;color:var(--muted, #607369);font-family:inherit;font-size:11px;line-height:1.6;}.ds-category-icon{display:inline-flex;align-items:center;justify-content:center;width:39px;height:39px;flex:none;border-radius:10px;color:var(--violet, #755493);background:var(--violet-soft, #f1ebf7);}"
+    },
+    {
+      "name": "入口资料卡",
+      "kind": "card",
+      "refersTo": "entry-card",
+      "description": "名称、地址、密钥与动作分区；示例为虚构入口。",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-top\"><span class=\"ds-card-kind\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><ellipse cx=\"12\" cy=\"12\" rx=\"4\" ry=\"9\"/><path d=\"M3 12h18\"/></svg></span><span>网站</span></div><div class=\"ds-card-body\"><h2><a href=\"https://example.org\" target=\"_blank\" rel=\"noopener noreferrer\">文档入口 <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5\"/></svg></a></h2><p>docs.example.org</p></div><div class=\"ds-card-keys\"><div class=\"ds-card-heading\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"8\" cy=\"9\" r=\"4\"/><path d=\"m11 12 9 9m-4-4 3-3m-6 0 3-3\"/></svg><select aria-label=\"文档入口的复制密钥\" disabled><option>示例密钥 · example</option></select></div><button><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"8\" y=\"8\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3\"/></svg>复制密钥</button></div><footer><a href=\"https://example.org\" target=\"_blank\" rel=\"noopener noreferrer\">打开网站 <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5\"/></svg></a></footer></article>",
+      "css": ".ds-card{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line, #dce5dd);border-radius:var(--radius-card, 12px);background:var(--surface, #ffffff);font-family:inherit;line-height:1.6;transition:border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));}.ds-card:hover,.ds-card:focus-within{border-color:var(--accent, #2c6b50);}.ds-card-top{display:flex;align-items:center;gap:10px;padding:20px 19px 0;color:var(--muted, #607369);font-size:11px;}.ds-card-kind{display:inline-flex;align-items:center;justify-content:center;width:39px;height:39px;flex:none;border-radius:10px;color:var(--blue, #426b9b);background:var(--blue-soft, #eaf0f8);}.ds-card-body{flex:1;min-width:0;padding:15px 19px 17px;}.ds-card h2{margin:0 0 5px;font-size:16px;line-height:1.5;font-weight:600;letter-spacing:-.01em;}.ds-card h2 a{display:flex;align-items:center;gap:8px;color:var(--ink, #243a31);text-decoration:none;overflow-wrap:anywhere;}.ds-card h2 a:hover,.ds-card footer a:hover{color:var(--accent, #2c6b50);}.ds-card p{overflow:hidden;margin:0;color:var(--muted, #607369);font-family:ui-monospace,\"SFMono-Regular\",Consolas,monospace;font-size:11px;text-overflow:ellipsis;white-space:nowrap;}.ds-card-keys{display:flex;flex-direction:column;align-items:start;justify-content:center;gap:7px;min-height:82px;margin:0 19px;padding:12px 0;border-top:1px solid var(--line, #dce5dd);color:var(--subtle, #435c4f);font-size:11px;}.ds-card-keys button{font-family:inherit;font-size:13px;font-weight:500;line-height:1.6;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 12px;border:1px solid var(--line, #dce5dd);border-radius:var(--radius-control, 8px);color:var(--subtle, #435c4f);background:var(--surface, #ffffff);transition:background-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1)),border-color 150ms var(--ease, cubic-bezier(0.16, 1, 0.3, 1));cursor:pointer;min-height:30px;padding:4px 8px;border:0;color:var(--accent, #2c6b50);background:var(--accent-soft, #e7f1e8);font-size:10px;}.ds-card-keys button:hover{color:var(--on-accent, #ffffff);background:var(--accent, #2c6b50);}.ds-card footer{display:flex;align-items:center;justify-content:space-between;min-height:43px;padding:5px 13px 5px 19px;border-top:1px solid var(--line, #dce5dd);border-radius:0 0 12px 12px;background:var(--canvas, #f5f7f4);}.ds-card footer a{display:inline-flex;align-items:center;gap:6px;min-height:31px;padding:3px 0;color:var(--subtle, #435c4f);font-size:11px;text-decoration:none;}.ds-card a:focus-visible,.ds-card button:focus-visible{outline:2px solid var(--focus, #377b5c);outline-offset:3px;}.ds-card button:active{filter:brightness(.96);}@media(max-width:760px){.ds-card-keys button{min-height:38px;padding:7px 10px;font-size:11px;}.ds-card footer a{min-height:38px;font-size:12px;}}@media(max-width:480px){.ds-card-body{padding-top:13px;}}@media(prefers-reduced-motion:reduce){.ds-card,.ds-card button{transition:none;}} .ds-card-heading{display:flex;align-items:center;gap:5px;min-width:0;width:100%;color:var(--accent, #2c6b50);}.ds-card-heading select{flex:1;min-width:0;width:100%;min-height:25px;padding:2px 3px;border:0;border-radius:4px;color:var(--subtle, #435c4f);background:transparent;font-family:inherit;font-size:11px;text-overflow:ellipsis;opacity:1;appearance:none;-webkit-text-fill-color:var(--subtle, #435c4f);}@media(max-width:760px){.ds-card-heading select{min-height:34px;font-size:12px;}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "大学图书馆分类导视的私人资料目录",
+    "overview": "以森林绿导航、雾绿画布和白色工作区建立稳定的查找环境。入口名称是阅读主角，分类颜色帮助识别资源，关联密钥在卡片内形成独立的操作区。标准网页控件承担搜索、筛选和编辑；图书馆导视是颜色与秩序的来源。\n\n密度服务于反复查找：标题、地址、关联关系和动作按固定顺序排列。系统无衬线覆盖中文与拉丁文，等宽体只用于地址及只读配置。浅色是默认主题，手动深色主题沿用同一组语义变量。",
+    "keyCharacteristics": [
+      "稳定的深绿导航与清晰内容层级。",
+      "分类图标始终伴随类型文字。",
+      "入口资料与关联密钥在卡片内分区。",
+      "浅深主题共享组件与可见键盘焦点。"
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Theme Rule",
+        "body": "组件使用语义变量；深色模式替换变量值，导航亮字与状态文字继续保留可读性。",
+        "section": "colors"
+      },
+      {
+        "name": "The Name First Rule",
+        "body": "资料名称高于地址与关联元数据；地址使用等宽体，主要操作保留文字。",
+        "section": "typography"
+      },
+      {
+        "name": "The Overlay Depth Rule",
+        "body": "目录卡片保持平面，菜单与对话框使用阴影表达浮层关系。",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do 使用语义颜色变量，使同一组件自动适应浅色与深色主题。",
+      "Do 将网站、PostgreSQL、Redis、通用服务的类型色与图标、文字一起呈现。",
+      "Do 把查看资料、打开网站、复制账号和复制密钥做成各自明确的操作。",
+      "Do 保留焦点轮廓、原生表单标签、筛选按下状态与减少动态效果支持。",
+      "Do 在窄屏允许筛选换行，将导航移入抽屉，并提高卡片内操作高度。"
+    ],
+    "donts": [
+      "Don't 把目录卡片整体变成会吞掉复制和菜单动作的点击区域。",
+      "Don't 用颜色单独表示资源类型、选中状态或未关联状态。",
+      "Don't 将服务入口描述为可以连接或测试的客户端；它们的动作是查看资料。",
+      "Don't 为地址和配置之外的普通中文正文引入等宽字体。"
+    ]
+  }
+}

@@ -1,1 +1,345 @@
-/* Responsive rules live with the design tokens in app.css. */
+@media (min-width: 1700px) {
+  .workspace-body {
+    padding-right: 50px;
+    padding-left: 50px;
+  }
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1200px) {
+  .topbar {
+    padding: 0 28px;
+  }
+  .workspace-body {
+    padding: 30px 28px 0;
+  }
+  .grid {
+    gap: 16px;
+  }
+  .lock-copy {
+    padding: 40px;
+  }
+  .lock-intro h1 {
+    font-size: 36px;
+  }
+}
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 206px minmax(0, 1fr);
+  }
+  .sidebar {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+  .workspace-header {
+    gap: 18px;
+  }
+  .workspace-header h1 {
+    font-size: 25px;
+  }
+  .directory-toolbar {
+    align-items: start;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sort-label {
+    align-self: flex-end;
+  }
+  .lock-screen {
+    grid-template-columns: minmax(320px, 0.9fr) minmax(380px, 1.1fr);
+  }
+  .lock-copy {
+    padding: 32px;
+  }
+  .lock-intro h1 {
+    font-size: 32px;
+  }
+}
+@media (max-width: 760px) {
+  .shell {
+    display: block;
+  }
+  .desktop-sidebar,
+  .desktop-location,
+  .local-label {
+    display: none;
+  }
+  .content {
+    min-height: 100dvh;
+  }
+  .topbar {
+    height: 62px;
+    padding: 0 20px 0 12px;
+  }
+  .mobile-menu {
+    display: inline-flex;
+  }
+  .mobile-brand {
+    display: block;
+    margin-left: 8px;
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+  }
+  .topbar-tools {
+    gap: 6px;
+  }
+  .lock-button {
+    border-color: transparent;
+    background: transparent;
+  }
+  .workspace-body {
+    padding: 27px 20px 0;
+  }
+  .workspace-header {
+    align-items: start;
+    margin-bottom: 22px;
+  }
+  .workspace-header h1 {
+    font-size: 25px;
+  }
+  .page-subtitle {
+    font-size: 11px;
+  }
+  .workspace-header .actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .actions > .primary {
+    min-height: 42px;
+  }
+  .actions .action-menu summary {
+    min-height: 42px;
+  }
+  .actions .menu-popover {
+    right: auto;
+    left: 0;
+  }
+  .directory-toolbar {
+    gap: 8px;
+    margin-top: 17px;
+    padding-bottom: 12px;
+  }
+  .type-filters {
+    gap: 1px;
+  }
+  .type-filters button {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  .search input {
+    font-size: 14px;
+  }
+  .search kbd {
+    display: none;
+  }
+  .clear-search {
+    right: 7px;
+  }
+  .search-row:has(.clear-search) input {
+    padding-right: 30px;
+  }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 14px;
+  }
+  .card-menu > summary.icon-button {
+    min-height: 38px;
+    width: 38px;
+  }
+  .credential-actions button {
+    min-height: 38px;
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+  .no-credentials button {
+    min-height: 40px;
+  }
+  .credential-picker select {
+    min-height: 34px;
+    font-size: 12px;
+  }
+  .card-footer > a,
+  .card-footer > button:not(.icon-button) {
+    min-height: 38px;
+    font-size: 12px;
+  }
+  .card-footer .icon-button {
+    min-height: 38px;
+    width: 38px;
+  }
+  .workspace-footer {
+    flex-wrap: wrap;
+    padding-top: 30px;
+    font-size: 10px;
+  }
+  .navigation-backdrop {
+    display: flex;
+    align-items: stretch;
+    justify-content: start;
+    padding: 0;
+  }
+  .navigation-drawer {
+    width: min(300px, calc(100% - 42px));
+    height: 100%;
+  }
+  .mobile-sidebar {
+    width: 100%;
+    height: 100%;
+    padding-top: 25px;
+  }
+  .mobile-sidebar .sidebar-brand {
+    margin-bottom: 27px;
+  }
+  .mobile-sidebar nav > button {
+    min-height: 46px;
+  }
+  .mobile-sidebar .sidebar-note p {
+    font-size: 11px;
+  }
+  .empty {
+    padding: 60px 5px;
+  }
+  .empty h2 {
+    font-size: 20px;
+  }
+  .empty-explainer {
+    gap: 12px;
+    margin-top: 33px;
+    font-size: 10px;
+  }
+  .list-hint {
+    display: none;
+  }
+  .key-table th,
+  .key-table td {
+    padding: 12px;
+  }
+  .key-table th:first-child {
+    width: auto;
+  }
+  .key-table th:last-child {
+    width: 92px;
+  }
+  .key-row-actions {
+    gap: 0;
+    flex-direction: column;
+  }
+  .key-table th:nth-child(2) {
+    width: 78px;
+  }
+  .vault-item {
+    gap: 7px;
+  }
+  .key-avatar {
+    display: none;
+  }
+  .toast {
+    bottom: 20px;
+    left: 50%;
+    width: max-content;
+  }
+  .skip-link {
+    left: 20px;
+  }
+  .lock-screen {
+    display: block;
+  }
+  .lock-copy {
+    display: none;
+  }
+  .lock-form-area {
+    min-height: 100dvh;
+    padding: 28px 28px 22px;
+  }
+  .lock-mobile-brand {
+    display: block;
+    align-self: start;
+    margin-bottom: 45px;
+  }
+  .lock-mobile-brand .brand {
+    color: var(--ink);
+    font-size: 22px;
+  }
+  .lock-mobile-brand .brand-mark {
+    color: var(--accent);
+    border-color: var(--line);
+    background: var(--surface);
+  }
+  .lock-mobile-brand .brand small {
+    color: var(--muted);
+  }
+  .lock-card {
+    width: min(390px, 100%);
+  }
+  .lock-form-icon {
+    display: none;
+  }
+  .lock-card h2 {
+    font-size: 25px;
+  }
+  .lock-card input,
+  .lock-card select,
+  .modal input,
+  .modal select,
+  .modal textarea {
+    font-size: 16px;
+  }
+}
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .topbar {
+    padding-right: 12px;
+  }
+  .workspace-body {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+  .type-filters {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .type-filters button {
+    padding: 6px 8px;
+  }
+  .type-filters button > span {
+    font-size: 10px;
+  }
+  .card-body {
+    padding-top: 13px;
+  }
+  .modal-backdrop:not(.navigation-backdrop) {
+    padding: 0;
+    align-items: stretch;
+  }
+  .modal {
+    width: 100%;
+    max-height: 100dvh;
+    height: 100dvh;
+    padding: 24px 20px;
+    border-radius: 0;
+  }
+  .modal-actions {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .entry-modal {
+    padding: 26px 22px;
+  }
+  .empty-explainer {
+    flex-direction: column;
+    gap: 9px;
+  }
+  .empty-explainer > .icon {
+    display: none;
+  }
+  .key-links {
+    padding: 3px 5px;
+    font-size: 10px;
+  }
+}

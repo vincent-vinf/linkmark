@@ -8,6 +8,7 @@ import {
 } from "./domain/targets";
 import { db, type Group } from "./storage/db";
 import { createVault, saveVault, unlockVault } from "./vault/vault";
+import { CryptoUnavailableError } from "./crypto/environment";
 import {
   addEntry,
   addKey,
@@ -33,8 +34,16 @@ import {
   parseKeyStoreBackup,
   serializeKeyStoreBackup,
 } from "./portability/backup";
+import { Dialog, Icon, type IconName } from "./ui";
 import "./app.css";
 import "./responsive.css";
+
+const kindIcons: Record<TargetKind, IconName> = {
+  web: "globe",
+  postgresql: "database",
+  redis: "server",
+  generic: "box",
+};
 
 const emptyWorkspace: EncryptedWorkspace = {
   entries: [],
@@ -62,7 +71,7 @@ export default function App() {
   const [workspace, setWorkspace] = useState(emptyWorkspace);
   const [locked, setLocked] = useState(true);
   const [theme, setTheme] = useState<"dark" | "light">(() =>
-    localStorage.getItem("linkmark-theme") === "light" ? "light" : "dark",
+    localStorage.getItem("linkmark-theme") === "dark" ? "dark" : "light",
   );
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -82,6 +91,63 @@ export default function App() {
   const [importOpen, setImportOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [opening, setOpening] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const [kindFilter, setKindFilter] = useState<TargetKind | "all">("all");
+  const [onlyPinned, setOnlyPinned] = useState(false);
+  useEffect(() => {
+    const closeMenus = (event: MouseEvent) => {
+      document
+        .querySelectorAll<HTMLDetailsElement>("details[data-menu][open]")
+        .forEach((menu) => {
+          if (
+            !menu.contains(event.target as Node) ||
+            (event.target as HTMLElement).closest("button")
+          )
+            menu.open = false;
+        });
+    };
+    const shortcuts = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        document
+          .querySelectorAll<HTMLDetailsElement>("details[data-menu][open]")
+          .forEach((menu) => {
+            menu.open = false;
+            menu.querySelector("summary")?.focus();
+          });
+      }
+      if (locked || document.querySelector('[role="dialog"]')) return;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        document
+          .querySelector<HTMLInputElement>("[data-workspace-search]")
+          ?.focus();
+      }
+      if (
+        !(event.target instanceof HTMLElement) ||
+        event.target.closest(
+          'input, textarea, select, [contenteditable="true"]',
+        )
+      )
+        return;
+      if (
+        event.key.toLowerCase() === "n" &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey
+      ) {
+        event.preventDefault();
+        if (view === "keys") setKeyEditor("new");
+        else setEntryEditor("new");
+      }
+    };
+    document.addEventListener("click", closeMenus);
+    document.addEventListener("keydown", shortcuts);
+    return () => {
+      document.removeEventListener("click", closeMenus);
+      document.removeEventListener("keydown", shortcuts);
+    };
+  }, [locked, view]);
   useEffect(() => {
     void db.vaults
       .get("primary")
@@ -115,6 +181,17 @@ export default function App() {
     setView("entries");
     setEntryEditor(null);
     setKeyEditor(null);
+    setGroupEditor(false);
+    setRecycleOpen(false);
+    setImportOpen(false);
+    setShareOpen(false);
+    setNavOpen(false);
+    setQuery("");
+    setToast("");
+    setPassword("");
+    setConfirm("");
+    setKindFilter("all");
+    setOnlyPinned(false);
   };
   useEffect(() => {
     window.addEventListener("pagehide", lock);
@@ -126,6 +203,8 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [expiry]);
   const open = async (create: boolean) => {
+    if (opening) return;
+    setOpening(true);
     try {
       setError("");
       if (create && password !== confirm)
@@ -142,10 +221,19 @@ export default function App() {
       else refresh();
       setExpiry(Date.now() + duration);
       setLocked(false);
+      setHasVault(true);
       setPassword("");
       setConfirm("");
-    } catch {
-      setError("无法打开密钥库，请检查主密码。");
+    } catch (cause) {
+      setError(
+        cause instanceof CryptoUnavailableError
+          ? cause.message
+          : create
+            ? "无法创建密钥库，请确认浏览器允许本地存储后重试。"
+            : "无法打开密钥库，请检查主密码或重试。",
+      );
+    } finally {
+      setOpening(false);
     }
   };
   const importBackup = async (
@@ -203,6 +291,8 @@ export default function App() {
     () =>
       workspace.entries
         .filter((entry) => {
+          if (kindFilter !== "all" && entry.kind !== kindFilter) return false;
+          if (onlyPinned && !entry.pinned) return false;
           if (activeGroup !== undefined && entry.groupId !== activeGroup)
             return false;
           const keys = entry.vaultItemIds
@@ -222,12 +312,13 @@ export default function App() {
               : Number(b.pinned) - Number(a.pinned) ||
                 a.sortOrder - b.sortOrder,
         ),
-    [workspace, query, activeGroup, sortBy],
+    [workspace, query, activeGroup, sortBy, kindFilter, onlyPinned],
   );
   if (locked)
     return (
       <LockScreen
         hasVault={hasVault}
+        opening={opening}
         password={password}
         confirm={confirm}
         duration={duration}
@@ -260,178 +351,217 @@ export default function App() {
         : activeGroup
           ? workspace.groups.find((group) => group.id === activeGroup)?.name
           : "所有入口";
+  const navigate = (
+    nextView: "entries" | "keys",
+    group?: string | null,
+    pinned = false,
+  ) => {
+    setView(nextView);
+    setActiveGroup(group);
+    setOnlyPinned(pinned);
+    setKindFilter("all");
+    setQuery("");
+    setNavOpen(false);
+  };
+  const sidebar = (mobile = false) => (
+    <Sidebar
+      mobile={mobile}
+      workspace={workspace}
+      view={view}
+      activeGroup={activeGroup}
+      onlyPinned={onlyPinned}
+      onNavigate={navigate}
+      onGroups={() => {
+        setNavOpen(false);
+        setGroupEditor(true);
+      }}
+      onRecycle={() => {
+        setNavOpen(false);
+        setRecycleOpen(true);
+      }}
+      onLock={lock}
+      onClose={() => setNavOpen(false)}
+    />
+  );
   return (
     <main className="shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <span>LM</span>
-          <div>
-            Linkmark<small>私人入口簿</small>
-          </div>
-        </div>
-        <button
-          className="new-button"
-          aria-label="新建入口 ↗"
-          onClick={() => setEntryEditor("new")}
+      <a className="skip-link" href="#workspace">
+        跳到资料区
+      </a>
+      {sidebar()}
+      {navOpen && (
+        <Dialog
+          onClose={() => setNavOpen(false)}
+          className="navigation-backdrop"
         >
-          <span className="button-plus">＋</span>新建入口 <kbd>N</kbd>
-        </button>
-        <nav aria-label="资料导航">
-          <p className="nav-label">浏览</p>
-          <button
-            className={
-              view === "entries" && activeGroup === undefined ? "active" : ""
-            }
-            onClick={() => {
-              setView("entries");
-              setActiveGroup(undefined);
-            }}
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="资料导航"
+            className="navigation-drawer"
           >
-            <span>所有入口</span>
-            <small>{workspace.entries.length}</small>
-          </button>
-          <button
-            className={
-              view === "entries" && activeGroup === null ? "active" : ""
-            }
-            onClick={() => {
-              setView("entries");
-              setActiveGroup(null);
-            }}
-          >
-            <span>默认分组</span>
-            <small>
-              {
-                workspace.entries.filter((entry) => entry.groupId === null)
-                  .length
-              }
-            </small>
-          </button>
-          <div className="section-title">
-            <span>分组</span>
-            <button aria-label="管理分组" onClick={() => setGroupEditor(true)}>
-              ＋
-            </button>
+            {sidebar(true)}
           </div>
-          {workspace.groups.map((group) => (
+        </Dialog>
+      )}
+      <section className="content" id="workspace" tabIndex={-1}>
+        <header className="topbar">
+          <div className="topbar-location">
             <button
-              className={
-                view === "entries" && activeGroup === group.id ? "active" : ""
-              }
-              onClick={() => {
-                setView("entries");
-                setActiveGroup(group.id);
-              }}
-              key={group.id}
+              className="icon-button mobile-menu"
+              aria-label="打开导航"
+              onClick={() => setNavOpen(true)}
             >
-              <span>{group.name}</span>
-              <small>
-                {
-                  workspace.entries.filter(
-                    (entry) => entry.groupId === group.id,
-                  ).length
-                }
-              </small>
+              <Icon name="menu" />
             </button>
-          ))}
-          <p className="nav-label vault-label">密钥库</p>
-          <button
-            className={view === "keys" ? "active" : ""}
-            onClick={() => setView("keys")}
-          >
-            <span>全部密钥</span>
-            <small>{workspace.keys.length}</small>
-          </button>
-        </nav>
-        <div className="sidebar-footer">
-          <span className="lock-dot unlocked" />
-          <span>已解锁</span>
-          <button onClick={lock}>立即锁定</button>
-        </div>
-      </aside>
-      <section className="content">
-        <header className="workspace-header">
-          <div>
-            <p className="eyebrow">LINKMARK / 本机加密工作台</p>
-            <h1>{pageTitle}</h1>
-            <p className="page-subtitle">
-              {view === "keys"
-                ? "集中保存、复用并安全地查看访问凭据。"
-                : "你常用的服务与访问资料，始终保留在这台设备。"}
-            </p>
+            <span className="mobile-brand">Linkmark</span>
+            <span className="desktop-location">
+              私人入口簿 <Icon name="chevron" size={13} />{" "}
+              <span>{pageTitle}</span>
+            </span>
           </div>
-          <div className="actions">
+          <div className="topbar-tools">
+            <span className="local-label">
+              <Icon name="shield" size={15} /> 本地加密
+            </span>
             <button
+              className="icon-button"
               aria-label="切换颜色模式"
+              title={theme === "dark" ? "切换浅色模式" : "切换深色模式"}
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
-              {theme === "dark" ? "☼ 浅色" : "◐ 深色"}
+              <Icon name={theme === "dark" ? "sun" : "moon"} />
             </button>
-            <button onClick={() => setShareOpen(true)}>分享</button>
-            <button onClick={() => void downloadBackup()}>导出备份</button>
-            <details className="more-actions">
-              <summary>更多操作</summary>
-              <div>
-                <button onClick={() => setRecycleOpen(true)}>回收站</button>
-                <button onClick={() => setImportOpen(true)}>导入加密包</button>
-                <button className="danger" onClick={lock}>
-                  锁定密钥库
-                </button>
-              </div>
-            </details>
+            <button className="lock-button" onClick={lock}>
+              <Icon name="lock" size={16} />
+              <span>锁定</span>
+            </button>
           </div>
         </header>
-        <section className="workspace-strip" aria-label="密钥库概览">
-          <div>
-            <span>入口</span>
-            <strong>{workspace.entries.length}</strong>
-          </div>
-          <div>
-            <span>密钥</span>
-            <strong>{workspace.keys.length}</strong>
-          </div>
-          <div>
-            <span>分组</span>
-            <strong>{workspace.groups.length + 1}</strong>
-          </div>
-          <p>
-            <span className="live-dot" />
-            正在本机内存中安全查看
-          </p>
-        </section>
-        {view === "keys" ? (
-          <KeyList
-            workspace={workspace}
-            onNew={() => setKeyEditor("new")}
-            onEdit={setKeyEditor}
-            onDelete={async (key) => {
-              if (
-                window.confirm(`删除密钥“${key.title}”并解除所有入口关联？`)
-              ) {
-                deleteKey(vaultRef.current!, key.id);
-                await persist();
-              }
-            }}
-          />
-        ) : (
-          <EntryList
-            visible={visible}
-            query={query}
-            sortBy={sortBy}
-            onSort={setSortBy}
-            onQuery={setQuery}
-            vault={vaultRef.current!}
-            onCopy={copyValue}
-            onNew={() => setEntryEditor("new")}
-            onEdit={setEntryEditor}
-            onDelete={async (entry) => {
-              if (window.confirm(`将“${entry.name}”移入回收站？`)) {
-                deleteEntry(vaultRef.current!, entry.id);
-                await persist();
-              }
-            }}
-          />
-        )}
+        <div className="workspace-body">
+          <header className="workspace-header">
+            <div>
+              <h1>
+                {onlyPinned ? "已置顶" : pageTitle}
+                <span className="title-count">
+                  {view === "keys"
+                    ? workspace.keys.length
+                    : onlyPinned
+                      ? workspace.entries.filter((e) => e.pinned).length
+                      : activeGroup === undefined
+                        ? workspace.entries.length
+                        : workspace.entries.filter(
+                            (e) => e.groupId === activeGroup,
+                          ).length}
+                </span>
+              </h1>
+              <p className="page-subtitle">
+                {view === "keys"
+                  ? "账号、密码与 Token，保存一次，关联多个入口。"
+                  : onlyPinned
+                    ? "常用的访问地址，随时找到。"
+                    : "收好访问地址，需要时一处找到。"}
+              </p>
+            </div>
+            <div className="actions">
+              <details className="action-menu" data-menu>
+                <summary>
+                  <Icon name="download" size={16} />
+                  <span>备份与分享</span>
+                  <Icon name="down" size={14} />
+                </summary>
+                <div className="menu-popover">
+                  <button onClick={() => void downloadBackup()}>
+                    <Icon name="download" />
+                    导出备份
+                  </button>
+                  <button onClick={() => setImportOpen(true)}>
+                    <Icon name="upload" />
+                    导入加密包
+                  </button>
+                  <button onClick={() => setShareOpen(true)}>
+                    <Icon name="share" />
+                    分享
+                  </button>
+                  <p>用加密包备份或迁移资料</p>
+                </div>
+              </details>
+              <button
+                className="primary"
+                aria-label={view === "keys" ? "新建密钥" : "新建入口"}
+                onClick={() =>
+                  view === "keys" ? setKeyEditor("new") : setEntryEditor("new")
+                }
+              >
+                <Icon name="plus" />
+                {view === "keys" ? "新建密钥" : "新建入口"}
+              </button>
+            </div>
+          </header>
+          {view === "keys" ? (
+            <KeyList
+              workspace={workspace}
+              onNew={() => setKeyEditor("new")}
+              onEdit={setKeyEditor}
+              onDelete={async (key) => {
+                if (
+                  window.confirm(`删除密钥“${key.title}”并解除所有入口关联？`)
+                ) {
+                  deleteKey(vaultRef.current!, key.id);
+                  await persist();
+                }
+              }}
+            />
+          ) : (
+            <EntryList
+              visible={visible}
+              query={query}
+              groups={workspace.groups}
+              allEntries={workspace.entries.filter(
+                (e) =>
+                  (activeGroup === undefined || e.groupId === activeGroup) &&
+                  (!onlyPinned || e.pinned),
+              )}
+              kindFilter={kindFilter}
+              onKindFilter={setKindFilter}
+              onClear={() => {
+                setQuery("");
+                setKindFilter("all");
+              }}
+              onTogglePin={async (entry) => {
+                updateEntry(vaultRef.current!, {
+                  ...entry,
+                  pinned: !entry.pinned,
+                });
+                try {
+                  await persist();
+                } catch {
+                  setToast("未能保存置顶状态，请重试。");
+                }
+              }}
+              sortBy={sortBy}
+              onSort={setSortBy}
+              onQuery={setQuery}
+              vault={vaultRef.current!}
+              onCopy={copyValue}
+              onNew={() => setEntryEditor("new")}
+              onEdit={setEntryEditor}
+              onDelete={async (entry) => {
+                if (window.confirm(`将“${entry.name}”移入回收站？`)) {
+                  deleteEntry(vaultRef.current!, entry.id);
+                  await persist();
+                }
+              }}
+            />
+          )}
+          <footer className="workspace-footer">
+            <span>
+              <Icon name="shield" size={14} />
+              资料加密保存在此浏览器
+            </span>
+            {expiry && <SessionStatus expiry={expiry} />}
+          </footer>
+        </div>
         {entryEditor && (
           <EntryEditor
             entry={entryEditor === "new" ? undefined : entryEditor}
@@ -509,7 +639,7 @@ export default function App() {
         )}
         {toast && (
           <div className="toast" role="status">
-            ✓ {toast}
+            <Icon name="info" /> {toast}
           </div>
         )}
       </section>
@@ -517,8 +647,196 @@ export default function App() {
   );
 }
 
+function Brand() {
+  return (
+    <div className="brand">
+      <span className="brand-mark">
+        <Icon name="bookmark" size={24} />
+      </span>
+      <div>
+        Linkmark<small>私人入口簿</small>
+      </div>
+    </div>
+  );
+}
+
+function SessionStatus({ expiry }: { expiry: number }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const minutes = Math.max(1, Math.ceil((expiry - now) / 60_000));
+  const label =
+    minutes >= 1440
+      ? `${Math.ceil(minutes / 1440)} 天`
+      : minutes >= 60
+        ? `${Math.ceil(minutes / 60)} 小时`
+        : `${minutes} 分钟`;
+  return (
+    <span title={`自动锁定时间：${new Date(expiry).toLocaleString("zh-CN")}`}>
+      <Icon name="clock" size={14} />
+      {label}后自动锁定
+    </span>
+  );
+}
+
+function Sidebar({
+  workspace,
+  view,
+  activeGroup,
+  onlyPinned,
+  mobile,
+  onNavigate,
+  onGroups,
+  onRecycle,
+  onLock,
+  onClose,
+}: {
+  workspace: EncryptedWorkspace;
+  view: "entries" | "keys";
+  activeGroup?: string | null;
+  onlyPinned: boolean;
+  mobile: boolean;
+  onNavigate: (
+    view: "entries" | "keys",
+    group?: string | null,
+    pinned?: boolean,
+  ) => void;
+  onGroups: () => void;
+  onRecycle: () => void;
+  onLock: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <aside
+      className={`sidebar ${mobile ? "mobile-sidebar" : "desktop-sidebar"}`}
+    >
+      <div className="sidebar-brand">
+        <Brand />
+        {mobile && (
+          <button
+            className="icon-button"
+            aria-label="关闭导航"
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </button>
+        )}
+      </div>
+      <nav aria-label="资料导航">
+        <p className="nav-label">我的资料</p>
+        <button
+          className={
+            view === "entries" && activeGroup === undefined && !onlyPinned
+              ? "active"
+              : ""
+          }
+          aria-current={
+            view === "entries" && activeGroup === undefined && !onlyPinned
+              ? "page"
+              : undefined
+          }
+          onClick={() => onNavigate("entries")}
+        >
+          <Icon name="grid" />
+          <span>所有入口</span>
+          <small>{workspace.entries.length}</small>
+        </button>
+        <button
+          className={view === "entries" && onlyPinned ? "active" : ""}
+          aria-current={view === "entries" && onlyPinned ? "page" : undefined}
+          onClick={() => onNavigate("entries", undefined, true)}
+        >
+          <Icon name="star" />
+          <span>已置顶</span>
+          <small>{workspace.entries.filter((e) => e.pinned).length}</small>
+        </button>
+        <button
+          className={view === "keys" ? "active" : ""}
+          aria-current={view === "keys" ? "page" : undefined}
+          onClick={() => onNavigate("keys")}
+        >
+          <Icon name="key" />
+          <span>全部密钥</span>
+          <small>{workspace.keys.length}</small>
+        </button>
+        <div className="section-title">
+          <span>分组</span>
+          <button
+            className="icon-button"
+            aria-label="管理分组"
+            title="管理分组"
+            onClick={onGroups}
+          >
+            <Icon name="plus" size={16} />
+          </button>
+        </div>
+        <button
+          className={view === "entries" && activeGroup === null ? "active" : ""}
+          aria-current={
+            view === "entries" && activeGroup === null ? "page" : undefined
+          }
+          onClick={() => onNavigate("entries", null)}
+        >
+          <Icon name="folder" />
+          <span>默认分组</span>
+          <small>
+            {workspace.entries.filter((e) => e.groupId === null).length}
+          </small>
+        </button>
+        {workspace.groups.map((group) => (
+          <button
+            key={group.id}
+            className={
+              view === "entries" && activeGroup === group.id ? "active" : ""
+            }
+            aria-current={
+              view === "entries" && activeGroup === group.id
+                ? "page"
+                : undefined
+            }
+            onClick={() => onNavigate("entries", group.id)}
+          >
+            <Icon name="folder" />
+            <span>{group.name}</span>
+            <small>
+              {workspace.entries.filter((e) => e.groupId === group.id).length}
+            </small>
+          </button>
+        ))}
+        {!workspace.groups.length && (
+          <button className="add-group" onClick={onGroups}>
+            <Icon name="plus" size={16} />
+            <span>新建分组</span>
+          </button>
+        )}
+      </nav>
+      <div className="sidebar-bottom">
+        <button className="recycle-nav" onClick={onRecycle}>
+          <Icon name="trash" />
+          <span>回收站</span>
+        </button>
+        <div className="sidebar-note">
+          <Icon name="shield" size={20} />
+          <div>
+            <strong>你的资料，由你保管</strong>
+            <p>仅在此浏览器存储，请定期备份。</p>
+          </div>
+        </div>
+        <button className="sidebar-lock" onClick={onLock}>
+          <span className="status-dot" />
+          密钥库已解锁
+          <Icon name="lock" size={16} />
+        </button>
+      </div>
+    </aside>
+  );
+}
+
 function LockScreen(props: {
   hasVault: boolean;
+  opening: boolean;
   password: string;
   confirm: string;
   duration: number;
@@ -540,92 +858,157 @@ function LockScreen(props: {
   return (
     <main className="lock-screen">
       <section className="lock-copy">
-        <div className="brand">
-          <span>LM</span>
-          <div>
-            Linkmark<small>LOCAL VAULT</small>
+        <Brand />
+        <div className="lock-intro">
+          <h1>
+            把常用入口
+            <br />
+            和访问凭据，
+            <br />
+            <span>锁在一起。</span>
+          </h1>
+          <p>
+            从一个网站，到你的自托管服务。
+            <br />
+            访问资料井井有条，也只属于你。
+          </p>
+          <div className="lock-guide">
+            <div>
+              <Icon name="globe" size={22} />
+              <span>
+                <strong>入口，保存访问地址</strong>
+                <small>网站、数据库，以及其他服务</small>
+              </span>
+            </div>
+            <div>
+              <Icon name="key" size={22} />
+              <span>
+                <strong>密钥，保存访问凭据</strong>
+                <small>账号、密码与 Token，可关联多个入口</small>
+              </span>
+            </div>
           </div>
         </div>
-        <p className="eyebrow">私人资料，不离开这台设备</p>
-        <h1>
-          把常用入口
-          <br />
-          和访问凭据
-          <br />
-          <em>锁在一起。</em>
-        </h1>
-        <p>
-          网站、服务地址、账号与密钥由同一个本机密钥库保护。服务器只提供页面，不接触你的资料。
+        <p className="lock-privacy">
+          <Icon name="shield" size={18} />
+          本地加密 · 无需注册 · 可离线使用
         </p>
-        <div className="lock-facts">
-          <span>ARGON2ID</span>
-          <span>AES-GCM</span>
-          <span>OFFLINE</span>
-        </div>
       </section>
-      <section className="lock-card">
-        <p className="eyebrow">{props.hasVault ? "欢迎回来" : "首次使用"}</p>
-        <h2>{props.hasVault ? "解锁密钥库" : "创建密钥库"}</h2>
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (props.password && (props.hasVault || props.confirm))
-              props.onOpen();
-          }}
-        >
-          <p className="security-note">
+      <section className="lock-form-area">
+        <div className="lock-mobile-brand">
+          <Brand />
+        </div>
+        <div className="lock-card">
+          <span className="lock-form-icon">
+            <Icon name="lock" size={25} />
+          </span>
+          <h2>{props.hasVault ? "欢迎回来" : "创建你的私人密钥库"}</h2>
+          <p className="lock-description">
             {props.hasVault
-              ? "输入主密码，资料仅在当前页面内存中解密。"
-              : "主密码无法找回。创建后请保留一份加密备份。"}
+              ? "解锁后，继续管理你的入口与访问凭据。"
+              : "设置一个主密码，开始收好你的访问资料。"}
           </p>
-          <label>
-            主密码
-            <input
-              type="password"
-              value={props.password}
-              onChange={(event) => props.onPassword(event.target.value)}
-              autoFocus
-            />
-          </label>
-          {!props.hasVault && (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (
+                props.password &&
+                (props.hasVault || props.confirm) &&
+                !props.opening
+              )
+                props.onOpen();
+            }}
+            aria-busy={props.opening}
+          >
             <label>
-              确认主密码
+              主密码
               <input
                 type="password"
-                value={props.confirm}
-                onChange={(event) => props.onConfirm(event.target.value)}
+                autoComplete={
+                  props.hasVault ? "current-password" : "new-password"
+                }
+                required
+                value={props.password}
+                onChange={(event) => props.onPassword(event.target.value)}
+                placeholder={
+                  props.hasVault ? "输入主密码" : "建议使用较长、易记的口令"
+                }
+                autoFocus
+                disabled={props.opening}
               />
             </label>
-          )}
-          <label>
-            保持解锁
-            <select
-              value={props.duration}
-              onChange={(event) => props.onDuration(Number(event.target.value))}
+            {!props.hasVault && (
+              <label>
+                确认主密码
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={props.confirm}
+                  onChange={(event) => props.onConfirm(event.target.value)}
+                  placeholder="再输入一次主密码"
+                  disabled={props.opening}
+                />
+              </label>
+            )}
+            <label>
+              保持解锁
+              <select
+                value={props.duration}
+                onChange={(event) =>
+                  props.onDuration(Number(event.target.value))
+                }
+                disabled={props.opening}
+              >
+                {durations.map(([value, label]) => (
+                  <option value={value} key={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="field-hint">到期自动锁定，刷新页面也会立即锁定。</p>
+            {props.error && (
+              <p className="error" role="alert">
+                {props.error}
+              </p>
+            )}
+            <button
+              className="primary lock-submit"
+              type="submit"
+              disabled={
+                props.opening ||
+                !props.password ||
+                (!props.hasVault && !props.confirm)
+              }
             >
-              {durations.map(([value, label]) => (
-                <option value={value} key={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {props.error && <p className="error">{props.error}</p>}
-          <button
-            className="primary"
-            type="submit"
-            disabled={!props.password || (!props.hasVault && !props.confirm)}
-          >
-            {props.hasVault ? "解锁密钥库" : "创建密钥库"}
-          </button>
-          <button
-            className="text-button"
-            type="button"
-            onClick={props.onImport}
-          >
-            {props.hasVault ? "从备份恢复" : "导入加密包"}
-          </button>
-        </form>
+              {props.opening
+                ? "正在打开密钥库…"
+                : props.hasVault
+                  ? "解锁密钥库"
+                  : "创建密钥库"}
+              <Icon name={props.opening ? "clock" : "chevron"} size={18} />
+            </button>
+            <button
+              className="text-button"
+              type="button"
+              onClick={props.onImport}
+              disabled={props.opening}
+            >
+              <Icon name="upload" size={15} />
+              {props.hasVault ? "从备份恢复" : "已有备份？导入加密包"}
+            </button>
+          </form>
+          <div className="password-notice">
+            <Icon name="info" size={17} />
+            <p>
+              {props.hasVault
+                ? "主密码不会发送给服务器。解锁后的资料仅在当前页面内存中保留。"
+                : "主密码无法找回。请妥善保管，并在创建后导出一份加密备份。"}
+            </p>
+          </div>
+        </div>
+        <p className="lock-page-footer">服务器只提供页面，不接触你的资料。</p>
       </section>
       {props.importOpen && (
         <ImportDialog
@@ -649,6 +1032,12 @@ function EntryList({
   onNew,
   onEdit,
   onDelete,
+  groups,
+  allEntries,
+  kindFilter,
+  onKindFilter,
+  onClear,
+  onTogglePin,
 }: {
   visible: Target[];
   query: string;
@@ -660,31 +1049,63 @@ function EntryList({
   onNew: () => void;
   onEdit: (entry: Target) => void;
   onDelete: (entry: Target) => Promise<void>;
+  groups: Group[];
+  allEntries: Target[];
+  kindFilter: TargetKind | "all";
+  onKindFilter: (kind: TargetKind | "all") => void;
+  onClear: () => void;
+  onTogglePin: (entry: Target) => Promise<void>;
 }) {
   const [selectedCredentialIds, setSelectedCredentialIds] = useState<
     Record<string, string>
   >({});
-  const openWebsite = (entry: Target) => {
-    if (entry.kind === "web" && typeof entry.config.url === "string")
-      window.open(entry.config.url, "_blank", "noopener,noreferrer");
-  };
+  const filtered = Boolean(query.trim() || kindFilter !== "all");
   return (
     <>
-      <label className="search">
-        <span>⌕</span>
-        <input
-          value={query}
-          onChange={(event) => onQuery(event.target.value)}
-          placeholder="搜索名称、地址或关联密钥"
-        />
-        <kbd>⌘ K</kbd>
-      </label>
-      <div className="toolbar">
-        <span>
-          <strong>{visible.length}</strong> 个入口
-        </span>
-        <span className="sort-label">
-          排序
+      <div className="search-row">
+        <label className="search">
+          <Icon name="search" size={20} />
+          <input
+            data-workspace-search
+            aria-label="搜索入口"
+            value={query}
+            onChange={(event) => onQuery(event.target.value)}
+            placeholder="搜索入口名称、地址或关联密钥…"
+          />
+          <kbd>Ctrl / ⌘ K</kbd>
+        </label>
+        {query && (
+          <button
+            className="icon-button clear-search"
+            aria-label="清除搜索"
+            onClick={() => onQuery("")}
+          >
+            <Icon name="close" size={16} />
+          </button>
+        )}
+      </div>
+      <div className="directory-toolbar">
+        <div className="type-filters" role="group" aria-label="入口类型筛选">
+          {(["all", "web", "postgresql", "redis", "generic"] as const).map(
+            (kind) => (
+              <button
+                key={kind}
+                aria-pressed={kindFilter === kind}
+                className={kindFilter === kind ? "selected" : ""}
+                onClick={() => onKindFilter(kind)}
+              >
+                {kind === "all" ? "全部" : kindNames[kind]}
+                <span>
+                  {kind === "all"
+                    ? allEntries.length
+                    : allEntries.filter((e) => e.kind === kind).length}
+                </span>
+              </button>
+            ),
+          )}
+        </div>
+        <label className="sort-label">
+          <span>排序</span>
           <select
             aria-label="入口排序"
             value={sortBy}
@@ -696,155 +1117,247 @@ function EntryList({
             <option value="name">名称</option>
             <option value="updated">最近更新</option>
           </select>
-        </span>
-        <button onClick={onNew}>＋ 新建入口</button>
+        </label>
       </div>
       {visible.length ? (
-        <div className="grid">
-          {visible.map((entry) => {
-            const credentials = entry.vaultItemIds
-              .map((id) => getKey(vault, id))
-              .filter((key): key is NonNullable<typeof key> => Boolean(key));
-            const selectedCredential =
-              credentials.find(
-                (key) => key.id === selectedCredentialIds[entry.id],
-              ) ?? credentials[0];
-            const hasMultipleCredentials = credentials.length > 1;
-            const clickable =
-              entry.kind === "web" && typeof entry.config.url === "string";
-            return (
-              <article
-                className={`card${clickable ? " clickable" : ""}${hasMultipleCredentials ? " multi-credential" : ""}`}
-                key={entry.id}
-                role={clickable ? "link" : undefined}
-                tabIndex={clickable ? 0 : undefined}
-                onClick={() => openWebsite(entry)}
-                onKeyDown={(event) => {
-                  if (
-                    clickable &&
-                    (event.key === "Enter" || event.key === " ")
-                  ) {
-                    event.preventDefault();
-                    openWebsite(entry);
-                  }
-                }}
-              >
-                <div className="card-top">
-                  <div className={`kind kind-${entry.kind}`}>
-                    {entry.kind === "web"
-                      ? "↗"
-                      : entry.kind === "postgresql"
-                        ? "PG"
-                        : entry.kind === "redis"
-                          ? "R"
-                          : "·"}
-                  </div>
-                  <p className="kind-label">{kindNames[entry.kind]}</p>
-                  <button
-                    className="edit-icon"
-                    aria-label={`编辑 ${entry.name}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onEdit(entry);
-                    }}
-                  >
-                    •••
-                  </button>
-                </div>
-                <div className="card-body">
-                  <h2>{entry.name}</h2>
-                  <p>{Object.values(entry.config).join(" · ")}</p>
-                  {entry.notes && (
-                    <p className="card-note" title={entry.notes}>
-                      {entry.notes}
-                    </p>
-                  )}
-                </div>
-                <div className="card-actions">
-                  {selectedCredential ? (
-                    <label
-                      className={`credential-picker${hasMultipleCredentials ? "" : " is-static"}`}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <select
-                        aria-label={`${entry.name} 的复制密钥`}
-                        disabled={!hasMultipleCredentials}
-                        value={selectedCredential.id}
-                        onChange={(event) =>
-                          setSelectedCredentialIds((current) => ({
-                            ...current,
-                            [entry.id]: event.target.value,
-                          }))
-                        }
-                      >
-                        {credentials.map((key) => (
-                          <option key={key.id} value={key.id}>
-                            {key.title}
-                            {key.username ? ` · ${key.username}` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : (
-                    <span className="link-secret">未关联密钥</span>
-                  )}
-                  {selectedCredential && (
-                    <span className="credential-actions">
-                      {selectedCredential.username && (
-                        <button
-                          aria-label={`复制 ${entry.name} 的账号`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void onCopy(
-                              "账号",
-                              selectedCredential.username ?? "",
-                            );
-                          }}
-                        >
-                          复制账号
-                        </button>
-                      )}
-                      {selectedCredential.password && (
-                        <button
-                          aria-label={`复制 ${entry.name} 的密钥`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void onCopy(
-                              "密钥",
-                              selectedCredential.password ?? "",
-                            );
-                          }}
-                        >
-                          复制密钥
-                        </button>
-                      )}
+        <>
+          <div className="results-caption" role="status">
+            {filtered
+              ? `找到 ${visible.length} 个入口`
+              : `${visible.length} 个入口`}
+            {filtered && (
+              <button className="text-action" onClick={onClear}>
+                清除筛选
+              </button>
+            )}
+          </div>
+          <div className="grid">
+            {visible.map((entry) => {
+              const credentials = entry.vaultItemIds
+                .map((id) => getKey(vault, id))
+                .filter((key): key is NonNullable<typeof key> => Boolean(key));
+              const selectedCredential =
+                credentials.find(
+                  (key) => key.id === selectedCredentialIds[entry.id],
+                ) ?? credentials[0];
+              const isWeb =
+                entry.kind === "web" && typeof entry.config.url === "string";
+              const address =
+                entry.kind === "web"
+                  ? String(entry.config.url)
+                      .replace(/^https?:\/\//, "")
+                      .replace(/\/$/, "")
+                  : entry.config.host
+                    ? `${entry.config.host}${entry.config.port ? `:${entry.config.port}` : ""}`
+                    : Object.values(entry.config).join(" · ") || "通用服务资料";
+              const group = groups.find((g) => g.id === entry.groupId)?.name;
+              return (
+                <article
+                  className={`card${entry.pinned ? " is-pinned" : ""}`}
+                  key={entry.id}
+                >
+                  <div className="card-top">
+                    <span className={`kind kind-${entry.kind}`}>
+                      <Icon name={kindIcons[entry.kind]} size={22} />
                     </span>
-                  )}
-                  <button
-                    className="delete-action"
-                    aria-label={`删除 ${entry.name}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      void onDelete(entry);
-                    }}
-                  >
-                    删除
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+                    <span className="card-type">{kindNames[entry.kind]}</span>
+                    {entry.pinned && (
+                      <span className="pin-label" title="已置顶">
+                        <Icon name="star" size={13} />
+                        置顶
+                      </span>
+                    )}
+                    <details className="card-menu action-menu" data-menu>
+                      <summary
+                        className="icon-button"
+                        aria-label={`更多操作 ${entry.name}`}
+                      >
+                        <Icon name="more" />
+                      </summary>
+                      <div className="menu-popover">
+                        <button
+                          aria-label={`编辑入口资料 ${entry.name}`}
+                          onClick={() => onEdit(entry)}
+                        >
+                          <Icon name="edit" />
+                          编辑入口
+                        </button>
+                        <button onClick={() => void onTogglePin(entry)}>
+                          <Icon name="star" />
+                          {entry.pinned ? "取消置顶" : "置顶入口"}
+                        </button>
+                        <button
+                          className="danger"
+                          aria-label={`删除 ${entry.name}`}
+                          onClick={() => void onDelete(entry)}
+                        >
+                          <Icon name="trash" />
+                          移入回收站
+                        </button>
+                      </div>
+                    </details>
+                  </div>
+                  <div className="card-body">
+                    <h2>
+                      {isWeb ? (
+                        <a
+                          href={String(entry.config.url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {entry.name}
+                          <Icon name="external" size={15} />
+                        </a>
+                      ) : (
+                        <button onClick={() => onEdit(entry)}>
+                          {entry.name}
+                        </button>
+                      )}
+                    </h2>
+                    <p className="entry-address" title={address}>
+                      {address}
+                    </p>
+                    {entry.notes && (
+                      <p className="card-note" title={entry.notes}>
+                        {entry.notes}
+                      </p>
+                    )}
+                    {group && (
+                      <span className="group-chip">
+                        <Icon name="folder" size={12} />
+                        {group}
+                      </span>
+                    )}
+                  </div>
+                  <div className="card-credentials">
+                    {selectedCredential ? (
+                      <>
+                        <div className="credential-heading">
+                          <Icon name="key" size={14} />
+                          <label className="credential-picker">
+                            <span className="sr-only">
+                              {entry.name} 的复制密钥
+                            </span>
+                            <select
+                              aria-label={`${entry.name} 的复制密钥`}
+                              value={selectedCredential.id}
+                              disabled={credentials.length < 2}
+                              onChange={(event) =>
+                                setSelectedCredentialIds((current) => ({
+                                  ...current,
+                                  [entry.id]: event.target.value,
+                                }))
+                              }
+                            >
+                              {credentials.map((key) => (
+                                <option key={key.id} value={key.id}>
+                                  {key.title}
+                                  {key.username ? ` · ${key.username}` : ""}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+                        <div className="credential-actions">
+                          {selectedCredential.username && (
+                            <button
+                              aria-label={`复制 ${entry.name} 的账号`}
+                              onClick={() =>
+                                void onCopy(
+                                  "账号",
+                                  selectedCredential.username ?? "",
+                                )
+                              }
+                            >
+                              <Icon name="copy" size={14} />
+                              复制账号
+                            </button>
+                          )}
+                          {selectedCredential.password && (
+                            <button
+                              aria-label={`复制 ${entry.name} 的密钥`}
+                              onClick={() =>
+                                void onCopy(
+                                  "密钥",
+                                  selectedCredential.password ?? "",
+                                )
+                              }
+                            >
+                              <Icon name="copy" size={14} />
+                              复制密钥
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="no-credentials">
+                        <Icon name="key" size={14} />
+                        <span>未关联密钥</span>
+                        <button onClick={() => onEdit(entry)}>
+                          关联密钥
+                          <Icon name="plus" size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="card-footer">
+                    {isWeb ? (
+                      <a
+                        href={String(entry.config.url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        打开网站
+                        <Icon name="external" size={14} />
+                      </a>
+                    ) : (
+                      <button onClick={() => onEdit(entry)}>
+                        查看资料
+                        <Icon name="chevron" size={14} />
+                      </button>
+                    )}
+                    <button
+                      className="icon-button"
+                      aria-label={`编辑 ${entry.name}`}
+                      title="编辑入口"
+                      onClick={() => onEdit(entry)}
+                    >
+                      <Icon name="edit" size={15} />
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </>
       ) : (
         <div className="empty">
-          <span>✦</span>
-          <h2>{query ? "没有匹配的入口" : "从第一个入口开始"}</h2>
+          <span className="empty-icon">
+            <Icon name={filtered ? "search" : "bookmark"} size={30} />
+          </span>
+          <h2>{filtered ? "没有找到匹配的入口" : "收好你的第一个入口"}</h2>
           <p>
-            {query
-              ? "尝试更换关键词，或清除搜索条件。"
-              : "保存网站、数据库和服务地址，并把访问密钥一起关联。"}
+            {filtered
+              ? "试试其他关键词，或清除筛选条件。"
+              : "先保存一个常用的网站或服务地址，再按需关联账号与密钥。"}
           </p>
-          <button onClick={onNew}>新建入口</button>
+          <button className="primary" onClick={filtered ? onClear : onNew}>
+            {filtered ? "清除筛选" : "新建入口"}
+            <Icon name={filtered ? "close" : "plus"} size={17} />
+          </button>
+          {!filtered && (
+            <div className="empty-explainer">
+              <span>
+                <Icon name="globe" />
+                入口保存「去哪里」
+              </span>
+              <Icon name="chevron" size={16} />
+              <span>
+                <Icon name="key" />
+                密钥保存「如何访问」
+              </span>
+            </div>
+          )}
         </div>
       )}
     </>
@@ -862,56 +1375,155 @@ function KeyList({
   onEdit: (id: string) => void;
   onDelete: (key: EncryptedWorkspace["keys"][number]) => Promise<void>;
 }) {
+  const [query, setQuery] = useState("");
+  const [unlinked, setUnlinked] = useState(false);
+  const countLinks = (id: string) =>
+    workspace.entries.filter((entry) => entry.vaultItemIds.includes(id));
+  const visible = workspace.keys.filter(
+    (key) =>
+      (!unlinked || !countLinks(key.id).length) &&
+      `${key.title} ${key.username ?? ""}`
+        .toLocaleLowerCase()
+        .includes(query.toLocaleLowerCase()),
+  );
   return (
-    <section className="vault-list">
-      <header>
-        <div>
-          <p className="eyebrow">可复用的访问凭据</p>
-          <h2>密钥清单</h2>
+    <>
+      <label className="search">
+        <Icon name="search" size={20} />
+        <input
+          data-workspace-search
+          aria-label="搜索密钥"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="搜索密钥名称或账号…"
+        />
+        <kbd>Ctrl / ⌘ K</kbd>
+      </label>
+      <div className="directory-toolbar">
+        <div className="type-filters" role="group" aria-label="密钥关联筛选">
+          <button
+            aria-pressed={!unlinked}
+            className={!unlinked ? "selected" : ""}
+            onClick={() => setUnlinked(false)}
+          >
+            全部<span>{workspace.keys.length}</span>
+          </button>
+          <button
+            aria-pressed={unlinked}
+            className={unlinked ? "selected" : ""}
+            onClick={() => setUnlinked(true)}
+          >
+            未关联密钥
+            <span>
+              {
+                workspace.keys.filter((key) => !countLinks(key.id).length)
+                  .length
+              }
+            </span>
+          </button>
         </div>
-        <button className="primary" onClick={onNew}>
-          ＋ 新建密钥
-        </button>
-      </header>
-      {workspace.keys.length ? (
-        <div className="key-table">
-          <div className="key-table-head">
-            <span>密钥</span>
-            <span>关联入口</span>
-            <span>操作</span>
-          </div>
-          {workspace.keys.map((key) => (
-            <div className="key-row" key={key.id}>
-              <button className="vault-item" onClick={() => onEdit(key.id)}>
-                <span className="key-avatar">⌘</span>
-                <span>
-                  <strong>{key.title}</strong>
-                  <small>{key.username || "未填写账号"}</small>
-                </span>
-              </button>
-              <span className="key-links">
-                {
-                  workspace.entries.filter((entry) =>
-                    entry.vaultItemIds.includes(key.id),
-                  ).length
-                }{" "}
-                个入口
-              </span>
-              <button className="delete-key" onClick={() => void onDelete(key)}>
-                删除
-              </button>
-            </div>
-          ))}
+        <span className="list-hint">密钥值默认隐藏</span>
+      </div>
+      {visible.length ? (
+        <div className="vault-list">
+          <table className="key-table">
+            <thead>
+              <tr>
+                <th>密钥名称 / 账号</th>
+                <th>关联入口</th>
+                <th>
+                  <span className="sr-only">操作</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((key) => {
+                const linked = countLinks(key.id);
+                return (
+                  <tr key={key.id}>
+                    <td>
+                      <button
+                        className="vault-item"
+                        onClick={() => onEdit(key.id)}
+                      >
+                        <span className="key-avatar">
+                          <Icon name="key" size={19} />
+                        </span>
+                        <span>
+                          <strong>{key.title}</strong>
+                          <small>{key.username || "未填写账号"}</small>
+                        </span>
+                      </button>
+                    </td>
+                    <td>
+                      <span
+                        className={`key-links ${linked.length ? "" : "unlinked"}`}
+                        title={linked.map((entry) => entry.name).join("、")}
+                      >
+                        {linked.length ? `${linked.length} 个入口` : "未关联"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="key-row-actions">
+                        <button
+                          className="text-action"
+                          aria-label={`查看密钥 ${key.title}`}
+                          onClick={() => onEdit(key.id)}
+                        >
+                          查看
+                          <Icon name="chevron" size={14} />
+                        </button>
+                        <button
+                          className="icon-button delete-key"
+                          aria-label={`删除密钥 ${key.title}`}
+                          onClick={() => void onDelete(key)}
+                        >
+                          <Icon name="trash" size={17} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       ) : (
-        <div className="empty key-empty">
-          <span>⌘</span>
-          <h2>还没有密钥</h2>
-          <p>密钥可以关联到一个或多个入口，账号、密码、Token 都保存在这里。</p>
-          <button onClick={onNew}>新建密钥</button>
+        <div className="empty">
+          <span className="empty-icon">
+            <Icon name={query || unlinked ? "search" : "key"} size={30} />
+          </span>
+          <h2>
+            {query || unlinked
+              ? "没有匹配的密钥"
+              : "凭据存一次，多个入口都能用"}
+          </h2>
+          <p>
+            {query || unlinked
+              ? "更换关键词，或查看全部密钥。"
+              : "将账号、密码或 Token 保存为密钥，再关联到需要它的入口。"}
+          </p>
+          <button
+            className="primary"
+            onClick={
+              query || unlinked
+                ? () => {
+                    setQuery("");
+                    setUnlinked(false);
+                  }
+                : onNew
+            }
+          >
+            <Icon name={query || unlinked ? "close" : "plus"} size={17} />
+            {query || unlinked ? "清除筛选" : "新建密钥"}
+          </button>
         </div>
       )}
-    </section>
+      <p className="directory-note">
+        <Icon name="info" size={15} />
+        解除关联不会删除密钥。你可以在入口编辑中重新关联。
+      </p>
+    </>
   );
 }
 
@@ -962,6 +1574,7 @@ function EntryEditor({
   const [keyValue, setKeyValue] = useState("");
   const [keyNotes, setKeyNotes] = useState("");
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
   const setField = (field: string, value: string | boolean) =>
     setConfig((current) => ({ ...current, [field]: value }));
   const toggleKey = (id: string) =>
@@ -999,6 +1612,8 @@ function EntryEditor({
     setScreen("keys");
   };
   const submit = async () => {
+    if (saving) return;
+    setError("");
     const cleaned = normalizeConfig(kind, config);
     if (!name.trim() || !validateTargetConfig(kind, cleaned))
       return setError(
@@ -1025,12 +1640,19 @@ function EntryEditor({
           groupId: groupId || null,
           vaultItemIds: selected.filter((id) => existingIds.has(id)),
         });
-    await onSave(
-      base,
-      pendingKeys
-        .filter((key) => selected.includes(key.id))
-        .map(({ id: _id, ...key }) => key),
-    );
+    setSaving(true);
+    try {
+      await onSave(
+        base,
+        pendingKeys
+          .filter((key) => selected.includes(key.id))
+          .map(({ id: _id, ...key }) => key),
+      );
+    } catch {
+      setError("未能保存入口，请保持页面打开并重试。");
+    } finally {
+      setSaving(false);
+    }
   };
   const heading =
     screen === "details"
@@ -1041,9 +1663,15 @@ function EntryEditor({
         ? "关联密钥"
         : "新建密钥";
   return (
-    <div className="modal-backdrop">
+    <Dialog
+      onClose={() => {
+        if (!saving) onClose();
+      }}
+      className="editor-backdrop"
+    >
       <section
         className="modal entry-modal"
+        aria-busy={saving}
         role="dialog"
         aria-modal="true"
         aria-label={heading}
@@ -1058,19 +1686,26 @@ function EntryEditor({
                   setScreen(screen === "new-key" ? "keys" : "details")
                 }
               >
-                ← 返回
+                <Icon name="chevron" size={15} /> 返回
               </button>
             )}
-            <p className="eyebrow">
-              {screen === "details"
-                ? "入口资料"
-                : screen === "keys"
-                  ? "选择可复用的访问凭据"
-                  : "创建后会自动关联此入口"}
-            </p>
             <h2>{heading}</h2>
+            <p className="editor-description">
+              {screen === "details"
+                ? "保存访问地址，并按需关联账号与密钥。"
+                : screen === "keys"
+                  ? "一个密钥可用于多个入口，关联不会创建副本。"
+                  : "保存入口时，新密钥会一起加密保存。"}
+            </p>
           </div>
-          <button onClick={onClose}>×</button>
+          <button
+            className="icon-button"
+            aria-label="关闭对话框"
+            disabled={saving}
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </button>
         </div>
         {screen === "details" ? (
           <>
@@ -1078,16 +1713,9 @@ function EntryEditor({
               名称
               <input
                 autoFocus
+                placeholder="例如：个人博客、开发数据库"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-              />
-            </label>
-            <label>
-              备注（可选）
-              <textarea
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                placeholder="例如：仅限公司网络访问"
               />
             </label>
             <label>
@@ -1121,6 +1749,14 @@ function EntryEditor({
                 ))}
               </select>
             </label>
+            <label>
+              备注（可选）
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="例如：仅限公司网络访问"
+              />
+            </label>
             <section className="linked-key-summary">
               <div>
                 <span>关联密钥</span>
@@ -1133,7 +1769,7 @@ function EntryEditor({
                             : key.title,
                         )
                         .join("、")
-                    : "尚未关联"}
+                    : "可选：添加账号、密码或 Token"}
                 </strong>
               </div>
               <button
@@ -1147,11 +1783,21 @@ function EntryEditor({
                 管理
               </button>
             </section>
-            {error && <p className="error">{error}</p>}
+            {error && (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            )}
             <div className="modal-actions">
-              <button onClick={onClose}>取消</button>
-              <button className="primary" onClick={() => void submit()}>
-                保存入口
+              <button disabled={saving} onClick={onClose}>
+                取消
+              </button>
+              <button
+                className="primary"
+                disabled={saving || !name.trim()}
+                onClick={() => void submit()}
+              >
+                {saving ? "正在加密保存…" : "保存入口"}
               </button>
             </div>
           </>
@@ -1208,7 +1854,7 @@ function EntryEditor({
                 setScreen("new-key");
               }}
             >
-              ＋ 新建密钥
+              <Icon name="plus" size={16} /> 新建密钥
             </button>
             <p className="selection-count">已选择 {linked.length} 把密钥</p>
             <div className="modal-actions">
@@ -1248,7 +1894,11 @@ function EntryEditor({
                 onChange={(event) => setKeyNotes(event.target.value)}
               />
             </label>
-            {error && <p className="error">{error}</p>}
+            {error && (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            )}
             <div className="modal-actions">
               <button onClick={() => setScreen("keys")}>取消</button>
               <button className="primary" onClick={createPendingKey}>
@@ -1258,7 +1908,7 @@ function EntryEditor({
           </>
         )}
       </section>
-    </div>
+    </Dialog>
   );
 }
 
@@ -1380,17 +2030,50 @@ function KeyEditor({
       .join("\n"),
   );
   const [show, setShow] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const save = async () => {
+    if (saving || !title.trim()) return;
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(keyId, {
+        title: title.trim(),
+        username,
+        password: value,
+        notes,
+        fields: parseLines(fields),
+      });
+    } catch {
+      setError("未能保存密钥，请保持页面打开并重试。");
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
-    <div className="modal-backdrop">
+    <Dialog
+      onClose={() => {
+        if (!saving) onClose();
+      }}
+      className="editor-backdrop"
+    >
       <section
-        className="modal"
+        className="modal entry-modal"
+        aria-busy={saving}
         role="dialog"
         aria-modal="true"
         aria-label={keyId ? "编辑密钥" : "新建密钥"}
       >
         <div className="modal-heading">
           <h2>{keyId ? "编辑密钥" : "新建密钥"}</h2>
-          <button onClick={onClose}>×</button>
+          <button
+            className="icon-button"
+            aria-label="关闭对话框"
+            disabled={saving}
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </button>
         </div>
         <label>
           密钥名称
@@ -1450,26 +2133,25 @@ function KeyEditor({
               : "尚未关联"}
           </p>
         )}
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
         <div className="modal-actions">
-          <button onClick={onClose}>取消</button>
+          <button disabled={saving} onClick={onClose}>
+            取消
+          </button>
           <button
             className="primary"
-            disabled={!title.trim()}
-            onClick={() =>
-              void onSave(keyId, {
-                title: title.trim(),
-                username,
-                password: value,
-                notes,
-                fields: parseLines(fields),
-              })
-            }
+            disabled={saving || !title.trim()}
+            onClick={() => void save()}
           >
-            保存密钥
+            {saving ? "正在加密保存…" : "保存密钥"}
           </button>
         </div>
       </section>
-    </div>
+    </Dialog>
   );
 }
 
@@ -1486,7 +2168,7 @@ function GroupEditor({
 }) {
   const [name, setName] = useState("");
   return (
-    <div className="modal-backdrop">
+    <Dialog onClose={onClose}>
       <section
         className="modal"
         role="dialog"
@@ -1495,7 +2177,13 @@ function GroupEditor({
       >
         <div className="modal-heading">
           <h2>管理分组</h2>
-          <button onClick={onClose}>×</button>
+          <button
+            className="icon-button"
+            aria-label="关闭对话框"
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </button>
         </div>
         <label>
           新分组名称
@@ -1538,7 +2226,7 @@ function GroupEditor({
           <button onClick={onClose}>完成</button>
         </div>
       </section>
-    </div>
+    </Dialog>
   );
 }
 
@@ -1559,7 +2247,7 @@ function RecycleDialog({
     setRecords(listRecycledRecords(vault));
   };
   return (
-    <div className="modal-backdrop">
+    <Dialog onClose={onClose}>
       <section
         className="modal"
         role="dialog"
@@ -1573,7 +2261,13 @@ function RecycleDialog({
               删除的资料会在 30 天后自动永久清理。
             </p>
           </div>
-          <button onClick={onClose}>×</button>
+          <button
+            className="icon-button"
+            aria-label="关闭对话框"
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </button>
         </div>
         {records.length ? (
           <>
@@ -1626,7 +2320,7 @@ function RecycleDialog({
           </>
         )}
       </section>
-    </div>
+    </Dialog>
   );
 }
 
@@ -1656,7 +2350,10 @@ function ImportDialog({
     groups: number;
   } | null>(null);
   const [error, setError] = useState("");
+  const [working, setWorking] = useState(false);
   const inspect = async () => {
+    if (working) return;
+    setWorking(true);
     try {
       const backup = await parseKeyStoreBackup(encoded.trim(), packagePassword);
       const vault = await unlockVault(backup.vault, packagePassword);
@@ -1672,16 +2369,19 @@ function ImportDialog({
     } catch (cause) {
       setPreview(null);
       setError(cause instanceof Error ? cause.message : "无法读取加密包。");
+    } finally {
+      setWorking(false);
     }
   };
   const submit = async () => {
-    if (!preview) return;
+    if (!preview || working) return;
     if (
       mode === "replace" &&
       preview.packageMode === "share" &&
       (!localPassword || localPassword !== confirm)
     )
       return setError("请确认新的本地主密码。");
+    setWorking(true);
     try {
       await onImport(
         encoded.trim(),
@@ -1691,25 +2391,40 @@ function ImportDialog({
       );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "无法导入加密包。");
+    } finally {
+      setWorking(false);
     }
   };
   const resetPreview = () => setPreview(null);
   return (
-    <div className="modal-backdrop">
+    <Dialog
+      onClose={() => {
+        if (!working) onClose();
+      }}
+    >
       <section
         className="modal"
+        aria-busy={working}
         role="dialog"
         aria-modal="true"
         aria-label="导入加密包"
       >
         <div className="modal-heading">
           <h2>导入加密包</h2>
-          <button onClick={onClose}>×</button>
+          <button
+            className="icon-button"
+            aria-label="关闭对话框"
+            disabled={working}
+            onClick={onClose}
+          >
+            <Icon name="close" />
+          </button>
         </div>
         {hasVault && (
           <label>
             导入方式
             <select
+              disabled={working}
               value={mode}
               onChange={(event) => {
                 setMode(event.target.value as "replace" | "merge");
@@ -1731,6 +2446,7 @@ function ImportDialog({
         <label>
           加密字符串
           <textarea
+            disabled={working}
             value={encoded}
             onChange={(event) => {
               setEncoded(event.target.value);
@@ -1741,6 +2457,7 @@ function ImportDialog({
         <label>
           备份或分享口令
           <input
+            disabled={working}
             type="password"
             value={packagePassword}
             onChange={(event) => {
@@ -1754,6 +2471,7 @@ function ImportDialog({
             <label>
               新的本地主密码
               <input
+                disabled={working}
                 type="password"
                 value={localPassword}
                 onChange={(event) => setLocalPassword(event.target.value)}
@@ -1762,6 +2480,7 @@ function ImportDialog({
             <label>
               确认新的本地主密码
               <input
+                disabled={working}
                 type="password"
                 value={confirm}
                 onChange={(event) => setConfirm(event.target.value)}
@@ -1775,33 +2494,44 @@ function ImportDialog({
             {preview.groups} 个分组。资料尚未写入本机。
           </p>
         )}
-        {error && <p className="error">{error}</p>}
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
         <div className="modal-actions">
-          <button onClick={onClose}>取消</button>
+          <button disabled={working} onClick={onClose}>
+            取消
+          </button>
           {preview ? (
             <button
               className="primary"
               disabled={
-                preview.packageMode === "share" &&
-                mode === "replace" &&
-                !localPassword
+                working ||
+                (preview.packageMode === "share" &&
+                  mode === "replace" &&
+                  !localPassword)
               }
               onClick={() => void submit()}
             >
-              {mode === "merge" ? "确认合并导入" : "确认恢复"}
+              {working
+                ? "正在导入…"
+                : mode === "merge"
+                  ? "确认合并导入"
+                  : "确认恢复"}
             </button>
           ) : (
             <button
               className="primary"
-              disabled={!encoded || !packagePassword}
+              disabled={working || !encoded || !packagePassword}
               onClick={() => void inspect()}
             >
-              解密并预览
+              {working ? "正在解密预览…" : "解密并预览"}
             </button>
           )}
         </div>
       </section>
-    </div>
+    </Dialog>
   );
 }
 
@@ -1844,7 +2574,11 @@ function ShareDialog({
     }
   };
   return (
-    <div className="modal-backdrop">
+    <Dialog
+      onClose={() => {
+        if (!creating) onClose();
+      }}
+    >
       <section
         className="modal"
         role="dialog"
@@ -1853,8 +2587,13 @@ function ShareDialog({
       >
         <div className="modal-heading">
           <h2>分享加密包</h2>
-          <button onClick={onClose} disabled={creating}>
-            ×
+          <button
+            className="icon-button"
+            aria-label="关闭对话框"
+            onClick={onClose}
+            disabled={creating}
+          >
+            <Icon name="close" />
           </button>
         </div>
         <p className="security-note">
@@ -1893,7 +2632,11 @@ function ShareDialog({
                 {progress}
               </p>
             )}
-            {error && <p className="error">{error}</p>}
+            {error && (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            )}
             <div className="modal-actions">
               <button onClick={onClose} disabled={creating}>
                 取消
@@ -1912,7 +2655,7 @@ function ShareDialog({
           {result && <button onClick={onClose}>完成</button>}
         </div>
       </section>
-    </div>
+    </Dialog>
   );
 }
 

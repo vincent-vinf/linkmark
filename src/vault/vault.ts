@@ -1,5 +1,6 @@
 import { BinaryStream, Consts, Credentials, CryptoEngine, Int64, Kdbx, KdbxHeader, ProtectedValue, VarDictionary } from 'kdbxweb';
 import { deriveArgon2id } from '../crypto/argon2';
+import { assertCryptoAvailable } from '../crypto/environment';
 
 const text = new TextEncoder();
 let configured = false;
@@ -45,6 +46,7 @@ export function assertVaultKdfParameters(data: ArrayBuffer): void {
 }
 
 export async function createVault(password: string): Promise<ArrayBuffer> {
+  assertCryptoAvailable();
   if (typeof Worker !== 'undefined') return saveVaultInWorker(password);
   configureArgon2();
   const vault = Kdbx.create(credentials(password), 'Linkmark Vault');
@@ -56,12 +58,14 @@ export async function createVault(password: string): Promise<ArrayBuffer> {
 }
 
 export async function unlockVault(data: ArrayBuffer, password: string): Promise<Kdbx> {
+  assertCryptoAvailable();
   configureArgon2();
   assertVaultKdfParameters(data);
   return Kdbx.load(data, credentials(password));
 }
 
 export async function saveVault(vault: Kdbx, password?: string): Promise<ArrayBuffer> {
+  assertCryptoAvailable();
   if (!password || typeof Worker === 'undefined') return vault.save();
   const xml = await vault.saveXml();
   return saveVaultInWorker(password, xml);
