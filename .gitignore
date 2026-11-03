@@ -3,3 +3,8 @@ dist/
 *.tsbuildinfo
 test-results/
 playwright-report/
+
+# Local agent tooling and design review artifacts
+/.agents/skills/impeccable/
+/.codex/
+/.impeccable/review/
