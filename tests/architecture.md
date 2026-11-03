@@ -21,10 +21,11 @@ compromised device are outside that guarantee (see
 
 The stack is TypeScript, React 19, Vite, Dexie/IndexedDB, kdbxweb KDBX4 and
 hash-wasm Argon2id.  Production is a static HTTPS PWA: `index.html` contains a
-self-only CSP, and `public/sw.js` caches only same-origin application-shell
+CSP restricting scripts and connections to self, with HTTP(S) images allowed for
+website favicons after unlock; `public/sw.js` caches only same-origin application-shell
 GETs.  There are no HTTP business endpoints, backend processes, user accounts,
-cookies, JWTs, API keys, RBAC roles, cloud sync, shell commands, or network
-connections to saved targets.
+cookies, JWTs, API keys, RBAC roles, cloud sync, or service connections to saved
+targets. After unlock, the browser can load saved websites' favicon images directly.
 
 Key entry points: `index.html` -> `src/main.tsx` -> `src/App.tsx`; cryptography
 and KDBX parsing are in `src/vault/vault.ts`, `src/vault/vault-save.worker.ts`,

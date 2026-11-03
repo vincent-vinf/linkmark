@@ -37,6 +37,7 @@ import {
 import { Dialog, Icon, type IconName } from "./ui";
 import { useAppearance } from "./appearance";
 import { AppearanceSettings } from "./AppearanceSettings";
+import { WebsiteIcon } from "./WebsiteIcon";
 import { buildSshCommand } from "./domain/ssh";
 import { webNavigationCopy } from "./domain/navigation";
 import { buildPostgresUri } from "./domain/postgresql";
@@ -1183,7 +1184,14 @@ function EntryList({
                 >
                   <div className="card-top">
                     <span className={`kind kind-${entry.kind}`}>
-                      <Icon name={kindIcons[entry.kind]} size={22} />
+                      {isWeb ? (
+                        <WebsiteIcon
+                          key={String(entry.config.url)}
+                          url={String(entry.config.url)}
+                        />
+                      ) : (
+                        <Icon name={kindIcons[entry.kind]} size={22} />
+                      )}
                     </span>
                     <span className="card-type">{kindNames[entry.kind]}</span>
                     {entry.pinned && (
@@ -1347,7 +1355,7 @@ function EntryList({
                         onClick={() =>
                           void onCopy(
                             "全部资料",
-                            formatEntryCopy(entry, selectedCredential, group),
+                            formatEntryCopy(entry, selectedCredential),
                           )
                         }
                       >

@@ -22,16 +22,13 @@ describe("copying complete entry details", () => {
         notes: "仅内网使用\n第二行",
         fields: { "API Key": "secret-token", 区域: "cn-north-1" },
       },
-      "生产服务",
     );
     expect(text).toBe(
       [
         '名称: 管理后台 "生产"',
         "类型: 网站",
-        "分组: 生产服务",
         "网站地址: https://example.com/login?a=1&b=2",
         "备注: 第一行\n第二行：保留原文",
-        "密钥名称: 管理员",
         "账号: admin@example.com",
         '密码:   p:a\\ss"\n```  ',
         "密钥备注: 仅内网使用\n第二行",
@@ -44,6 +41,9 @@ describe("copying complete entry details", () => {
       entry.createdAt,
       "internal-group-id",
       "internal-key-id",
+      "管理员",
+      "分组:",
+      "密钥名称:",
     ])
       expect(text).not.toContain(value);
   });
@@ -114,7 +114,6 @@ describe("copying complete entry details", () => {
       [
         "名称: 文档",
         "类型: 网站",
-        "分组: 默认分组",
         "网站地址: https://example.com",
       ].join("\n"),
     );
@@ -122,9 +121,7 @@ describe("copying complete entry details", () => {
       [
         "名称: 文档",
         "类型: 网站",
-        "分组: 默认分组",
         "网站地址: https://example.com",
-        "密钥名称: 密码",
         "密码: secret",
       ].join("\n"),
     );

@@ -107,10 +107,8 @@ test("copy all follows the selected key and copies plain labeled lines with its 
     [
       "名称: 可分享的入口",
       "类型: 网站",
-      "分组: 默认分组",
       "网站地址: https://example.com/login",
       "备注: 入口备注第一行\n第二行",
-      "密钥名称: 只读账号",
       "账号: reader",
       "密码: reader-secret",
       "密钥备注: 只读账号的备注",
@@ -132,10 +130,8 @@ test("copy all follows the selected key and copies plain labeled lines with its 
     [
       "名称: 可分享的入口",
       "类型: 网站",
-      "分组: 默认分组",
       "网站地址: https://example.com/login",
       "备注: 入口备注第一行\n第二行",
-      "密钥名称: 管理员",
       "账号: admin@example.com",
       '密码: p:a\\ss"```',
       "密钥备注: 管理员的备注",
@@ -190,7 +186,6 @@ test("copy all works without linked credentials and stays usable on narrow scree
     [
       "名称: 公开文档",
       "类型: 网站",
-      "分组: 默认分组",
       "网站地址: https://example.com/docs",
     ].join("\n"),
   );

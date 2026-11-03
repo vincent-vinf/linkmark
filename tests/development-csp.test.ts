@@ -22,7 +22,7 @@ describe('development and production CSP boundaries', () => {
     }
   });
 
-  it('keeps the strict self-only CSP in the production build', async () => {
+  it('allows website icons while keeping production scripts and connections self-only', async () => {
     const result = await build({
       root: projectRoot,
       logLevel: 'silent',
@@ -35,6 +35,9 @@ describe('development and production CSP boundaries', () => {
     expect(String(html.source)).toMatch(/http-equiv\s*=\s*["']Content-Security-Policy["']/i);
     expect(String(html.source)).toContain("script-src 'self'");
     expect(String(html.source)).toContain("style-src 'self'");
+    expect(String(html.source)).toContain("img-src 'self' data: https: http:");
+    expect(String(html.source)).toContain("connect-src 'self'");
+    expect(String(html.source)).toContain("object-src 'none'");
     expect(String(html.source)).not.toContain("'unsafe-inline'");
   });
 });

@@ -28,7 +28,6 @@ const configLabels: Record<string, string> = {
 export function formatEntryCopy(
   entry: Target,
   credential?: VaultItemInput,
-  groupName?: string,
 ): string {
   const lines: string[] = [];
   const add = (label: string, value: string | number | boolean | undefined) => {
@@ -39,7 +38,6 @@ export function formatEntryCopy(
   };
   add("名称", entry.name);
   add("类型", kindNames[entry.kind]);
-  add("分组", groupName || "默认分组");
   for (const [key, value] of Object.entries(entry.config))
     add(
       key === "database" && entry.kind === "redis"
@@ -49,7 +47,6 @@ export function formatEntryCopy(
     );
   add("备注", entry.notes);
   if (credential) {
-    add("密钥名称", credential.title);
     add("账号", credential.username);
     add("密码", credential.password);
     add("密钥备注", credential.notes);
