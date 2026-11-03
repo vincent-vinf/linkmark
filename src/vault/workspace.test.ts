@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createTarget } from "../domain/targets";
-import { createVault, unlockVault } from "./vault";
+import { nextGroupSortOrder, orderedGroups } from "../domain/groups";
+import { createVault, saveVault, unlockVault } from "./vault";
 import {
   addEntry,
   addKey,
@@ -123,6 +124,42 @@ describe("encrypted workspace seam", () => {
     expect(getWorkspace(vault)).toMatchObject({ groups: [{ name: "工作" }] });
   });
 
+  it("preserves default-group ordering through metadata changes and encrypted round trips", async () => {
+    const vault = await unlockVault(await createVault("test"), "test");
+    initializeWorkspace(vault);
+    // Existing vaults have no explicit order for the default group.
+    expect(getWorkspace(vault).defaultGroupSortOrder).toBe(-1);
+    setWorkspaceMetadata(vault, {
+      groups: [
+        { id: "work", name: "工作", sortOrder: 0 },
+        { id: "personal", name: "个人", sortOrder: 1 },
+      ],
+      defaultGroupSortOrder: 2,
+    });
+    const current = getWorkspace(vault);
+    setWorkspaceMetadata(vault, {
+      groups: [
+        ...current.groups,
+        {
+          id: "new",
+          name: "新增",
+          sortOrder: nextGroupSortOrder(current.groups, current.defaultGroupSortOrder),
+        },
+      ],
+    });
+    deleteWorkspaceGroup(vault, "work");
+    const reopened = getWorkspace(
+      await unlockVault(await saveVault(vault), "test"),
+    );
+    expect(reopened.defaultGroupSortOrder).toBe(2);
+    expect(
+      orderedGroups(reopened.groups, reopened.defaultGroupSortOrder).map(
+        (group) => group.name,
+      ),
+    ).toEqual(["个人", "默认分组", "新增"]);
+    expect(reopened.groups.map((group) => group.id)).toEqual(["personal", "new"]);
+  });
+
   it("updates key details and safely returns grouped entries to the default group", async () => {
     const vault = await unlockVault(await createVault("test"), "test");
     initializeWorkspace(vault);
@@ -185,6 +222,11 @@ describe("encrypted workspace seam", () => {
     );
     initializeWorkspace(local);
     initializeWorkspace(incoming);
+    setWorkspaceMetadata(local, { groups: [], defaultGroupSortOrder: 2 });
+    setWorkspaceMetadata(incoming, {
+      groups: [{ id: "incoming-group", name: "导入分组", sortOrder: 0 }],
+      defaultGroupSortOrder: 99,
+    });
     const keyId = addKey(incoming, {
       title: "imported key",
       password: "value",
@@ -204,5 +246,11 @@ describe("encrypted workspace seam", () => {
     expect(result.keys).toHaveLength(1);
     expect(result.entries[0]?.vaultItemIds).toEqual([result.keys[0]?.id]);
     expect(result.keys[0]?.id).not.toBe(keyId);
+    expect(result.defaultGroupSortOrder).toBe(2);
+    expect(
+      orderedGroups(result.groups, result.defaultGroupSortOrder).map(
+        (group) => group.name,
+      ),
+    ).toEqual(["默认分组", "导入分组"]);
   });
 });

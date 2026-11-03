@@ -1,5 +1,6 @@
 import { ProtectedValue, type Kdbx } from "kdbxweb";
 import { createTarget, type Target } from "../domain/targets";
+import { nextGroupSortOrder } from "../domain/groups";
 import type { Group } from "../storage/db";
 import {
   ensureLinkmarkStructure,
@@ -9,10 +10,11 @@ import {
 
 const dataField = "LinkmarkData";
 const metadataTitle = ".linkmark-metadata";
-type WorkspaceMetadata = { groups: Group[] };
+type WorkspaceMetadata = { groups: Group[]; defaultGroupSortOrder?: number };
 export type EncryptedWorkspace = {
   entries: Target[];
   groups: Group[];
+  defaultGroupSortOrder: number;
   keys: VaultItemSummary[];
 };
 export type RecycledRecord = {
@@ -60,7 +62,14 @@ function metadata(vault: Kdbx): WorkspaceMetadata {
     const value = JSON.parse(
       read(metadataEntry(vault).fields.get(dataField)),
     ) as Partial<WorkspaceMetadata>;
-    return { groups: Array.isArray(value.groups) ? value.groups : [] };
+    return {
+      groups: Array.isArray(value.groups) ? value.groups : [],
+      defaultGroupSortOrder:
+        typeof value.defaultGroupSortOrder === "number" &&
+        Number.isFinite(value.defaultGroupSortOrder)
+          ? value.defaultGroupSortOrder
+          : -1,
+    };
   } catch {
     throw new Error("密钥库应用元数据损坏");
   }
@@ -330,7 +339,11 @@ export function mergeWorkspace(vault: Kdbx, incoming: Kdbx): void {
   for (const group of source.groups) {
     const id = crypto.randomUUID();
     groupIds.set(group.id, id);
-    groups.push({ ...group, id, sortOrder: groups.length });
+    groups.push({
+      ...group,
+      id,
+      sortOrder: nextGroupSortOrder(groups, local.defaultGroupSortOrder),
+    });
   }
   setWorkspaceMetadata(vault, { groups });
   for (const key of source.keys) {
@@ -366,7 +379,12 @@ export function getWorkspace(vault: Kdbx): EncryptedWorkspace {
     username: read(record.fields.get("UserName")),
   }));
   const state = metadata(vault);
-  return { entries, groups: state.groups, keys };
+  return {
+    entries,
+    groups: state.groups,
+    defaultGroupSortOrder: state.defaultGroupSortOrder ?? -1,
+    keys,
+  };
 }
 
 export function setWorkspaceMetadata(
@@ -375,6 +393,6 @@ export function setWorkspaceMetadata(
 ): void {
   metadataEntry(vault).fields.set(
     dataField,
-    ProtectedValue.fromString(JSON.stringify(next)),
+    ProtectedValue.fromString(JSON.stringify({ ...metadata(vault), ...next })),
   );
 }

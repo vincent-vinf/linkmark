@@ -60,12 +60,12 @@ test("dragging and keyboard sorting update navigation and survive unlocking", as
   );
   await page.mouse.up();
   await expect(dialog(page).getByRole("status")).toContainText("顺序已保存");
-  await expect(rows(page)).toHaveText(["个人资源", "研发资源", "生产资源"]);
+  await expect(rows(page)).toHaveText(["默认分组", "个人资源", "研发资源", "生产资源"]);
   await expectNav(page, ["个人资源", "研发资源", "生产资源"]);
   await handle(page, "个人资源").focus();
   await page.keyboard.press("ArrowDown");
-  await expect(dialog(page).getByRole("status")).toContainText("第 2 位");
-  await expect(rows(page)).toHaveText(["研发资源", "个人资源", "生产资源"]);
+  await expect(dialog(page).getByRole("status")).toContainText("第 3 位");
+  await expect(rows(page)).toHaveText(["默认分组", "研发资源", "个人资源", "生产资源"]);
   await expect(handle(page, "个人资源")).toBeFocused();
   await expectNav(page, ["研发资源", "个人资源", "生产资源"]);
   if (browserName === "chromium") {
@@ -92,12 +92,13 @@ test("dragging and keyboard sorting update navigation and survive unlocking", as
   await page.getByRole("button", { name: "解锁密钥库", exact: true }).click();
   await expectNav(page, ["研发资源", "个人资源", "生产资源"]);
   await page.getByLabel("管理分组", { exact: true }).click();
-  await expect(rows(page)).toHaveText(["研发资源", "个人资源", "生产资源"]);
+  await expect(rows(page)).toHaveText(["默认分组", "研发资源", "个人资源", "生产资源"]);
   await dialog(page).getByLabel("新分组名称", { exact: true }).fill("新增资源");
   await dialog(page)
     .getByRole("button", { name: "新建分组", exact: true })
     .click();
   await expect(rows(page)).toHaveText([
+    "默认分组",
     "研发资源",
     "个人资源",
     "生产资源",
@@ -109,8 +110,8 @@ test("cancelling a drag restores the order and failed saves can be retried", asy
   page,
 }) => {
   await setup(page);
-  const source = await handle(page, "个人资源").boundingBox();
-  const target = await handle(page, "研发资源").boundingBox();
+  const source = await handle(page, "默认分组").boundingBox();
+  const target = await handle(page, "个人资源").boundingBox();
   if (!source || !target) throw new Error("Missing group handles");
   await page.mouse.move(
     source.x + source.width / 2,
@@ -122,11 +123,11 @@ test("cancelling a drag restores the order and failed saves can be retried", asy
     target.y + target.height / 2,
     { steps: 12 },
   );
-  await expect(rows(page)).toHaveText(["个人资源", "研发资源", "生产资源"]);
+  await expect(rows(page)).toHaveText([...names, "默认分组"]);
   await page.keyboard.press("Escape");
   await page.mouse.up();
   await expect(dialog(page)).toBeVisible();
-  await expect(rows(page)).toHaveText(names);
+  await expect(rows(page)).toHaveText(["默认分组", ...names]);
   await expectNav(page, names);
   await page.evaluate(() => {
     const original = IDBObjectStore.prototype.put;
@@ -140,15 +141,17 @@ test("cancelling a drag restores the order and failed saves can be retried", asy
         : original.call(this, value, key);
     };
   });
-  await handle(page, "个人资源").focus();
-  await page.keyboard.press("ArrowUp");
+  await handle(page, "默认分组").focus();
+  await page.keyboard.press("ArrowDown");
   await expect(dialog(page).getByRole("alert")).toContainText("已恢复原顺序");
-  await expect(rows(page)).toHaveText(names);
+  await expect(rows(page)).toHaveText(["默认分组", ...names]);
   await expectNav(page, names);
-  await handle(page, "个人资源").focus();
-  await page.keyboard.press("ArrowUp");
+  await handle(page, "默认分组").focus();
+  await page.keyboard.press("ArrowDown");
   await expect(dialog(page).getByRole("status")).toContainText("顺序已保存");
-  await expectNav(page, ["研发资源", "个人资源", "生产资源"]);
+  await expect(navNames(page)).toHaveText([
+    "所有入口", "已置顶", "全部密钥", "研发资源", "默认分组", "生产资源", "个人资源",
+  ]);
 });
 
 test("touch dragging reorders groups on a narrow screen", async ({
@@ -161,8 +164,8 @@ test("touch dragging reorders groups on a narrow screen", async ({
   );
   await page.setViewportSize({ width: 320, height: 844 });
   await setup(page);
-  const source = await handle(page, "个人资源").boundingBox();
-  const target = await handle(page, "研发资源").boundingBox();
+  const source = await handle(page, "默认分组").boundingBox();
+  const target = await handle(page, "个人资源").boundingBox();
   if (!source || !target) throw new Error("Missing group handles");
   const client = await page.context().newCDPSession(page);
   const x = source.x + source.width / 2;
@@ -186,16 +189,56 @@ test("touch dragging reorders groups on a narrow screen", async ({
     touchPoints: [],
   });
   await expect(dialog(page).getByRole("status")).toContainText("顺序已保存");
-  await expect(rows(page)).toHaveText(["个人资源", "研发资源", "生产资源"]);
+  await expect(rows(page)).toHaveText([...names, "默认分组"]);
   await dialog(page).getByRole("button", { name: "完成", exact: true }).click();
   await page.getByRole("button", { name: "打开导航", exact: true }).click();
   await expect(page.locator(".mobile-sidebar nav > button > span")).toHaveText([
     "所有入口",
     "已置顶",
     "全部密钥",
-    "默认分组",
-    "个人资源",
     "研发资源",
     "生产资源",
+    "个人资源",
+    "默认分组",
   ]);
+});
+
+test("default group can move between groups and keeps its position and ungrouped entries", async ({
+  page,
+}) => {
+  await setup(page);
+  await expect(dialog(page).getByRole("button", { name: "删除分组 默认分组" })).toHaveCount(0);
+  const source = await handle(page, "默认分组").boundingBox();
+  const target = await handle(page, "个人资源").boundingBox();
+  if (!source || !target) throw new Error("Missing group handles");
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 12 });
+  await page.mouse.up();
+  await expect(dialog(page).getByRole("status")).toContainText("顺序已保存");
+  await expect(rows(page)).toHaveText([...names, "默认分组"]);
+  await handle(page, "默认分组").press("ArrowUp");
+  await expect(dialog(page).getByRole("status")).toContainText("第 3 位");
+  await expect(rows(page)).toHaveText(["研发资源", "生产资源", "默认分组", "个人资源"]);
+  await dialog(page).getByLabel("新分组名称", { exact: true }).fill("新增资源");
+  await dialog(page).getByRole("button", { name: "新建分组", exact: true }).click();
+  await expect(rows(page)).toHaveText(["研发资源", "生产资源", "默认分组", "个人资源", "新增资源"]);
+  page.once("dialog", (confirm) => confirm.accept());
+  await dialog(page).getByRole("button", { name: "删除分组 研发资源", exact: true }).click();
+  await expect(rows(page)).toHaveText(["生产资源", "默认分组", "个人资源", "新增资源"]);
+  await dialog(page).getByRole("button", { name: "完成", exact: true }).click();
+  await page.reload();
+  await page.getByLabel("主密码", { exact: true }).fill("group-test-password");
+  await page.getByRole("button", { name: "解锁密钥库", exact: true }).click();
+  await expect(navNames(page)).toHaveText([
+    "所有入口", "已置顶", "全部密钥", "生产资源", "默认分组", "个人资源", "新增资源",
+  ]);
+  await page.getByRole("button", { name: "默认分组 0", exact: true }).click();
+  await page.locator(".actions").getByRole("button", { name: "新建入口", exact: true }).click();
+  await expect(page.getByRole("combobox", { name: /^分组/ })).toHaveValue("");
+  await page.getByLabel("名称", { exact: true }).fill("默认分组的文档");
+  await page.getByLabel("网站地址", { exact: true }).fill("https://example.com/docs");
+  await page.getByRole("button", { name: "保存入口", exact: true }).click();
+  await expect(page.getByRole("button", { name: "默认分组 1", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { name: "默认分组的文档", exact: true })).toBeVisible();
 });

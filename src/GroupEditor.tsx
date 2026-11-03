@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { Group } from "./storage/db";
+import { DEFAULT_GROUP_ID } from "./domain/groups";
 import { Dialog, Icon } from "./ui";
 
 export function GroupEditor({
@@ -152,7 +153,7 @@ export function GroupEditor({
         {order.length > 0 && (
           <>
             <p className="field-hint" id="group-sort-hint">
-              拖动左侧手柄排序，也可聚焦手柄后按上下方向键。顺序自动保存，默认分组固定在导航顶部。
+              拖动左侧手柄排序，也可聚焦手柄后按上下方向键。默认分组也可排序，顺序自动保存。
             </p>
             <ol
               className="group-sort-list"
@@ -224,25 +225,27 @@ export function GroupEditor({
                     <Icon name="grip" />
                   </button>
                   <span className="group-sort-name">{group.name}</span>
-                  <button
-                    type="button"
-                    className="group-delete"
-                    aria-label={`删除分组 ${group.name}`}
-                    disabled={busy || !!draggedId}
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          `删除分组“${group.name}”？其中入口会移入默认分组。`,
+                  {group.id !== DEFAULT_GROUP_ID && (
+                    <button
+                      type="button"
+                      className="group-delete"
+                      aria-label={`删除分组 ${group.name}`}
+                      disabled={busy || !!draggedId}
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            `删除分组“${group.name}”？其中入口会移入默认分组。`,
+                          )
                         )
-                      )
-                        void mutate(
-                          () => onDelete(group.id),
-                          "未能删除分组，请重试。",
-                        );
-                    }}
-                  >
-                    删除
-                  </button>
+                          void mutate(
+                            () => onDelete(group.id),
+                            "未能删除分组，请重试。",
+                          );
+                      }}
+                    >
+                      删除
+                    </button>
+                  )}
                 </li>
               ))}
             </ol>

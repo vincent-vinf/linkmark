@@ -7,6 +7,11 @@ import {
   type TargetKind,
 } from "./domain/targets";
 import { db, type Group } from "./storage/db";
+import {
+  DEFAULT_GROUP_ID,
+  nextGroupSortOrder,
+  orderedGroups,
+} from "./domain/groups";
 import { createVault, saveVault, unlockVault } from "./vault/vault";
 import { CryptoUnavailableError } from "./crypto/environment";
 import {
@@ -59,6 +64,7 @@ const kindIcons: Record<TargetKind, IconName> = {
 const emptyWorkspace: EncryptedWorkspace = {
   entries: [],
   groups: [],
+  defaultGroupSortOrder: -1,
   keys: [],
 };
 const durations = [
@@ -354,7 +360,14 @@ export default function App() {
     setWorkspaceMetadata(vaultRef.current, {
       groups: [
         ...workspace.groups,
-        { id: crypto.randomUUID(), name, sortOrder: workspace.groups.length },
+        {
+          id: crypto.randomUUID(),
+          name,
+          sortOrder: nextGroupSortOrder(
+            workspace.groups,
+            workspace.defaultGroupSortOrder,
+          ),
+        },
       ],
     });
     await persist();
@@ -621,19 +634,30 @@ export default function App() {
         )}
         {groupEditor && (
           <GroupEditor
-            groups={workspace.groups}
+            groups={orderedGroups(
+              workspace.groups,
+              workspace.defaultGroupSortOrder,
+            )}
             onClose={() => setGroupEditor(false)}
             onSave={async (name) => {
               await addGroup(name);
             }}
             onReorder={async (groups) => {
               const vault = vaultRef.current!;
-              const previous = getWorkspace(vault).groups;
-              setWorkspaceMetadata(vault, { groups });
+              const previous = getWorkspace(vault);
+              setWorkspaceMetadata(vault, {
+                groups: groups.filter((group) => group.id !== DEFAULT_GROUP_ID),
+                defaultGroupSortOrder:
+                  groups.find((group) => group.id === DEFAULT_GROUP_ID)
+                    ?.sortOrder ?? -1,
+              });
               try {
                 await persist();
               } catch (error) {
-                setWorkspaceMetadata(vault, { groups: previous });
+                setWorkspaceMetadata(vault, {
+                  groups: previous.groups,
+                  defaultGroupSortOrder: previous.defaultGroupSortOrder,
+                });
                 throw error;
               }
             }}
@@ -804,39 +828,31 @@ function Sidebar({
             <Icon name="plus" size={16} />
           </button>
         </div>
-        <button
-          className={view === "entries" && activeGroup === null ? "active" : ""}
-          aria-current={
-            view === "entries" && activeGroup === null ? "page" : undefined
-          }
-          onClick={() => onNavigate("entries", null)}
-        >
-          <Icon name="folder" />
-          <span>默认分组</span>
-          <small>
-            {workspace.entries.filter((e) => e.groupId === null).length}
-          </small>
-        </button>
-        {workspace.groups.map((group) => (
-          <button
-            key={group.id}
-            className={
-              view === "entries" && activeGroup === group.id ? "active" : ""
-            }
-            aria-current={
-              view === "entries" && activeGroup === group.id
-                ? "page"
-                : undefined
-            }
-            onClick={() => onNavigate("entries", group.id)}
-          >
-            <Icon name="folder" />
-            <span>{group.name}</span>
-            <small>
-              {workspace.entries.filter((e) => e.groupId === group.id).length}
-            </small>
-          </button>
-        ))}
+        {orderedGroups(workspace.groups, workspace.defaultGroupSortOrder).map(
+          (group) => {
+            const groupId = group.id === DEFAULT_GROUP_ID ? null : group.id;
+            return (
+              <button
+                key={group.id}
+                className={
+                  view === "entries" && activeGroup === groupId ? "active" : ""
+                }
+                aria-current={
+                  view === "entries" && activeGroup === groupId
+                    ? "page"
+                    : undefined
+                }
+                onClick={() => onNavigate("entries", groupId)}
+              >
+                <Icon name="folder" />
+                <span>{group.name}</span>
+                <small>
+                  {workspace.entries.filter((e) => e.groupId === groupId).length}
+                </small>
+              </button>
+            );
+          },
+        )}
         {!workspace.groups.length && (
           <button className="add-group" onClick={onGroups}>
             <Icon name="plus" size={16} />
