@@ -1,5 +1,89 @@
 import { expect, test } from "@playwright/test";
 
+test("new entries inherit the browsed group and allow overriding it", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByLabel("主密码", { exact: true })
+    .fill("browser-test-password");
+  await page
+    .getByLabel("确认主密码", { exact: true })
+    .fill("browser-test-password");
+  await page.getByRole("button", { name: "创建密钥库", exact: true }).click();
+  await page.getByLabel("管理分组", { exact: true }).click();
+  for (const name of ["研发资源", "生产资源"]) {
+    await page.getByLabel("新分组名称", { exact: true }).fill(name);
+    await page
+      .getByRole("dialog", { name: "管理分组" })
+      .getByRole("button", { name: "新建分组", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: `${name} 0`, exact: true }),
+    ).toBeVisible();
+  }
+  await page.getByRole("button", { name: "完成", exact: true }).click();
+  const group = page.getByRole("combobox", { name: /^分组/ });
+  const newEntry = page
+    .locator(".actions")
+    .getByRole("button", { name: "新建入口", exact: true });
+  await page.getByRole("button", { name: "研发资源 0", exact: true }).click();
+  await page
+    .locator(".empty")
+    .getByRole("button", { name: "新建入口", exact: true })
+    .click();
+  await expect(group.locator("option:checked")).toHaveText("研发资源");
+  await page.getByLabel("名称", { exact: true }).fill("研发文档");
+  await page
+    .getByLabel("网站地址", { exact: true })
+    .fill("https://example.com/docs");
+  await page.getByRole("button", { name: "保存入口", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "研发文档", exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("编辑 研发文档", { exact: true }).click();
+  await expect(group.locator("option:checked")).toHaveText("研发资源");
+  await page.getByRole("button", { name: "取消", exact: true }).click();
+  await page.getByRole("button", { name: "生产资源 0", exact: true }).click();
+  await newEntry.click();
+  await expect(group.locator("option:checked")).toHaveText("生产资源");
+  await group.selectOption("");
+  await page.getByLabel("名称", { exact: true }).fill("手动归组的文档");
+  await page
+    .getByLabel("网站地址", { exact: true })
+    .fill("https://example.com/manual");
+  await page.getByRole("button", { name: "保存入口", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "新建入口", exact: true }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "手动归组的文档", exact: true }),
+  ).not.toBeVisible();
+  await page.getByRole("button", { name: "默认分组 1", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "手动归组的文档", exact: true }),
+  ).toBeVisible();
+  await newEntry.click();
+  await expect(group).toHaveValue("");
+  await page.getByRole("button", { name: "取消", exact: true }).click();
+  await page.getByRole("button", { name: "所有入口 2", exact: true }).click();
+  await page.keyboard.press("n");
+  await expect(group).toHaveValue("");
+  await page.getByRole("button", { name: "取消", exact: true }).click();
+  await page.reload();
+  await page
+    .getByLabel("主密码", { exact: true })
+    .fill("browser-test-password");
+  await page.getByRole("button", { name: "解锁密钥库", exact: true }).click();
+  await page.getByRole("button", { name: "研发资源 1", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "研发文档", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "手动归组的文档", exact: true }),
+  ).not.toBeVisible();
+});
+
 test("requires a key store before showing entries and saves a linked key with an entry", async ({
   page,
 }) => {

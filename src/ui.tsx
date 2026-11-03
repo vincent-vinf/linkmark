@@ -106,6 +106,16 @@ const paths = {
       <circle cx="19" cy="12" r="1" />
     </>
   ),
+  grip: (
+    <>
+      <circle cx="9" cy="5" r="1" />
+      <circle cx="15" cy="5" r="1" />
+      <circle cx="9" cy="12" r="1" />
+      <circle cx="15" cy="12" r="1" />
+      <circle cx="9" cy="19" r="1" />
+      <circle cx="15" cy="19" r="1" />
+    </>
+  ),
   copy: (
     <>
       <rect x="8" y="8" width="13" height="13" rx="2" />

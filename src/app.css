@@ -1266,6 +1266,63 @@ h3 {
   flex: none;
   font-size: 12px;
 }
+.group-editor .field-hint {
+  margin: 16px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.group-sort-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.group-sort-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.group-sort-row.is-dragging {
+  border-radius: var(--radius-control);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.group-sort-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.group-drag-handle.icon-button {
+  flex: none;
+  width: 40px;
+  min-height: 40px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.group-drag-handle[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: default;
+}
+.is-dragging .group-drag-handle {
+  cursor: grabbing;
+}
+.group-delete {
+  flex: none;
+  min-height: 40px;
+  color: var(--coral);
+  font-size: 12px;
+}
+.group-delete:hover {
+  color: var(--coral);
+  background: var(--coral-soft);
+}
+.group-editor .group-sort-status {
+  min-height: 22px;
+  margin: 12px 0 0;
+}
 .recycle-row {
   display: flex;
   align-items: center;

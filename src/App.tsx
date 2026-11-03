@@ -38,6 +38,7 @@ import { Dialog, Icon, type IconName } from "./ui";
 import { useAppearance } from "./appearance";
 import { AppearanceSettings } from "./AppearanceSettings";
 import { WebsiteIcon } from "./WebsiteIcon";
+import { GroupEditor } from "./GroupEditor";
 import { buildSshCommand } from "./domain/ssh";
 import { webNavigationCopy } from "./domain/navigation";
 import { buildPostgresUri } from "./domain/postgresql";
@@ -93,7 +94,11 @@ export default function App() {
   );
   const [view, setView] = useState<"entries" | "keys">("entries");
   const [sortBy, setSortBy] = useState<"manual" | "name" | "updated">("manual");
-  const [entryEditor, setEntryEditor] = useState<Target | "new" | null>(null);
+  const [entryEditor, setEntryEditor] = useState<
+    | { mode: "create"; template?: Target }
+    | { mode: "edit"; entry: Target }
+    | null
+  >(null);
   const [keyEditor, setKeyEditor] = useState<string | "new" | null>(null);
   const [groupEditor, setGroupEditor] = useState(false);
   const [recycleOpen, setRecycleOpen] = useState(false);
@@ -147,7 +152,7 @@ export default function App() {
       ) {
         event.preventDefault();
         if (view === "keys") setKeyEditor("new");
-        else setEntryEditor("new");
+        else setEntryEditor({ mode: "create" });
       }
     };
     document.addEventListener("click", closeMenus);
@@ -497,7 +502,9 @@ export default function App() {
                 className="primary"
                 aria-label={view === "keys" ? "新建密钥" : "新建入口"}
                 onClick={() =>
-                  view === "keys" ? setKeyEditor("new") : setEntryEditor("new")
+                  view === "keys"
+                    ? setKeyEditor("new")
+                    : setEntryEditor({ mode: "create" })
                 }
               >
                 <Icon name="plus" />
@@ -551,8 +558,11 @@ export default function App() {
               onQuery={setQuery}
               vault={vaultRef.current!}
               onCopy={copyValue}
-              onNew={() => setEntryEditor("new")}
-              onEdit={setEntryEditor}
+              onNew={() => setEntryEditor({ mode: "create" })}
+              onEdit={(entry) => setEntryEditor({ mode: "edit", entry })}
+              onDuplicate={(template) =>
+                setEntryEditor({ mode: "create", template })
+              }
               onDelete={async (entry) => {
                 if (window.confirm(`将“${entry.name}”移入回收站？`)) {
                   deleteEntry(vaultRef.current!, entry.id);
@@ -571,7 +581,11 @@ export default function App() {
         </div>
         {entryEditor && (
           <EntryEditor
-            entry={entryEditor === "new" ? undefined : entryEditor}
+            entry={entryEditor.mode === "edit" ? entryEditor.entry : undefined}
+            template={
+              entryEditor.mode === "create" ? entryEditor.template : undefined
+            }
+            initialGroupId={activeGroup}
             keys={workspace.keys}
             groups={workspace.groups}
             onClose={() => setEntryEditor(null)}
@@ -582,7 +596,7 @@ export default function App() {
                 ...entry,
                 vaultItemIds: [...entry.vaultItemIds, ...keyIds],
               };
-              if (entryEditor === "new") addEntry(vault, next);
+              if (entryEditor.mode === "create") addEntry(vault, next);
               else updateEntry(vault, next);
               await persist();
               setEntryEditor(null);
@@ -611,6 +625,17 @@ export default function App() {
             onClose={() => setGroupEditor(false)}
             onSave={async (name) => {
               await addGroup(name);
+            }}
+            onReorder={async (groups) => {
+              const vault = vaultRef.current!;
+              const previous = getWorkspace(vault).groups;
+              setWorkspaceMetadata(vault, { groups });
+              try {
+                await persist();
+              } catch (error) {
+                setWorkspaceMetadata(vault, { groups: previous });
+                throw error;
+              }
             }}
             onDelete={async (id) => {
               deleteWorkspaceGroup(vaultRef.current!, id);
@@ -1042,6 +1067,7 @@ function EntryList({
   onCopy,
   onNew,
   onEdit,
+  onDuplicate,
   onDelete,
   groups,
   allEntries,
@@ -1059,6 +1085,7 @@ function EntryList({
   onCopy: (label: string, value: string) => Promise<void>;
   onNew: () => void;
   onEdit: (entry: Target) => void;
+  onDuplicate: (entry: Target) => void;
   onDelete: (entry: Target) => Promise<void>;
   groups: Group[];
   allEntries: Target[];
@@ -1214,6 +1241,13 @@ function EntryList({
                         >
                           <Icon name="edit" />
                           编辑入口
+                        </button>
+                        <button
+                          aria-label={`复制入口 ${entry.name}`}
+                          onClick={() => onDuplicate(entry)}
+                        >
+                          <Icon name="copy" />
+                          复制入口
                         </button>
                         <button onClick={() => void onTogglePin(entry)}>
                           <Icon name="star" />
@@ -1630,12 +1664,16 @@ type PendingKey = {
 
 function EntryEditor({
   entry,
+  template,
+  initialGroupId,
   keys,
   groups,
   onClose,
   onSave,
 }: {
   entry?: Target;
+  template?: Target;
+  initialGroupId?: string | null;
   keys: EncryptedWorkspace["keys"];
   groups: Group[];
   onClose: () => void;
@@ -1652,14 +1690,19 @@ function EntryEditor({
   const [screen, setScreen] = useState<"details" | "keys" | "new-key">(
     "details",
   );
-  const [name, setName] = useState(entry?.name ?? "");
-  const [notes, setNotes] = useState(entry?.notes ?? "");
-  const [kind, setKind] = useState<TargetKind>(entry?.kind ?? "web");
+  const initial = entry ?? template;
+  const [name, setName] = useState(
+    entry?.name ?? (template ? `${template.name}(副本)` : ""),
+  );
+  const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [kind, setKind] = useState<TargetKind>(initial?.kind ?? "web");
   const [config, setConfig] = useState<
     Record<string, string | number | boolean>
-  >(stringConfig(entry?.config));
-  const [groupId, setGroupId] = useState(entry?.groupId ?? "");
-  const [selected, setSelected] = useState(entry?.vaultItemIds ?? []);
+  >(stringConfig(initial?.config));
+  const [groupId, setGroupId] = useState(
+    initial ? (initial.groupId ?? "") : (initialGroupId ?? ""),
+  );
+  const [selected, setSelected] = useState([...(initial?.vaultItemIds ?? [])]);
   const [pendingKeys, setPendingKeys] = useState<PendingKey[]>([]);
   const [sshUser, setSshUser] = useState("");
   const [sshPassword, setSshPassword] = useState("");
@@ -1788,7 +1831,9 @@ function EntryEditor({
     screen === "details"
       ? entry
         ? "编辑入口"
-        : "新建入口"
+        : template
+          ? "复制入口"
+          : "新建入口"
       : screen === "keys"
         ? "关联密钥"
         : "新建密钥";
@@ -1822,7 +1867,9 @@ function EntryEditor({
             <h2>{heading}</h2>
             <p className="editor-description">
               {screen === "details"
-                ? "保存访问地址，并按需关联账号与密钥。"
+                ? template
+                  ? "已填入原入口资料，保存后创建独立入口；关联密钥继续复用。"
+                  : "保存访问地址，并按需关联账号与密钥。"
                 : screen === "keys"
                   ? "一个密钥可用于多个入口，关联不会创建副本。"
                   : "保存入口时，新密钥会一起加密保存。"}
@@ -2420,81 +2467,6 @@ function KeyEditor({
           >
             {saving ? "正在加密保存…" : "保存密钥"}
           </button>
-        </div>
-      </section>
-    </Dialog>
-  );
-}
-
-function GroupEditor({
-  groups,
-  onClose,
-  onSave,
-  onDelete,
-}: {
-  groups: Group[];
-  onClose: () => void;
-  onSave: (name: string) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
-}) {
-  const [name, setName] = useState("");
-  return (
-    <Dialog onClose={onClose}>
-      <section
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="管理分组"
-      >
-        <div className="modal-heading">
-          <h2>管理分组</h2>
-          <button
-            className="icon-button"
-            aria-label="关闭对话框"
-            onClick={onClose}
-          >
-            <Icon name="close" />
-          </button>
-        </div>
-        <label>
-          新分组名称
-          <input
-            autoFocus
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
-        <div className="modal-actions">
-          <button
-            className="primary"
-            disabled={!name.trim()}
-            onClick={() => {
-              void onSave(name.trim());
-              setName("");
-            }}
-          >
-            新建分组
-          </button>
-        </div>
-        {groups.map((group) => (
-          <div className="recycle-row" key={group.id}>
-            <span>{group.name}</span>
-            <button
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `删除分组“${group.name}”？其中入口会移入默认分组。`,
-                  )
-                )
-                  void onDelete(group.id);
-              }}
-            >
-              删除
-            </button>
-          </div>
-        ))}
-        <div className="modal-actions">
-          <button onClick={onClose}>完成</button>
         </div>
       </section>
     </Dialog>
