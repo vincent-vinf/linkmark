@@ -36,6 +36,171 @@ async function mockClipboard(page: Page, useNative = false) {
   }, useNative);
 }
 
+test("copy all follows the selected key and copies plain labeled lines with its custom fields", async ({
+  page,
+  context,
+  browserName,
+}) => {
+  await createVault(page);
+  await page
+    .locator(".actions")
+    .getByRole("button", { name: "新建入口", exact: true })
+    .click();
+  await page.getByLabel("名称", { exact: true }).fill("可分享的入口");
+  await page
+    .getByLabel("网站地址", { exact: true })
+    .fill("https://example.com/login");
+  await page
+    .getByLabel("备注（可选）", { exact: true })
+    .fill("入口备注第一行\n第二行");
+  await page.getByRole("button", { name: "管理关联密钥", exact: true }).click();
+  for (const [title, username, password] of [
+    ["管理员", "admin@example.com", 'p:a\\ss"```'],
+    ["只读账号", "reader", "reader-secret"],
+  ]) {
+    await page.getByRole("button", { name: "新建密钥", exact: true }).click();
+    await page.getByLabel("密钥名称", { exact: true }).fill(title!);
+    await page.getByLabel("账号（可选）", { exact: true }).fill(username!);
+    await page.getByLabel("密钥值（可选）", { exact: true }).fill(password!);
+    await page
+      .getByLabel("备注（可选）", { exact: true })
+      .fill(`${title}的备注`);
+    await page.getByRole("button", { name: "创建并关联", exact: true }).click();
+  }
+  await page.getByRole("button", { name: "完成", exact: true }).click();
+  await page.getByRole("button", { name: "保存入口", exact: true }).click();
+  await page.getByRole("button", { name: "全部密钥 2", exact: true }).click();
+  await page.getByLabel("查看密钥 管理员", { exact: true }).click();
+  await page
+    .getByLabel("自定义字段（每行：名称: 值）", { exact: true })
+    .fill("API Key: sample-token\n区域: cn-north-1");
+  await page.getByRole("button", { name: "保存密钥", exact: true }).click();
+  await page
+    .locator(".actions")
+    .getByRole("button", { name: "新建密钥", exact: true })
+    .click();
+  await page.getByLabel("密钥名称", { exact: true }).fill("无关密钥");
+  await page
+    .getByLabel("密钥值（密码、API Key 或 Token）")
+    .fill("unrelated-secret");
+  await page.getByRole("button", { name: "保存密钥", exact: true }).click();
+  await page.getByRole("button", { name: "所有入口 1", exact: true }).click();
+  await page
+    .getByLabel("可分享的入口 的复制密钥", { exact: true })
+    .selectOption({ label: "只读账号 · reader" });
+  if (browserName === "chromium")
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await mockClipboard(page, browserName === "chromium");
+  const copyAll = page.getByRole("button", {
+    name: "复制 可分享的入口 的全部资料",
+    exact: true,
+  });
+  await copyAll.click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "全部资料已复制到剪贴板" }),
+  ).toBeVisible();
+  const text = await page.evaluate(
+    () =>
+      (window as Window & { clipboardWrites: string[] }).clipboardWrites[0]!,
+  );
+  expect(text).toBe(
+    [
+      "名称: 可分享的入口",
+      "类型: 网站",
+      "分组: 默认分组",
+      "网站地址: https://example.com/login",
+      "备注: 入口备注第一行\n第二行",
+      "密钥名称: 只读账号",
+      "账号: reader",
+      "密码: reader-secret",
+      "密钥备注: 只读账号的备注",
+    ].join("\n"),
+  );
+  if (browserName === "chromium")
+    await expect
+      .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toBe(text);
+  await page
+    .getByLabel("可分享的入口 的复制密钥", { exact: true })
+    .selectOption({ label: "管理员 · admin@example.com" });
+  await copyAll.click();
+  const adminText = await page.evaluate(
+    () =>
+      (window as Window & { clipboardWrites: string[] }).clipboardWrites[1]!,
+  );
+  expect(adminText).toBe(
+    [
+      "名称: 可分享的入口",
+      "类型: 网站",
+      "分组: 默认分组",
+      "网站地址: https://example.com/login",
+      "备注: 入口备注第一行\n第二行",
+      "密钥名称: 管理员",
+      "账号: admin@example.com",
+      '密码: p:a\\ss"```',
+      "密钥备注: 管理员的备注",
+      "API Key: sample-token",
+      "区域: cn-north-1",
+    ].join("\n"),
+  );
+  expect(adminText).not.toContain("reader-secret");
+  expect(adminText).not.toContain("unrelated-secret");
+  await page.setViewportSize({ width: 320, height: 844 });
+  const buttonRows = await page
+    .locator(".credential-actions button")
+    .evaluateAll((buttons) =>
+      buttons.map((button) => button.getBoundingClientRect().y),
+    );
+  expect(buttonRows).toHaveLength(3);
+  expect(new Set(buttonRows).size).toBe(1);
+  await expect(page.locator("body")).not.toContainText("reader-secret");
+  await expect(page.locator("body")).not.toContainText("sample-token");
+  await page.evaluate(() => {
+    (window as Window & { rejectClipboard: boolean }).rejectClipboard = true;
+  });
+  await copyAll.click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "无法复制全部资料" }),
+  ).toBeVisible();
+});
+
+test("copy all works without linked credentials and stays usable on narrow screens", async ({
+  page,
+}) => {
+  await createVault(page);
+  await page
+    .locator(".actions")
+    .getByRole("button", { name: "新建入口", exact: true })
+    .click();
+  await page.getByLabel("名称", { exact: true }).fill("公开文档");
+  await page
+    .getByLabel("网站地址", { exact: true })
+    .fill("https://example.com/docs");
+  await page.getByRole("button", { name: "保存入口", exact: true }).click();
+  await page.setViewportSize({ width: 320, height: 844 });
+  await mockClipboard(page);
+  await page
+    .getByRole("button", { name: "复制 公开文档 的全部资料", exact: true })
+    .click();
+  const text = await page.evaluate(
+    () =>
+      (window as Window & { clipboardWrites: string[] }).clipboardWrites[0]!,
+  );
+  expect(text).toBe(
+    [
+      "名称: 公开文档",
+      "类型: 网站",
+      "分组: 默认分组",
+      "网站地址: https://example.com/docs",
+    ].join("\n"),
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
 test("creates an SSH entry, previews and copies its command, and preserves it after unlock", async ({
   page,
 }) => {

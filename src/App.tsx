@@ -40,6 +40,7 @@ import { AppearanceSettings } from "./AppearanceSettings";
 import { buildSshCommand } from "./domain/ssh";
 import { webNavigationCopy } from "./domain/navigation";
 import { buildPostgresUri } from "./domain/postgresql";
+import { formatEntryCopy } from "./domain/entry-copy";
 import "./themes.css";
 import "./app.css";
 import "./responsive.css";
@@ -1275,64 +1276,32 @@ function EntryList({
                   </div>
                   <div className="card-credentials">
                     {selectedCredential ? (
-                      <>
-                        <div className="credential-heading">
-                          <Icon name="key" size={14} />
-                          <label className="credential-picker">
-                            <span className="sr-only">
-                              {entry.name} 的复制密钥
-                            </span>
-                            <select
-                              aria-label={`${entry.name} 的复制密钥`}
-                              value={selectedCredential.id}
-                              disabled={credentials.length < 2}
-                              onChange={(event) =>
-                                setSelectedCredentialIds((current) => ({
-                                  ...current,
-                                  [entry.id]: event.target.value,
-                                }))
-                              }
-                            >
-                              {credentials.map((key) => (
-                                <option key={key.id} value={key.id}>
-                                  {key.title}
-                                  {key.username ? ` · ${key.username}` : ""}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        </div>
-                        <div className="credential-actions">
-                          {selectedCredential.username && (
-                            <button
-                              aria-label={`复制 ${entry.name} 的账号`}
-                              onClick={() =>
-                                void onCopy(
-                                  "账号",
-                                  selectedCredential.username ?? "",
-                                )
-                              }
-                            >
-                              <Icon name="copy" size={14} />
-                              复制账号
-                            </button>
-                          )}
-                          {selectedCredential.password && (
-                            <button
-                              aria-label={`复制 ${entry.name} 的密钥`}
-                              onClick={() =>
-                                void onCopy(
-                                  "密钥",
-                                  selectedCredential.password ?? "",
-                                )
-                              }
-                            >
-                              <Icon name="copy" size={14} />
-                              复制密钥
-                            </button>
-                          )}
-                        </div>
-                      </>
+                      <div className="credential-heading">
+                        <Icon name="key" size={14} />
+                        <label className="credential-picker">
+                          <span className="sr-only">
+                            {entry.name} 的复制密钥
+                          </span>
+                          <select
+                            aria-label={`${entry.name} 的复制密钥`}
+                            value={selectedCredential.id}
+                            disabled={credentials.length < 2}
+                            onChange={(event) =>
+                              setSelectedCredentialIds((current) => ({
+                                ...current,
+                                [entry.id]: event.target.value,
+                              }))
+                            }
+                          >
+                            {credentials.map((key) => (
+                              <option key={key.id} value={key.id}>
+                                {key.title}
+                                {key.username ? ` · ${key.username}` : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
                     ) : (
                       <div className="no-credentials">
                         <Icon name="key" size={14} />
@@ -1343,6 +1312,49 @@ function EntryList({
                         </button>
                       </div>
                     )}
+                    <div className="credential-actions">
+                      {selectedCredential?.username && (
+                        <button
+                          aria-label={`复制 ${entry.name} 的账号`}
+                          onClick={() =>
+                            void onCopy(
+                              "账号",
+                              selectedCredential.username ?? "",
+                            )
+                          }
+                        >
+                          <Icon name="copy" size={14} />
+                          复制账号
+                        </button>
+                      )}
+                      {selectedCredential?.password && (
+                        <button
+                          aria-label={`复制 ${entry.name} 的密钥`}
+                          onClick={() =>
+                            void onCopy(
+                              "密钥",
+                              selectedCredential.password ?? "",
+                            )
+                          }
+                        >
+                          <Icon name="copy" size={14} />
+                          复制密钥
+                        </button>
+                      )}
+                      <button
+                        aria-label={`复制 ${entry.name} 的全部资料`}
+                        title="复制入口和当前选中密钥的资料，包含账号、密码及自定义字段"
+                        onClick={() =>
+                          void onCopy(
+                            "全部资料",
+                            formatEntryCopy(entry, selectedCredential, group),
+                          )
+                        }
+                      >
+                        <Icon name="copy" size={14} />
+                        复制全部
+                      </button>
+                    </div>
                   </div>
                   <div className="card-footer">
                     {isWeb ? (

@@ -849,11 +849,12 @@ h3 {
 .credential-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 6px;
 }
 .credential-actions button {
+  gap: 4px;
   min-height: 30px;
-  padding: 4px 8px;
+  padding: 4px 6px;
   border: 0;
   color: var(--accent);
   background: var(--accent-soft);
