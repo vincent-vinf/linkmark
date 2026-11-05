@@ -92,7 +92,7 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
-  const [duration, setDuration] = useState(300_000);
+  const [duration, setDuration] = useState(1_800_000);
   const [expiry, setExpiry] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [activeGroup, setActiveGroup] = useState<string | null | undefined>(
